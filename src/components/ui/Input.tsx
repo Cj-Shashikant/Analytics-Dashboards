@@ -1,24 +1,28 @@
-'use client';
+import * as React from "react";
 
-import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from "./utils";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
-
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      <input
-        type={type}
-        className={cn(
-          'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    );
-  }
-);
-
-Input.displayName = 'Input';
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  return (
+    <input
+      type={type}
+      data-slot="input"
+      className={cn(
+        "flex h-9 w-full rounded-md border border-gray-200 bg-white px-3 py-1 text-sm transition-colors",
+        // Darker text color for better visibility
+        "text-gray-900 font-medium",
+        "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-900",
+        // Darker placeholder
+        "placeholder:text-gray-400 placeholder:font-normal",
+        "focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-gray-500 focus-visible:border-gray-500",
+        // Better focus state
+        "focus:text-gray-900",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        "aria-invalid:border-red-500 aria-invalid:ring-red-500/20",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+export { Input };

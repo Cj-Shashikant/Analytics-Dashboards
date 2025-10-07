@@ -1,6 +1,6 @@
 'use client';
 
-import Header from '@/components/layout/headers';
+import Header from '@/components/layout/header/page';
 import { Box } from '@mui/material';
 
 export default function DashboardPage() {

@@ -1,0 +1,406 @@
+'use client';
+
+import React, { useState } from 'react';
+import {
+  Box,
+  Grid,
+  Typography,
+  IconButton,
+  FormControl,
+  Button,
+  Paper,
+} from '@mui/material';
+import {
+  CalendarDays,
+  Building2,
+  BarChart3,
+  Settings,
+  Trophy,
+  Save,
+  List,
+  DollarSign,
+  Maximize,
+} from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select';
+import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
+import {
+  setSelectedEntity,
+  setSelectedDepartment,
+  setSelectedReportType,
+  setSelectedLocation,
+  setSelectedDuration,
+  cycleValueUnit,
+  setIsAdvancedFiltersOpen,
+  setIsRevenueFullScreen,
+  setIsLeaderboardOpen,
+  setIsTodaysReportOpen,
+} from '../../../redux/slices/filterSlice';
+import { DEPARTMENTS } from '../../../constants/enums/departments';
+import { DURATIONS } from '../../../constants/enums/durations';
+import { getReportTypesForDepartment } from '../../../constants/enums/reportTypes';
+import { filterStyles } from './style';
+import { getFilterWidths, getWidthSx } from './dynamicWidth';
+
+// Import filter components
+import MoreFilter from './moreFilter';
+import SettingFilter from './settingFilter';
+import FullScreenFilter from './fullScreenFillter';
+import LeaderboardFilter from './leaderboardFilter';
+import PlaylistFilter from './playlistFilter';
+import PresentationFilter from './presentationFilter';
+
+export default function FilterPage() {
+  const dispatch = useAppDispatch();
+  const {
+    selectedEntity,
+    selectedDepartment,
+    selectedReportType,
+    selectedLocation,
+    selectedDuration,
+    valueUnit,
+  } = useAppSelector(state => state.filter);
+
+  // Modal state management
+  const [isMoreFilterOpen, setIsMoreFilterOpen] = useState(false);
+  const [isSettingFilterOpen, setIsSettingFilterOpen] = useState(false);
+  const [isFullScreenFilterOpen, setIsFullScreenFilterOpen] = useState(false);
+  const [isLeaderboardFilterOpen, setIsLeaderboardFilterOpen] = useState(false);
+  const [isPlaylistFilterOpen, setIsPlaylistFilterOpen] = useState(false);
+  const [isPresentationFilterOpen, setIsPresentationFilterOpen] = useState(false);
+
+  // Calculate dynamic widths based on content (like analytics App.tsx)
+  const filterWidths = getFilterWidths(
+    selectedEntity,
+    selectedDepartment,
+    selectedReportType,
+    selectedDuration,
+    selectedLocation
+  );
+
+  const handleEntityChange = (event: any) => {
+    dispatch(setSelectedEntity(event.target.value));
+  };
+
+  const handleDepartmentChange = (value: string) => {
+    dispatch(setSelectedDepartment(value));
+  };
+
+  const handleReportTypeChange = (value: string) => {
+    dispatch(setSelectedReportType(value));
+  };
+
+  const handleLocationChange = (value: string) => {
+    dispatch(setSelectedLocation(value));
+  };
+
+  const handleDurationChange = (value: string) => {
+    dispatch(setSelectedDuration(value));
+  };
+
+  const handleValueUnitCycle = () => {
+    dispatch(cycleValueUnit());
+  };
+
+  const handleMoreFilters = () => {
+    setIsMoreFilterOpen(true);
+  };
+
+  const handleSettings = () => {
+    setIsSettingFilterOpen(true);
+  };
+
+  const handleFullscreen = () => {
+    setIsFullScreenFilterOpen(true);
+  };
+
+  const handleLeaderboard = () => {
+    setIsLeaderboardFilterOpen(true);
+  };
+
+  const handleDownload = () => {
+    setIsPlaylistFilterOpen(true);
+  };
+
+  const handleMoreOptions = () => {
+    setIsPresentationFilterOpen(true);
+  };
+
+  return (
+    <Box>
+      {/* Main Filter Container */}
+      <Paper elevation={1} sx={filterStyles.mainContainer}>
+        <Box sx={filterStyles.filterContainer}>
+          {/* Left Side - Filter Controls */}
+          <Box sx={filterStyles.leftSide}>
+            {/* Primary Filter Row */}
+            <Grid container spacing={3} alignItems="flex-end">
+              {/* Organization Filter */}
+              {/* <Grid item xs={12} sm={6} lg="auto">
+                <Box sx={filterStyles.filterItem}>
+                  <Box sx={filterStyles.labelContainer}>
+                    <Building2 style={filterStyles.filterIcon} />
+                    <Typography sx={filterStyles.labelText}>
+                      Organisation
+                    </Typography>
+                  </Box>
+                  <FormControl size="small" fullWidth>
+                    <Select
+                      value={selectedEntity}
+                      onChange={handleEntityChange}
+                      sx={{
+                        ...filterStyles.selectTrigger,
+                        ...getWidthSx(filterWidths.entityWidth),
+                        minWidth: 140
+                      }}
+                    >
+                      {ENTITIES.map((entity) => (
+                        <MenuItem key={entity} value={entity}>
+                          {entity}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Grid> */}
+
+              {/* Duration Filter */}
+              <Grid item xs={12} sm={6} lg="auto">
+                <Box sx={filterStyles.filterItem}>
+                  <Box sx={filterStyles.labelContainer}>
+                    <CalendarDays style={filterStyles.filterIcon} />
+                    <Typography sx={filterStyles.labelText}>
+                      Duration
+                    </Typography>
+                  </Box>
+                  <FormControl size="small" fullWidth>
+                    <Select
+                      value={selectedDuration}
+                      onValueChange={handleDurationChange}
+                    >
+                      <SelectTrigger
+                        style={{
+                          ...getWidthSx(filterWidths.durationWidth),
+                          minWidth: 110,
+                        }}
+                      >
+                        <SelectValue placeholder="Duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DURATIONS.map(duration => (
+                          <SelectItem key={duration} value={duration}>
+                            {duration}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Grid>
+
+              {/* Department Filter */}
+              <Grid item xs={12} sm={6} lg="auto">
+                <Box sx={filterStyles.filterItem}>
+                  <Box sx={filterStyles.labelContainer}>
+                    <Building2 style={filterStyles.filterIcon} />
+                    <Typography sx={filterStyles.labelText}>
+                      Department
+                    </Typography>
+                  </Box>
+                  <FormControl size="small" fullWidth>
+                    <Select
+                      value={selectedDepartment}
+                      onValueChange={handleDepartmentChange}
+                    >
+                      <SelectTrigger
+                        style={{
+                          ...getWidthSx(filterWidths.departmentWidth),
+                          minWidth: 100,
+                        }}
+                      >
+                        <SelectValue placeholder="Department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DEPARTMENTS.map(department => (
+                          <SelectItem key={department} value={department}>
+                            {department}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Grid>
+
+              {/* Report Type Filter */}
+              <Grid item xs={12} sm={6} lg="auto">
+                <Box sx={filterStyles.filterItem}>
+                  <Box sx={filterStyles.labelContainer}>
+                    <BarChart3 style={filterStyles.filterIcon} />
+                    <Typography sx={filterStyles.labelText}>
+                      Report Type
+                    </Typography>
+                  </Box>
+                  <FormControl size="small" fullWidth>
+                    <Select
+                      value={selectedReportType}
+                      onValueChange={handleReportTypeChange}
+                    >
+                      <SelectTrigger
+                        style={{
+                          ...getWidthSx(filterWidths.reportTypeWidth),
+                          minWidth: 180,
+                        }}
+                      >
+                        <SelectValue placeholder="Report type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getReportTypesForDepartment(selectedDepartment).map(
+                          reportType => (
+                            <SelectItem key={reportType} value={reportType}>
+                              {reportType}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Grid>
+
+              {/* More Button - Aligned with filters */}
+              <Grid item xs={12} sm={6} lg="auto">
+                <Box sx={filterStyles.filterItem}>
+                  <Box sx={filterStyles.spacer}></Box>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={handleMoreFilters}
+                    sx={filterStyles.moreButton}
+                  >
+                    More
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* Right Side - Action Controls */}
+          <Box sx={filterStyles.rightSide}>
+            {/* Value Unit Button */}
+            <Box sx={filterStyles.actionContainer}>
+              <Box sx={filterStyles.spacer}></Box>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<DollarSign size={16} />}
+                onClick={handleValueUnitCycle}
+                sx={filterStyles.valueUnitButton}
+              >
+                {valueUnit}
+              </Button>
+            </Box>
+
+            {/* Action Icons */}
+            <Box sx={filterStyles.actionContainer}>
+              <Box sx={filterStyles.actionIconsContainer}>
+                <IconButton
+                  size="small"
+                  onClick={handleSettings}
+                  sx={filterStyles.settingsIcon}
+                  title="Settings"
+                >
+                  <Settings size={16} />
+                </IconButton>
+
+                <IconButton
+                  size="small"
+                  onClick={handleFullscreen}
+                  sx={filterStyles.fullscreenIcon}
+                  title="Full Screen"
+                >
+                  <Maximize size={16} />
+                </IconButton>
+
+                <IconButton
+                  size="small"
+                  onClick={handleLeaderboard}
+                  sx={filterStyles.leaderboardIcon}
+                  title="Leaderboard"
+                >
+                  <Trophy size={16} />
+                </IconButton>
+
+                <IconButton
+                  size="small"
+                  onClick={handleDownload}
+                  sx={filterStyles.downloadIcon}
+                  title="Save to Playlist"
+                >
+                  <Save size={16} />
+                </IconButton>
+
+                <IconButton
+                  size="small"
+                  onClick={handleMoreOptions}
+                  sx={filterStyles.moreOptionsIcon}
+                  title="Presentation Playlists"
+                >
+                  <List size={16} />
+                </IconButton>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Modal Components */}
+      {isMoreFilterOpen && (
+        <MoreFilter
+          isOpen={isMoreFilterOpen}
+          onClose={() => setIsMoreFilterOpen(false)}
+        />
+      )}
+
+      {isSettingFilterOpen && (
+        <SettingFilter
+          isOpen={isSettingFilterOpen}
+          onClose={() => setIsSettingFilterOpen(false)}
+        />
+      )}
+
+      {isFullScreenFilterOpen && (
+        <FullScreenFilter
+          isOpen={isFullScreenFilterOpen}
+          onClose={() => setIsFullScreenFilterOpen(false)}
+        />
+      )}
+
+      {isLeaderboardFilterOpen && (
+        <LeaderboardFilter
+          isOpen={isLeaderboardFilterOpen}
+          onClose={() => setIsLeaderboardFilterOpen(false)}
+        />
+      )}
+
+      {isPlaylistFilterOpen && (
+        <PlaylistFilter
+          isOpen={isPlaylistFilterOpen}
+          onClose={() => setIsPlaylistFilterOpen(false)}
+        />
+      )}
+
+      {isPresentationFilterOpen && (
+        <PresentationFilter
+          isOpen={isPresentationFilterOpen}
+          onClose={() => setIsPresentationFilterOpen(false)}
+        />
+      )}
+    </Box>
+  );
+}
