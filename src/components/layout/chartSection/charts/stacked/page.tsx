@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   BarChart,
   Bar,
@@ -7,8 +7,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
-} from "recharts";
+} from 'recharts';
 
 // TypeScript interfaces
 export interface StackedBarData {
@@ -39,26 +38,29 @@ export interface StackedBarProps {
 
 // Default colors for stacked bars
 const defaultColors = [
-  "#3B82F6", // Blue
-  "#10B981", // Green
-  "#F59E0B", // Yellow
-  "#EF4444", // Red
-  "#8B5CF6", // Purple
-  "#06B6D4", // Cyan
-  "#F97316", // Orange
-  "#84CC16", // Lime
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Yellow
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+  '#06B6D4', // Cyan
+  '#F97316', // Orange
+  '#84CC16', // Lime
 ];
 
 // Enhanced Custom Tooltip for Stacked Bars
-const StackedCustomTooltip = ({ 
-  active, 
-  payload, 
-  label, 
-  valueFormatter = (value: number) => `$${value.toLocaleString()}` 
+const StackedCustomTooltip = ({
+  active,
+  payload,
+  label,
+  valueFormatter = (value: number) => `$${value.toLocaleString()}`,
 }: any) => {
   if (active && payload && payload.length) {
-    const total = payload.reduce((sum: number, entry: any) => sum + entry.value, 0);
-    
+    const total = payload.reduce(
+      (sum: number, entry: any) => sum + entry.value,
+      0
+    );
+
     return (
       <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
         <p className="font-medium text-gray-900 mb-2">{label}</p>
@@ -93,21 +95,21 @@ const StackedCustomTooltip = ({
 export const StackedBarChartComponent: React.FC<StackedBarProps> = ({
   data,
   dataKeys,
-  nameKey = "name",
+  nameKey = 'name',
   colors = defaultColors,
   valueFormatter,
   onBarClick,
-  className = "",
+  className = '',
   height = 400,
-  stackId = "a",
+  stackId = 'a',
   showGrid = true,
   showTooltip = true,
   barRadius = [4, 4, 0, 0],
   margin = { top: 20, right: 30, left: 20, bottom: 60 },
 }) => {
-  const handleBarClick = (data: any, index: number) => {
+  const handleBarClick = (data: any, _index: number) => {
     if (onBarClick) {
-      onBarClick(data, index);
+      onBarClick(data, _index);
     }
   };
 
@@ -164,12 +166,12 @@ export const SimpleStackedBarChart: React.FC<{
   height?: number;
 }> = ({
   data,
-  dataKey = "value",
-  nameKey = "name",
-  color = "#3B82F6",
+  dataKey = 'value',
+  nameKey = 'name',
+  color = '#3B82F6',
   valueFormatter,
   onBarClick,
-  className = "",
+  className = '',
   height = 400,
 }) => {
   return (
@@ -178,8 +180,10 @@ export const SimpleStackedBarChart: React.FC<{
       dataKeys={[dataKey]}
       nameKey={nameKey}
       colors={[color]}
-      valueFormatter={valueFormatter}
-      onBarClick={onBarClick}
+      valueFormatter={
+        valueFormatter || ((value: number) => `$${value.toLocaleString()}`)
+      }
+      onBarClick={onBarClick || (() => {})}
       className={className}
       height={height}
     />

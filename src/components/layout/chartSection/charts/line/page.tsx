@@ -1,10 +1,10 @@
-import React from "react";
+import React from 'react';
 import {
   ScrollableLineChart,
   ScrollableChartConfig,
   defaultScrollConfig,
   shouldUseScrollableChart,
-} from "../../../ChartUtils";
+} from '../../../ChartUtils';
 import {
   LineChart,
   Line,
@@ -13,7 +13,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 
 // TypeScript interfaces
 export interface LineChartData {
@@ -41,11 +41,11 @@ export interface LineChartProps {
 }
 
 // Enhanced Custom Tooltip
-const EnhancedCustomTooltip = ({ 
-  active, 
-  payload, 
-  label, 
-  valueFormatter = (value: number) => `$${value.toLocaleString()}` 
+const EnhancedCustomTooltip = ({
+  active,
+  payload,
+  label,
+  valueFormatter = (value: number) => `$${value.toLocaleString()}`,
 }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
@@ -55,7 +55,7 @@ const EnhancedCustomTooltip = ({
         <p className="text-sm text-gray-600">
           <span
             className="inline-block w-3 h-3 rounded-full mr-2"
-            style={{ backgroundColor: data.color || "#3B82F6" }}
+            style={{ backgroundColor: data.color || '#3B82F6' }}
           ></span>
           {valueFormatter(data.value)}
         </p>
@@ -72,23 +72,24 @@ const EnhancedCustomTooltip = ({
 
 export const LineChartComponent: React.FC<LineChartProps> = ({
   data,
-  dataKey = "value",
-  nameKey = "name",
-  color = "#3B82F6",
+  dataKey = 'value',
+  nameKey = 'name',
+  color = '#3B82F6',
   config = {},
   valueFormatter,
   onPointClick,
-  className = "",
+  className = '',
   scrollable = false,
   strokeWidth = 2,
   dotRadius = 4,
   activeDotRadius = 6,
-  topFilter = "Top 10",
+  topFilter = 'Top 10',
 }) => {
   const chartConfig = { ...defaultScrollConfig, ...config };
-  
+
   // Use the enhanced logic to determine if scrolling is needed
-  const needsScrolling = scrollable || shouldUseScrollableChart(topFilter, data.length);
+  const needsScrolling =
+    scrollable || shouldUseScrollableChart(topFilter, data.length);
 
   // If scrolling is needed, use the ScrollableLineChart component
   if (needsScrolling) {
@@ -99,8 +100,10 @@ export const LineChartComponent: React.FC<LineChartProps> = ({
         nameKey={nameKey}
         color={color}
         config={config}
-        valueFormatter={valueFormatter}
-        onPointClick={onPointClick}
+        valueFormatter={
+          valueFormatter || ((value: number) => `$${value.toLocaleString()}`)
+        }
+        onPointClick={onPointClick || (() => {})}
         className={className}
       />
     );
@@ -116,13 +119,6 @@ export const LineChartComponent: React.FC<LineChartProps> = ({
     fullName: item[nameKey],
     originalIndex: index,
   }));
-
-  const handlePointClick = (data: any, index: number) => {
-    if (onPointClick) {
-      const originalData = data.payload;
-      onPointClick(originalData, data.originalIndex);
-    }
-  };
 
   // Regular chart for smaller datasets
   return (
@@ -156,7 +152,6 @@ export const LineChartComponent: React.FC<LineChartProps> = ({
             strokeWidth={strokeWidth}
             dot={{ fill: color, strokeWidth: 2, r: dotRadius }}
             activeDot={{ r: activeDotRadius, stroke: color, strokeWidth: 2 }}
-            onClick={handlePointClick}
           />
         </LineChart>
       </ResponsiveContainer>

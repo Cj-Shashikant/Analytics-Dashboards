@@ -1,11 +1,11 @@
 import React from 'react';
 import { Button } from '../ui/button';
-import { 
-  PieChart, 
-  BarChart3, 
-  LineChart, 
-  Table, 
-  TrendingUp 
+import {
+  PieChart,
+  BarChart3,
+  LineChart,
+  Table,
+  TrendingUp,
 } from 'lucide-react';
 
 export type ChartType = 'donut' | 'bar' | 'stackedBar' | 'line' | 'table';
@@ -16,13 +16,17 @@ interface ChartTypeSwitcherProps {
   className?: string;
 }
 
-export function ChartTypeSwitcher({ currentType, onTypeChange, className = '' }: ChartTypeSwitcherProps) {
+export function ChartTypeSwitcher({
+  currentType,
+  onTypeChange,
+  className = '',
+}: ChartTypeSwitcherProps) {
   const professionalPalette = {
-    primary: "#2563EB",
-    secondary: "#475569",
-    mutedGray: "#64748B",
-    lightGray: "#F1F5F9",
-    borderLight: "#E2E8F0",
+    primary: '#2563EB',
+    secondary: '#475569',
+    mutedGray: '#64748B',
+    lightGray: '#F1F5F9',
+    borderLight: '#E2E8F0',
   };
 
   const chartTypes = [
@@ -30,44 +34,46 @@ export function ChartTypeSwitcher({ currentType, onTypeChange, className = '' }:
       id: 'donut' as ChartType,
       label: 'Donut',
       icon: PieChart,
-      tooltip: 'Donut Chart'
+      tooltip: 'Donut Chart',
     },
     {
       id: 'bar' as ChartType,
       label: 'Bar',
       icon: BarChart3,
-      tooltip: 'Bar Chart'
+      tooltip: 'Bar Chart',
     },
     {
       id: 'stackedBar' as ChartType,
       label: 'Stacked',
       icon: TrendingUp,
-      tooltip: 'Stacked Bar Chart'
+      tooltip: 'Stacked Bar Chart',
     },
     {
       id: 'line' as ChartType,
       label: 'Line',
       icon: LineChart,
-      tooltip: 'Line Chart'
+      tooltip: 'Line Chart',
     },
     {
       id: 'table' as ChartType,
       label: 'Table',
       icon: Table,
-      tooltip: 'Table View'
-    }
+      tooltip: 'Table View',
+    },
   ];
 
   return (
-    <div className={`flex items-center gap-1 p-1 rounded-lg border ${className}`} 
-         style={{ 
-           backgroundColor: professionalPalette.lightGray,
-           borderColor: professionalPalette.borderLight 
-         }}>
-      {chartTypes.map((type) => {
+    <div
+      className={`flex items-center gap-1 p-1 rounded-lg border ${className}`}
+      style={{
+        backgroundColor: professionalPalette.lightGray,
+        borderColor: professionalPalette.borderLight,
+      }}
+    >
+      {chartTypes.map(type => {
         const IconComponent = type.icon;
         const isActive = currentType === type.id;
-        
+
         return (
           <Button
             key={type.id}
@@ -78,7 +84,9 @@ export function ChartTypeSwitcher({ currentType, onTypeChange, className = '' }:
               isActive ? 'shadow-sm' : 'hover:bg-white/50'
             }`}
             style={{
-              backgroundColor: isActive ? professionalPalette.primary : 'transparent',
+              backgroundColor: isActive
+                ? professionalPalette.primary
+                : 'transparent',
               color: isActive ? 'white' : professionalPalette.mutedGray,
             }}
             title={type.tooltip}

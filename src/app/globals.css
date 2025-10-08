@@ -7,7 +7,7 @@
   --foreground: #171717;
   --border: #e5e7eb;
   --ring: #3b82f6;
-  
+
   /* Color variables from analytics project */
   --color-red-50: oklch(0.971 0.013 17.38);
   --color-red-100: oklch(0.936 0.032 17.717);
@@ -84,7 +84,7 @@
   --color-gray-900: oklch(0.21 0.034 264.665);
   --color-black: #000;
   --color-white: #fff;
-  
+
   /* Spacing and layout */
   --spacing: 0.25rem;
   --container-xs: 20rem;
@@ -96,7 +96,7 @@
   --container-4xl: 56rem;
   --container-6xl: 72rem;
   --container-7xl: 80rem;
-  
+
   /* Typography */
   --text-xs: 0.75rem;
   --text-xs--line-height: calc(1 / 0.75);
@@ -114,40 +114,40 @@
   --text-3xl--line-height: calc(2.25 / 1.875);
   --text-4xl: 2.25rem;
   --text-4xl--line-height: calc(2.5 / 2.25);
-  
+
   /* Font weights */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   /* Letter spacing */
   --tracking-tight: -0.025em;
   --tracking-wide: 0.025em;
   --tracking-widest: 0.1em;
-  
+
   /* Line heights */
   --leading-tight: 1.25;
   --leading-relaxed: 1.625;
-  
+
   /* Border radius */
   --radius-xs: 0.125rem;
   --radius-2xl: 1rem;
-  
+
   /* Shadows */
   --drop-shadow-lg: 0 4px 4px #00000026;
-  
+
   /* Animations */
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --animate-spin: spin 1s linear infinite;
   --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  
+
   /* Filters */
   --blur-sm: 8px;
-  
+
   /* Aspect ratios */
   --aspect-video: 16 / 9;
-  
+
   /* Transitions */
   --default-transition-duration: 0.15s;
   --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -166,7 +166,9 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-family:
+    ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 @layer utilities {

@@ -16,17 +16,13 @@ interface PresentationFilterProps {
   onClose: () => void;
 }
 
-export default function PresentationFilter({ isOpen, onClose }: PresentationFilterProps) {
+export default function PresentationFilter({
+  isOpen,
+  onClose,
+}: PresentationFilterProps) {
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
-      <DialogTitle>
-        Presentation Playlists
-      </DialogTitle>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>Presentation Playlists</DialogTitle>
       <DialogContent>
         <Box sx={{ py: 2 }}>
           <Typography variant="body1">

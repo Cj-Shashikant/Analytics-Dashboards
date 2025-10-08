@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetDescription, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetTrigger 
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,17 +14,23 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
-import { 
-  Filter, 
-  Calendar, 
-  MapPin, 
-  Users, 
-  Package, 
-  Building, 
+import {
+  Filter,
+  Calendar,
+  MapPin,
+  Users,
+  Package,
+  Building,
   TrendingUp,
   Eye,
   Settings,
@@ -36,9 +41,13 @@ import {
   ChevronUp,
   RotateCcw,
   Save,
-  Search
+  Search,
 } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 export interface AdvancedFiltersProps {
   isOpen: boolean;
@@ -47,75 +56,179 @@ export interface AdvancedFiltersProps {
   initialFilters?: any;
 }
 
-export function AdvancedFilters({ 
-  isOpen, 
-  onOpenChange, 
+export function AdvancedFilters({
+  isOpen,
+  onOpenChange,
   onFiltersChange,
-  initialFilters = {}
+  initialFilters = {},
 }: AdvancedFiltersProps) {
   // Date Range States
   const [dateRange, setDateRange] = useState({
     from: initialFilters.dateRange?.from || '',
-    to: initialFilters.dateRange?.to || ''
+    to: initialFilters.dateRange?.to || '',
   });
-  const [quickDateRange, setQuickDateRange] = useState(initialFilters.quickDateRange || 'last30days');
+  const [quickDateRange, setQuickDateRange] = useState(
+    initialFilters.quickDateRange || 'last30days'
+  );
 
   // Regional Filters
-  const [selectedRegions, setSelectedRegions] = useState<string[]>(initialFilters.selectedRegions || []);
-  const [selectedCities, setSelectedCities] = useState<string[]>(initialFilters.selectedCities || []);
-  const [selectedStates, setSelectedStates] = useState<string[]>(initialFilters.selectedStates || []);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>(
+    initialFilters.selectedRegions || []
+  );
+  const [selectedCities, setSelectedCities] = useState<string[]>(
+    initialFilters.selectedCities || []
+  );
+  const [selectedStates, setSelectedStates] = useState<string[]>(
+    initialFilters.selectedStates || []
+  );
 
   // Team & Performance Filters
-  const [selectedTeams, setSelectedTeams] = useState<string[]>(initialFilters.selectedTeams || []);
-  const [selectedMembers, setSelectedMembers] = useState<string[]>(initialFilters.selectedMembers || []);
-  const [performanceRange, setPerformanceRange] = useState<number[]>(initialFilters.performanceRange || [0, 100]);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>(
+    initialFilters.selectedTeams || []
+  );
+  const [selectedMembers, setSelectedMembers] = useState<string[]>(
+    initialFilters.selectedMembers || []
+  );
+  const [performanceRange, setPerformanceRange] = useState<[number, number]>([
+    initialFilters.performanceRange?.[0] ?? 0,
+    initialFilters.performanceRange?.[1] ?? 100,
+  ]);
 
   // Product & Business Filters
-  const [selectedProducts, setSelectedProducts] = useState<string[]>(initialFilters.selectedProducts || []);
-  const [selectedInsurers, setSelectedInsurers] = useState<string[]>(initialFilters.selectedInsurers || []);
-  const [businessVerticals, setBusinessVerticals] = useState<string[]>(initialFilters.businessVerticals || []);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>(
+    initialFilters.selectedProducts || []
+  );
+  const [selectedInsurers, setSelectedInsurers] = useState<string[]>(
+    initialFilters.selectedInsurers || []
+  );
+  const [businessVerticals, setBusinessVerticals] = useState<string[]>(
+    initialFilters.businessVerticals || []
+  );
 
   // Display Settings
-  const [chartType, setChartType] = useState(initialFilters.chartType || 'donut');
-  const [colorScheme, setColorScheme] = useState(initialFilters.colorScheme || 'professional');
-  const [showPercentages, setShowPercentages] = useState(initialFilters.showPercentages ?? true);
-  const [showLegend, setShowLegend] = useState(initialFilters.showLegend ?? true);
-  const [animateCharts, setAnimateCharts] = useState(initialFilters.animateCharts ?? true);
+  const [chartType, setChartType] = useState(
+    initialFilters.chartType || 'donut'
+  );
+  const [colorScheme, setColorScheme] = useState(
+    initialFilters.colorScheme || 'professional'
+  );
+  const [showPercentages, setShowPercentages] = useState(
+    initialFilters.showPercentages ?? true
+  );
+  const [showLegend, setShowLegend] = useState(
+    initialFilters.showLegend ?? true
+  );
+  const [animateCharts, setAnimateCharts] = useState(
+    initialFilters.animateCharts ?? true
+  );
 
   // Advanced Settings
-  const [refreshInterval, setRefreshInterval] = useState(initialFilters.refreshInterval || 'manual');
-  const [exportFormat, setExportFormat] = useState(initialFilters.exportFormat || 'xlsx');
-  const [enableNotifications, setEnableNotifications] = useState(initialFilters.enableNotifications ?? false);
+  const [refreshInterval, setRefreshInterval] = useState(
+    initialFilters.refreshInterval || 'manual'
+  );
+  const [exportFormat, setExportFormat] = useState(
+    initialFilters.exportFormat || 'xlsx'
+  );
+  const [enableNotifications, setEnableNotifications] = useState(
+    initialFilters.enableNotifications ?? false
+  );
   const [autoSave, setAutoSave] = useState(initialFilters.autoSave ?? true);
 
   // UI States
   const [activeTab, setActiveTab] = useState('filters');
-  const [pinnedFilters, setPinnedFilters] = useState<string[]>(initialFilters.pinnedFilters || []);
+  const [pinnedFilters, setPinnedFilters] = useState<string[]>(
+    initialFilters.pinnedFilters || []
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(false);
 
   // Sample data - in real app, these would come from props or API
-  const regions = ['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East & Africa'];
-  const cities = ['New York', 'London', 'Tokyo', 'Singapore', 'Dubai', 'Sydney', 'Toronto', 'Frankfurt'];
-  const states = ['California', 'New York', 'Texas', 'Florida', 'Illinois', 'Pennsylvania', 'Ohio', 'Georgia'];
-  const teams = ['Sales Team A', 'Sales Team B', 'Marketing Team', 'Customer Success', 'Business Development'];
-  const members = ['John Smith', 'Sarah Johnson', 'Mike Chen', 'Emily Davis', 'Alex Rodriguez', 'Lisa Wang'];
-  const products = ['Life Insurance', 'Health Insurance', 'Auto Insurance', 'Home Insurance', 'Business Insurance'];
-  const insurers = ['MetLife', 'Prudential', 'AIG', 'Allianz', 'AXA', 'Zurich', 'Liberty Mutual'];
+  const regions = [
+    'North America',
+    'Europe',
+    'Asia Pacific',
+    'Latin America',
+    'Middle East & Africa',
+  ];
+  const cities = [
+    'New York',
+    'London',
+    'Tokyo',
+    'Singapore',
+    'Dubai',
+    'Sydney',
+    'Toronto',
+    'Frankfurt',
+  ];
+  const states = [
+    'California',
+    'New York',
+    'Texas',
+    'Florida',
+    'Illinois',
+    'Pennsylvania',
+    'Ohio',
+    'Georgia',
+  ];
+  const teams = [
+    'Sales Team A',
+    'Sales Team B',
+    'Marketing Team',
+    'Customer Success',
+    'Business Development',
+  ];
+  const members = [
+    'John Smith',
+    'Sarah Johnson',
+    'Mike Chen',
+    'Emily Davis',
+    'Alex Rodriguez',
+    'Lisa Wang',
+  ];
+  const products = [
+    'Life Insurance',
+    'Health Insurance',
+    'Auto Insurance',
+    'Home Insurance',
+    'Business Insurance',
+  ];
+  const insurers = [
+    'MetLife',
+    'Prudential',
+    'AIG',
+    'Allianz',
+    'AXA',
+    'Zurich',
+    'Liberty Mutual',
+  ];
 
   // Filter items configuration for pinning functionality
   const allFilterItems = [
-    { id: 'dateRange', label: 'Date Range', icon: Calendar, category: 'temporal' },
+    {
+      id: 'dateRange',
+      label: 'Date Range',
+      icon: Calendar,
+      category: 'temporal',
+    },
     { id: 'regions', label: 'Regions', icon: MapPin, category: 'geographic' },
     { id: 'cities', label: 'Cities', icon: MapPin, category: 'geographic' },
     { id: 'teams', label: 'Teams', icon: Users, category: 'organizational' },
     { id: 'products', label: 'Products', icon: Package, category: 'business' },
     { id: 'insurers', label: 'Insurers', icon: Building, category: 'business' },
-    { id: 'performance', label: 'Performance', icon: TrendingUp, category: 'metrics' }
+    {
+      id: 'performance',
+      label: 'Performance',
+      icon: TrendingUp,
+      category: 'metrics',
+    },
   ];
 
   // Utility functions
-  const toggleArrayItem = (array: string[], setArray: (arr: string[]) => void, item: string) => {
+  const toggleArrayItem = (
+    array: string[],
+    setArray: (arr: string[]) => void,
+    item: string
+  ) => {
     if (array.includes(item)) {
       setArray(array.filter(i => i !== item));
     } else {
@@ -176,13 +289,13 @@ export function AdvancedFilters({
       exportFormat,
       enableNotifications,
       autoSave,
-      pinnedFilters
+      pinnedFilters,
     };
-    
+
     if (onFiltersChange) {
       onFiltersChange(config);
     }
-    
+
     // Save to localStorage for persistence
     localStorage.setItem('advancedFiltersConfig', JSON.stringify(config));
   };
@@ -193,10 +306,20 @@ export function AdvancedFilters({
       const timeoutId = setTimeout(saveConfiguration, 1000);
       return () => clearTimeout(timeoutId);
     }
+    return undefined;
   }, [
-    dateRange, quickDateRange, selectedRegions, selectedCities, selectedStates,
-    selectedTeams, selectedMembers, performanceRange, selectedProducts,
-    selectedInsurers, businessVerticals, autoSave
+    dateRange,
+    quickDateRange,
+    selectedRegions,
+    selectedCities,
+    selectedStates,
+    selectedTeams,
+    selectedMembers,
+    performanceRange,
+    selectedProducts,
+    selectedInsurers,
+    businessVerticals,
+    autoSave,
   ]);
 
   const getAppliedFiltersCount = () => {
@@ -225,12 +348,15 @@ export function AdvancedFilters({
   ) => {
     const Icon = icon;
     const isPinned = pinnedFilters.includes(filterId);
-    const availableOptions = options.filter(option => 
+    const availableOptions = options.filter(option =>
       option.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
-      <Card key={filterId} className={`p-4 ${isPinned ? 'ring-2 ring-blue-200 bg-blue-50' : ''}`}>
+      <Card
+        key={filterId}
+        className={`p-4 ${isPinned ? 'ring-2 ring-blue-200 bg-blue-50' : ''}`}
+      >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Icon className="w-4 h-4 text-gray-600" />
@@ -270,27 +396,31 @@ export function AdvancedFilters({
         <div className="space-y-2">
           {isMultiSelect ? (
             <div className="flex flex-wrap gap-2">
-              {availableOptions.map((option) => (
+              {availableOptions.map(option => (
                 <Badge
                   key={option}
-                  variant={selectedOptions.includes(option) ? 'default' : 'outline'}
+                  variant={
+                    selectedOptions.includes(option) ? 'default' : 'outline'
+                  }
                   className="cursor-pointer text-xs"
-                  onClick={() => toggleArrayItem(selectedOptions, setSelectedOptions, option)}
+                  onClick={() =>
+                    toggleArrayItem(selectedOptions, setSelectedOptions, option)
+                  }
                 >
                   {option}
                 </Badge>
               ))}
             </div>
           ) : (
-            <Select 
-              value={selectedOptions[0] || ''} 
-              onValueChange={(value) => setSelectedOptions([value])}
+            <Select
+              value={selectedOptions[0] || ''}
+              onValueChange={value => setSelectedOptions([value])}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
               </SelectTrigger>
               <SelectContent>
-                {availableOptions.map((option) => (
+                {availableOptions.map(option => (
                   <SelectItem key={option} value={option}>
                     {option}
                   </SelectItem>
@@ -312,7 +442,8 @@ export function AdvancedFilters({
             Advanced Filters & Settings
           </SheetTitle>
           <SheetDescription>
-            Customize your dashboard view with advanced filtering options and display settings.
+            Customize your dashboard view with advanced filtering options and
+            display settings.
             {getAppliedFiltersCount() > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {getAppliedFiltersCount()} filters applied
@@ -341,7 +472,7 @@ export function AdvancedFilters({
               <Input
                 placeholder="Search filters..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -351,7 +482,12 @@ export function AdvancedFilters({
               <Card className="p-4 bg-blue-50 border-blue-200">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-blue-900">Applied Filters</h3>
-                  <Button variant="ghost" size="sm" onClick={resetFilters} className="text-blue-700">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetFilters}
+                    className="text-blue-700"
+                  >
                     Clear All
                   </Button>
                 </div>
@@ -367,7 +503,11 @@ export function AdvancedFilters({
                     </Badge>
                   ))}
                   {selectedProducts.map(product => (
-                    <Badge key={product} variant="secondary" className="text-xs">
+                    <Badge
+                      key={product}
+                      variant="secondary"
+                      className="text-xs"
+                    >
                       Product: {product}
                     </Badge>
                   ))}
@@ -388,15 +528,50 @@ export function AdvancedFilters({
                     .map(item => {
                       switch (item.id) {
                         case 'regions':
-                          return renderFilterItem('regions', 'Regions', MapPin, regions, selectedRegions, setSelectedRegions);
+                          return renderFilterItem(
+                            'regions',
+                            'Regions',
+                            MapPin,
+                            regions,
+                            selectedRegions,
+                            setSelectedRegions
+                          );
                         case 'cities':
-                          return renderFilterItem('cities', 'Cities', MapPin, cities, selectedCities, setSelectedCities);
+                          return renderFilterItem(
+                            'cities',
+                            'Cities',
+                            MapPin,
+                            cities,
+                            selectedCities,
+                            setSelectedCities
+                          );
                         case 'teams':
-                          return renderFilterItem('teams', 'Teams', Users, teams, selectedTeams, setSelectedTeams);
+                          return renderFilterItem(
+                            'teams',
+                            'Teams',
+                            Users,
+                            teams,
+                            selectedTeams,
+                            setSelectedTeams
+                          );
                         case 'products':
-                          return renderFilterItem('products', 'Products', Package, products, selectedProducts, setSelectedProducts);
+                          return renderFilterItem(
+                            'products',
+                            'Products',
+                            Package,
+                            products,
+                            selectedProducts,
+                            setSelectedProducts
+                          );
                         case 'insurers':
-                          return renderFilterItem('insurers', 'Insurers', Building, insurers, selectedInsurers, setSelectedInsurers);
+                          return renderFilterItem(
+                            'insurers',
+                            'Insurers',
+                            Building,
+                            insurers,
+                            selectedInsurers,
+                            setSelectedInsurers
+                          );
                         default:
                           return null;
                       }
@@ -424,11 +599,16 @@ export function AdvancedFilters({
                   )}
                 </Button>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Quick Select</Label>
-                  <Select value={quickDateRange} onValueChange={setQuickDateRange}>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Quick Select
+                  </Label>
+                  <Select
+                    value={quickDateRange}
+                    onValueChange={setQuickDateRange}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
@@ -449,19 +629,33 @@ export function AdvancedFilters({
                 {quickDateRange === 'custom' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">From</Label>
+                      <Label className="text-sm font-medium mb-2 block">
+                        From
+                      </Label>
                       <Input
                         type="date"
                         value={dateRange.from}
-                        onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                        onChange={e =>
+                          setDateRange(prev => ({
+                            ...prev,
+                            from: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">To</Label>
+                      <Label className="text-sm font-medium mb-2 block">
+                        To
+                      </Label>
                       <Input
                         type="date"
                         value={dateRange.to}
-                        onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                        onChange={e =>
+                          setDateRange(prev => ({
+                            ...prev,
+                            to: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                   </div>
@@ -473,19 +667,33 @@ export function AdvancedFilters({
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="w-4 h-4 text-gray-600" />
-                <h3 className="font-medium text-gray-900">Geographic Filters</h3>
+                <h3 className="font-medium text-gray-900">
+                  Geographic Filters
+                </h3>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Regions</Label>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Regions
+                  </Label>
                   <div className="flex flex-wrap gap-2">
-                    {regions.map((region) => (
+                    {regions.map(region => (
                       <Badge
                         key={region}
-                        variant={selectedRegions.includes(region) ? 'default' : 'outline'}
+                        variant={
+                          selectedRegions.includes(region)
+                            ? 'default'
+                            : 'outline'
+                        }
                         className="cursor-pointer"
-                        onClick={() => toggleArrayItem(selectedRegions, setSelectedRegions, region)}
+                        onClick={() =>
+                          toggleArrayItem(
+                            selectedRegions,
+                            setSelectedRegions,
+                            region
+                          )
+                        }
                       >
                         {region}
                       </Badge>
@@ -494,14 +702,24 @@ export function AdvancedFilters({
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Cities</Label>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Cities
+                  </Label>
                   <div className="flex flex-wrap gap-2">
-                    {cities.map((city) => (
+                    {cities.map(city => (
                       <Badge
                         key={city}
-                        variant={selectedCities.includes(city) ? 'default' : 'outline'}
+                        variant={
+                          selectedCities.includes(city) ? 'default' : 'outline'
+                        }
                         className="cursor-pointer"
-                        onClick={() => toggleArrayItem(selectedCities, setSelectedCities, city)}
+                        onClick={() =>
+                          toggleArrayItem(
+                            selectedCities,
+                            setSelectedCities,
+                            city
+                          )
+                        }
                       >
                         {city}
                       </Badge>
@@ -510,14 +728,24 @@ export function AdvancedFilters({
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">States</Label>
+                  <Label className="text-sm font-medium mb-2 block">
+                    States
+                  </Label>
                   <div className="flex flex-wrap gap-2">
-                    {states.map((state) => (
+                    {states.map(state => (
                       <Badge
                         key={state}
-                        variant={selectedStates.includes(state) ? 'default' : 'outline'}
+                        variant={
+                          selectedStates.includes(state) ? 'default' : 'outline'
+                        }
                         className="cursor-pointer"
-                        onClick={() => toggleArrayItem(selectedStates, setSelectedStates, state)}
+                        onClick={() =>
+                          toggleArrayItem(
+                            selectedStates,
+                            setSelectedStates,
+                            state
+                          )
+                        }
                       >
                         {state}
                       </Badge>
@@ -529,10 +757,18 @@ export function AdvancedFilters({
 
             {/* More Options Collapsible */}
             <Card className="p-4">
-              <Collapsible open={isMoreOptionsOpen} onOpenChange={setIsMoreOptionsOpen}>
+              <Collapsible
+                open={isMoreOptionsOpen}
+                onOpenChange={setIsMoreOptionsOpen}
+              >
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-                    <span className="font-medium text-gray-900">More Options</span>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between p-0 h-auto"
+                  >
+                    <span className="font-medium text-gray-900">
+                      More Options
+                    </span>
                     {isMoreOptionsOpen ? (
                       <ChevronUp className="w-4 h-4" />
                     ) : (
@@ -540,20 +776,28 @@ export function AdvancedFilters({
                     )}
                   </Button>
                 </CollapsibleTrigger>
-                
+
                 <CollapsibleContent className="space-y-6 mt-4">
                   <div className="space-y-6">
                     {/* Value Display Options */}
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">Value Display</h5>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">
+                        Value Display
+                      </h5>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <Label className="text-sm">Show Values</Label>
-                          <Switch checked={showPercentages} onCheckedChange={setShowPercentages} />
+                          <Switch
+                            checked={showPercentages}
+                            onCheckedChange={setShowPercentages}
+                          />
                         </div>
                         <div className="flex items-center justify-between">
                           <Label className="text-sm">Show Percentages</Label>
-                          <Switch checked={showLegend} onCheckedChange={setShowLegend} />
+                          <Switch
+                            checked={showLegend}
+                            onCheckedChange={setShowLegend}
+                          />
                         </div>
                       </div>
                     </div>
@@ -562,9 +806,17 @@ export function AdvancedFilters({
 
                     {/* Expense Categories */}
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">Expense Categories</h5>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">
+                        Expense Categories
+                      </h5>
                       <div className="flex flex-wrap gap-2">
-                        {['Marketing', 'Operations', 'Technology', 'HR', 'Finance'].map((category) => (
+                        {[
+                          'Marketing',
+                          'Operations',
+                          'Technology',
+                          'HR',
+                          'Finance',
+                        ].map(category => (
                           <Badge
                             key={category}
                             variant="outline"
@@ -580,16 +832,26 @@ export function AdvancedFilters({
 
                     {/* Additional Regional Filters */}
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">Additional Regional Filters</h5>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">
+                        Additional Regional Filters
+                      </h5>
                       <div className="space-y-4">
                         <div>
-                          <Label className="text-sm font-medium mb-2 block">Time Zones</Label>
+                          <Label className="text-sm font-medium mb-2 block">
+                            Time Zones
+                          </Label>
                           <div className="flex flex-wrap gap-2">
-                            {['EST', 'PST', 'GMT', 'CET', 'JST', 'AEST'].map((tz) => (
-                              <Badge key={tz} variant="outline" className="cursor-pointer">
-                                {tz}
-                              </Badge>
-                            ))}
+                            {['EST', 'PST', 'GMT', 'CET', 'JST', 'AEST'].map(
+                              tz => (
+                                <Badge
+                                  key={tz}
+                                  variant="outline"
+                                  className="cursor-pointer"
+                                >
+                                  {tz}
+                                </Badge>
+                              )
+                            )}
                           </div>
                         </div>
                       </div>
@@ -600,33 +862,59 @@ export function AdvancedFilters({
                     {/* Team & Performance Filters */}
                     <div>
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">Team & Performance</h5>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">
+                          Team & Performance
+                        </h5>
                         <div className="space-y-4">
                           <div>
-                            <Label className="text-sm font-medium mb-2 block">Teams</Label>
+                            <Label className="text-sm font-medium mb-2 block">
+                              Teams
+                            </Label>
                             <div className="flex flex-wrap gap-2">
-                              {teams.map((team) => (
+                              {teams.map(team => (
                                 <Badge
                                   key={team}
-                                  variant={selectedTeams.includes(team) ? 'default' : 'outline'}
+                                  variant={
+                                    selectedTeams.includes(team)
+                                      ? 'default'
+                                      : 'outline'
+                                  }
                                   className="cursor-pointer"
-                                  onClick={() => toggleArrayItem(selectedTeams, setSelectedTeams, team)}
+                                  onClick={() =>
+                                    toggleArrayItem(
+                                      selectedTeams,
+                                      setSelectedTeams,
+                                      team
+                                    )
+                                  }
                                 >
                                   {team}
                                 </Badge>
                               ))}
                             </div>
                           </div>
-                          
+
                           <div>
-                            <Label className="text-sm font-medium mb-2 block">Team Members</Label>
+                            <Label className="text-sm font-medium mb-2 block">
+                              Team Members
+                            </Label>
                             <div className="flex flex-wrap gap-2">
-                              {members.map((member) => (
+                              {members.map(member => (
                                 <Badge
                                   key={member}
-                                  variant={selectedMembers.includes(member) ? 'default' : 'outline'}
+                                  variant={
+                                    selectedMembers.includes(member)
+                                      ? 'default'
+                                      : 'outline'
+                                  }
                                   className="cursor-pointer"
-                                  onClick={() => toggleArrayItem(selectedMembers, setSelectedMembers, member)}
+                                  onClick={() =>
+                                    toggleArrayItem(
+                                      selectedMembers,
+                                      setSelectedMembers,
+                                      member
+                                    )
+                                  }
                                 >
                                   {member}
                                 </Badge>
@@ -635,10 +923,15 @@ export function AdvancedFilters({
                           </div>
 
                           <div>
-                            <Label className="text-sm font-medium mb-2 block">Performance Range: {performanceRange[0]}% - {performanceRange[1]}%</Label>
+                            <Label className="text-sm font-medium mb-2 block">
+                              Performance Range: {performanceRange[0]}% -{' '}
+                              {performanceRange[1]}%
+                            </Label>
                             <Slider
                               value={performanceRange}
-                              onValueChange={setPerformanceRange}
+                              onValueChange={value =>
+                                setPerformanceRange(value as [number, number])
+                              }
                               max={100}
                               step={5}
                               className="w-full"
@@ -651,17 +944,31 @@ export function AdvancedFilters({
 
                       {/* Product & Business Filters */}
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">Products & Business</h5>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">
+                          Products & Business
+                        </h5>
                         <div className="space-y-4">
                           <div>
-                            <Label className="text-sm font-medium mb-2 block">Products</Label>
+                            <Label className="text-sm font-medium mb-2 block">
+                              Products
+                            </Label>
                             <div className="flex flex-wrap gap-2">
-                              {products.map((product) => (
+                              {products.map(product => (
                                 <Badge
                                   key={product}
-                                  variant={selectedProducts.includes(product) ? 'default' : 'outline'}
+                                  variant={
+                                    selectedProducts.includes(product)
+                                      ? 'default'
+                                      : 'outline'
+                                  }
                                   className="cursor-pointer"
-                                  onClick={() => toggleArrayItem(selectedProducts, setSelectedProducts, product)}
+                                  onClick={() =>
+                                    toggleArrayItem(
+                                      selectedProducts,
+                                      setSelectedProducts,
+                                      product
+                                    )
+                                  }
                                 >
                                   {product}
                                 </Badge>
@@ -670,14 +977,26 @@ export function AdvancedFilters({
                           </div>
 
                           <div>
-                            <Label className="text-sm font-medium mb-2 block">Insurers</Label>
+                            <Label className="text-sm font-medium mb-2 block">
+                              Insurers
+                            </Label>
                             <div className="flex flex-wrap gap-2">
-                              {insurers.map((insurer) => (
+                              {insurers.map(insurer => (
                                 <Badge
                                   key={insurer}
-                                  variant={selectedInsurers.includes(insurer) ? 'default' : 'outline'}
+                                  variant={
+                                    selectedInsurers.includes(insurer)
+                                      ? 'default'
+                                      : 'outline'
+                                  }
                                   className="cursor-pointer"
-                                  onClick={() => toggleArrayItem(selectedInsurers, setSelectedInsurers, insurer)}
+                                  onClick={() =>
+                                    toggleArrayItem(
+                                      selectedInsurers,
+                                      setSelectedInsurers,
+                                      insurer
+                                    )
+                                  }
                                 >
                                   {insurer}
                                 </Badge>
@@ -686,18 +1005,32 @@ export function AdvancedFilters({
                           </div>
 
                           <div>
-                            <Label className="text-sm font-medium mb-2 block">Business Verticals</Label>
+                            <Label className="text-sm font-medium mb-2 block">
+                              Business Verticals
+                            </Label>
                             <div className="flex flex-wrap gap-2">
-                              {['Corporate', 'Retail', 'SME', 'Enterprise'].map((vertical) => (
-                                <Badge
-                                  key={vertical}
-                                  variant={businessVerticals.includes(vertical) ? 'default' : 'outline'}
-                                  className="cursor-pointer"
-                                  onClick={() => toggleArrayItem(businessVerticals, setBusinessVerticals, vertical)}
-                                >
-                                  {vertical}
-                                </Badge>
-                              ))}
+                              {['Corporate', 'Retail', 'SME', 'Enterprise'].map(
+                                vertical => (
+                                  <Badge
+                                    key={vertical}
+                                    variant={
+                                      businessVerticals.includes(vertical)
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    className="cursor-pointer"
+                                    onClick={() =>
+                                      toggleArrayItem(
+                                        businessVerticals,
+                                        setBusinessVerticals,
+                                        vertical
+                                      )
+                                    }
+                                  >
+                                    {vertical}
+                                  </Badge>
+                                )
+                              )}
                             </div>
                           </div>
                         </div>
@@ -715,13 +1048,17 @@ export function AdvancedFilters({
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Eye className="w-4 h-4 text-gray-600" />
-                <h3 className="font-medium text-gray-900">Chart Display Settings</h3>
+                <h3 className="font-medium text-gray-900">
+                  Chart Display Settings
+                </h3>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Chart Type</Label>
+                    <Label className="text-sm font-medium mb-2 block">
+                      Chart Type
+                    </Label>
                     <Select value={chartType} onValueChange={setChartType}>
                       <SelectTrigger className="w-full">
                         <SelectValue />
@@ -736,13 +1073,17 @@ export function AdvancedFilters({
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Color Scheme</Label>
+                    <Label className="text-sm font-medium mb-2 block">
+                      Color Scheme
+                    </Label>
                     <Select value={colorScheme} onValueChange={setColorScheme}>
                       <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="professional">Professional</SelectItem>
+                        <SelectItem value="professional">
+                          Professional
+                        </SelectItem>
                         <SelectItem value="vibrant">Vibrant</SelectItem>
                         <SelectItem value="pastel">Pastel</SelectItem>
                         <SelectItem value="monochrome">Monochrome</SelectItem>
@@ -753,13 +1094,15 @@ export function AdvancedFilters({
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Show Percentages</Label>
+                    <Label className="text-sm font-medium">
+                      Show Percentages
+                    </Label>
                     <Switch
                       checked={showPercentages}
                       onCheckedChange={setShowPercentages}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">Show Legend</Label>
                     <Switch
@@ -767,9 +1110,11 @@ export function AdvancedFilters({
                       onCheckedChange={setShowLegend}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Animate Charts</Label>
+                    <Label className="text-sm font-medium">
+                      Animate Charts
+                    </Label>
                     <Switch
                       checked={animateCharts}
                       onCheckedChange={setAnimateCharts}
@@ -783,13 +1128,20 @@ export function AdvancedFilters({
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Settings className="w-4 h-4 text-gray-600" />
-                <h3 className="font-medium text-gray-900">Performance & Data Settings</h3>
+                <h3 className="font-medium text-gray-900">
+                  Performance & Data Settings
+                </h3>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Data Refresh Interval</Label>
-                  <Select value={refreshInterval} onValueChange={setRefreshInterval}>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Data Refresh Interval
+                  </Label>
+                  <Select
+                    value={refreshInterval}
+                    onValueChange={setRefreshInterval}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
@@ -804,7 +1156,9 @@ export function AdvancedFilters({
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Export Format</Label>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Export Format
+                  </Label>
                   <Select value={exportFormat} onValueChange={setExportFormat}>
                     <SelectTrigger className="w-full">
                       <SelectValue />
@@ -820,19 +1174,20 @@ export function AdvancedFilters({
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Enable Notifications</Label>
+                    <Label className="text-sm font-medium">
+                      Enable Notifications
+                    </Label>
                     <Switch
                       checked={enableNotifications}
                       onCheckedChange={setEnableNotifications}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Auto-save Configuration</Label>
-                    <Switch
-                      checked={autoSave}
-                      onCheckedChange={setAutoSave}
-                    />
+                    <Label className="text-sm font-medium">
+                      Auto-save Configuration
+                    </Label>
+                    <Switch checked={autoSave} onCheckedChange={setAutoSave} />
                   </div>
                 </div>
               </div>
@@ -840,7 +1195,11 @@ export function AdvancedFilters({
 
             {/* Reset and Save Actions */}
             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-              <Button variant="outline" onClick={resetFilters} className="text-sm">
+              <Button
+                variant="outline"
+                onClick={resetFilters}
+                className="text-sm"
+              >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset All Settings
               </Button>

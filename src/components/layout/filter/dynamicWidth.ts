@@ -4,16 +4,17 @@
  */
 
 export const getDynamicWidth = (
-  content: string, 
-  minWidth: number = 120, 
+  content: string,
+  minWidth: number = 120,
   maxWidth: number = 240
 ): string => {
   // For custom period, we need extra space for date ranges
-  const isCustomPeriodContent = content.includes(' - ') && content !== 'Custom Period';
-  const baseWidth = isCustomPeriodContent ? 
-    Math.max(minWidth + 40, Math.min(maxWidth + 60, content.length * 7 + 60)) : // Wider for date ranges
-    Math.max(minWidth, Math.min(maxWidth, content.length * 8 + 50)); // Normal width
-  
+  const isCustomPeriodContent =
+    content.includes(' - ') && content !== 'Custom Period';
+  const baseWidth = isCustomPeriodContent
+    ? Math.max(minWidth + 40, Math.min(maxWidth + 60, content.length * 7 + 60)) // Wider for date ranges
+    : Math.max(minWidth, Math.min(maxWidth, content.length * 8 + 50)); // Normal width
+
   return `${baseWidth}px`;
 };
 
@@ -34,5 +35,5 @@ export const getFilterWidths = (
 
 // Convert pixel width to MUI sx prop
 export const getWidthSx = (width: string) => ({
-  width: { xs: '100%', lg: width }
+  width: { xs: '100%', lg: width },
 });

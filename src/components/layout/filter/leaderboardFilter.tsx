@@ -16,17 +16,13 @@ interface LeaderboardFilterProps {
   onClose: () => void;
 }
 
-export default function LeaderboardFilter({ isOpen, onClose }: LeaderboardFilterProps) {
+export default function LeaderboardFilter({
+  isOpen,
+  onClose,
+}: LeaderboardFilterProps) {
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
-      <DialogTitle>
-        Leaderboard
-      </DialogTitle>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>Leaderboard</DialogTitle>
       <DialogContent>
         <Box sx={{ py: 2 }}>
           <Typography variant="body1">

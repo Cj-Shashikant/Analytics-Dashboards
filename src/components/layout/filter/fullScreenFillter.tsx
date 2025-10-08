@@ -16,18 +16,13 @@ interface FullScreenFilterProps {
   onClose: () => void;
 }
 
-export default function FullScreenFilter({ isOpen, onClose }: FullScreenFilterProps) {
+export default function FullScreenFilter({
+  isOpen,
+  onClose,
+}: FullScreenFilterProps) {
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      fullScreen
-    >
-      <DialogTitle>
-        Full Screen View
-      </DialogTitle>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth fullScreen>
+      <DialogTitle>Full Screen View</DialogTitle>
       <DialogContent>
         <Box sx={{ py: 2 }}>
           <Typography variant="body1">

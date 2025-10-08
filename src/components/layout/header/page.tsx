@@ -28,7 +28,7 @@ export function TopNavigation() {
               type="text"
               placeholder="Search Here"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 w-full bg-gray-50 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -62,10 +62,14 @@ export function TopNavigation() {
           <div className="flex items-center space-x-2">
             <Avatar className="w-8 h-8">
               <AvatarImage src="" alt="RK" />
-              <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">ST</AvatarFallback>
+              <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">
+                ST
+              </AvatarFallback>
             </Avatar>
             <div className="hidden sm:block text-sm">
-              <div className="font-medium text-gray-900">Shashikant Tripathi</div>
+              <div className="font-medium text-gray-900">
+                Shashikant Tripathi
+              </div>
               <div className="text-gray-500 text-xs">Chairman</div>
             </div>
 

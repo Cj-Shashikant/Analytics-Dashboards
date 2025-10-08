@@ -120,7 +120,7 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
-export interface RevenueApiResponse extends ApiResponse<RevenueState> {}
+export type RevenueApiResponse = ApiResponse<RevenueState>;
 
 // Chart Configuration Interfaces
 export interface ChartConfig {
@@ -158,25 +158,3 @@ export interface DataProcessor {
   processCrossSellData: (rawData: any[]) => CrossSellDataItem[];
   calculateMetrics: (data: RevenueDataItem[]) => BaseMetricsData;
 }
-
-// Export all interfaces for easy importing
-export type {
-  RevenueDataItem,
-  ExpenseDataItem,
-  CrossSellDataItem,
-  TableDataItem,
-  BaseMetricsData,
-  RevenueState,
-  ProductsListProps,
-  ChartDataPoint,
-  TooltipProps,
-  ColorPalette,
-  FilterOptions,
-  SelectionState,
-  ApiResponse,
-  RevenueApiResponse,
-  ChartConfig,
-  PieChartConfig,
-  BarChartConfig,
-  DataProcessor,
-};

@@ -16,17 +16,13 @@ interface PlaylistFilterProps {
   onClose: () => void;
 }
 
-export default function PlaylistFilter({ isOpen, onClose }: PlaylistFilterProps) {
+export default function PlaylistFilter({
+  isOpen,
+  onClose,
+}: PlaylistFilterProps) {
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
-      <DialogTitle>
-        Save to Playlist
-      </DialogTitle>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>Save to Playlist</DialogTitle>
       <DialogContent>
         <Box sx={{ py: 2 }}>
           <Typography variant="body1">

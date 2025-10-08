@@ -93,7 +93,7 @@ export function ChartsSection({
   }, [expenseTopFilter, expenseChartType]);
 
   // Client types filter for Revenue by Products
-  const [selectedClientTypes, setSelectedClientTypes] = useState<string[]>([
+  const [selectedClientTypes] = useState<string[]>([
     'Corporate',
     'Retail',
     'Affinity',
@@ -170,7 +170,10 @@ export function ChartsSection({
         if (!item.clientTypes) return { ...item };
 
         const filteredValue = selectedClientTypes.reduce((sum, clientType) => {
-          return sum + (item.clientTypes[clientType] || 0);
+          const clientTypeValue =
+            item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
+            0;
+          return sum + clientTypeValue;
         }, 0);
 
         return {
@@ -242,8 +245,12 @@ export function ChartsSection({
     return [focusedItem];
   };
 
-  const displayRevenueData = autoZoomActive ? getFocusedRevenueData() : revenueData;
-  const displayExpenseData = autoZoomActive ? getFocusedExpenseData() : expenseData;
+  const displayRevenueData = autoZoomActive
+    ? getFocusedRevenueData()
+    : revenueData;
+  const displayExpenseData = autoZoomActive
+    ? getFocusedExpenseData()
+    : expenseData;
 
   // Handle item click for details panel
   const handleItemClick = (item: any) => {
@@ -253,18 +260,24 @@ export function ChartsSection({
 
   // Render revenue chart (left container)
   const renderRevenueChart = () => {
-    const chartData = displayRevenueData;
+    const chartData = displayRevenueData
+      .filter(item => item != null)
+      .map(item => ({
+        id: item.id || '',
+        name: item.name || '',
+        value: item.value || 0,
+        percentage: item.percentage || 0,
+        color: item.color || '#3B82F6',
+      }));
 
     switch (revenueChartType) {
       case 'donut':
         return (
           <DonutChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
-            innerRadius={chartDimensions.innerRadius}
-            outerRadius={chartDimensions.outerRadius}
+            size={{ width: 621, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -273,9 +286,8 @@ export function ChartsSection({
         return (
           <BarChartComponent
             data={chartData}
-            onItemClick={handleItemClick}
+            onBarClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
             dataKey="value"
             nameKey="name"
             color="#3B82F6"
@@ -286,9 +298,8 @@ export function ChartsSection({
         return (
           <LineChartComponent
             data={chartData}
-            onItemClick={handleItemClick}
+            onPointClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
             dataKey="value"
             nameKey="name"
             color="#3B82F6"
@@ -299,7 +310,7 @@ export function ChartsSection({
         return (
           <SimpleStackedBarChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onBarClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
             height={chartDimensions.height}
           />
@@ -309,11 +320,9 @@ export function ChartsSection({
         return (
           <DonutChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
-            innerRadius={chartDimensions.innerRadius}
-            outerRadius={chartDimensions.outerRadius}
+            size={{ width: 400, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -322,18 +331,24 @@ export function ChartsSection({
 
   // Render expense chart (right container)
   const renderExpenseChart = () => {
-    const chartData = displayExpenseData;
+    const chartData = displayExpenseData
+      .filter(item => item != null)
+      .map(item => ({
+        id: item.id || '',
+        name: item.name || '',
+        value: item.value || 0,
+        percentage: item.percentage || 0,
+        color: item.color || '#3B82F6',
+      }));
 
     switch (expenseChartType) {
       case 'donut':
         return (
           <DonutChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
-            innerRadius={chartDimensions.innerRadius}
-            outerRadius={chartDimensions.outerRadius}
+            size={{ width: 621, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -342,12 +357,11 @@ export function ChartsSection({
         return (
           <BarChartComponent
             data={chartData}
-            onItemClick={handleItemClick}
+            onBarClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
             dataKey="value"
             nameKey="name"
-            color="#EF4444"
+            color="#3B82F6"
           />
         );
 
@@ -355,12 +369,11 @@ export function ChartsSection({
         return (
           <LineChartComponent
             data={chartData}
-            onItemClick={handleItemClick}
+            onPointClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
             dataKey="value"
             nameKey="name"
-            color="#EF4444"
+            color="#3B82F6"
           />
         );
 
@@ -368,7 +381,7 @@ export function ChartsSection({
         return (
           <SimpleStackedBarChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onBarClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
             height={chartDimensions.height}
           />
@@ -378,11 +391,9 @@ export function ChartsSection({
         return (
           <DonutChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
-            innerRadius={chartDimensions.innerRadius}
-            outerRadius={chartDimensions.outerRadius}
+            size={{ width: 621, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -393,15 +404,7 @@ export function ChartsSection({
   return (
     <div className={commonStyles.container}>
       {/* Revenue vs Expenses Cards */}
-      {chartType && (
-        <RevenueBreakdownCards
-          totalRevenue={metricsData.totalRevenue}
-          expenses={metricsData.expenses}
-          grossProfit={metricsData.grossProfit}
-          valueUnit={valueUnit}
-          chartType={chartType}
-        />
-      )}
+      {chartType && <RevenueBreakdownCards />}
 
       {/* Main Layout - Left and Right Sections */}
       <div className={commonStyles.splitLayout}>
@@ -426,7 +429,10 @@ export function ChartsSection({
               <div className="flex items-center gap-4">
                 {/* Top filter for Revenue */}
                 <div className="flex items-center gap-2">
-                  <Select value={revenueTopFilter} onValueChange={setRevenueTopFilter}>
+                  <Select
+                    value={revenueTopFilter}
+                    onValueChange={setRevenueTopFilter}
+                  >
                     <SelectTrigger className={commonStyles.selectTrigger}>
                       <SelectValue />
                     </SelectTrigger>
@@ -443,7 +449,9 @@ export function ChartsSection({
                 <ThreeDotsMenu
                   currentChartType={revenueChartType}
                   onChartTypeChange={setRevenueChartType}
-                  onDownload={format => console.log('Download Revenue:', format)}
+                  onDownload={format =>
+                    console.log('Download Revenue:', format)
+                  }
                   topFilter={revenueTopFilter}
                 />
               </div>
@@ -452,7 +460,9 @@ export function ChartsSection({
             {/* Revenue Chart */}
             <div style={{ height: '21.9rem' }}>
               <div className={commonStyles.chartContainer}>
-                <div className={commonStyles.chartWrapper}>{renderRevenueChart()}</div>
+                <div className={commonStyles.chartWrapper}>
+                  {renderRevenueChart()}
+                </div>
               </div>
             </div>
           </Card>
@@ -479,7 +489,10 @@ export function ChartsSection({
               <div className="flex items-center gap-4">
                 {/* Top filter for Expenses */}
                 <div className="flex items-center gap-2">
-                  <Select value={expenseTopFilter} onValueChange={setExpenseTopFilter}>
+                  <Select
+                    value={expenseTopFilter}
+                    onValueChange={setExpenseTopFilter}
+                  >
                     <SelectTrigger className={commonStyles.selectTrigger}>
                       <SelectValue />
                     </SelectTrigger>
@@ -496,7 +509,9 @@ export function ChartsSection({
                 <ThreeDotsMenu
                   currentChartType={expenseChartType}
                   onChartTypeChange={setExpenseChartType}
-                  onDownload={format => console.log('Download Expenses:', format)}
+                  onDownload={format =>
+                    console.log('Download Expenses:', format)
+                  }
                   topFilter={expenseTopFilter}
                 />
               </div>
@@ -505,7 +520,9 @@ export function ChartsSection({
             {/* Expense Chart */}
             <div style={{ height: '21.9rem' }}>
               <div className={commonStyles.chartContainer}>
-                <div className={commonStyles.chartWrapper}>{renderExpenseChart()}</div>
+                <div className={commonStyles.chartWrapper}>
+                  {renderExpenseChart()}
+                </div>
               </div>
             </div>
           </Card>
@@ -535,15 +552,12 @@ export function ChartsSection({
         </div>
       </div>
 
-      
-
       {/* Item Details Panel */}
       <ProductDetailsPanel
         isOpen={isItemDetailsOpen}
         onClose={handleClosePanel}
-        item={selectedItem}
-        valueUnit={valueUnit}
-        reportType={selectedReportType}
+        product={selectedItem}
+        valueUnit={propValueUnit}
       />
     </div>
   );

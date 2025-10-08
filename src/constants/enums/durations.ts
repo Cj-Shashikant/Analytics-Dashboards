@@ -7,10 +7,9 @@ export const DURATIONS = [
   'Q3 2023-24',
   'Q2 2023-24',
   'Q1 2023-24',
-  'Custom Period'
-  
+  'Custom Period',
 ] as const;
 
-export type DurationType = typeof DURATIONS[number];
+export type DurationType = (typeof DURATIONS)[number];
 
 export const DEFAULT_DURATION: DurationType = 'FY 2023-24';

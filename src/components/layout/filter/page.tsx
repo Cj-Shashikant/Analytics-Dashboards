@@ -30,22 +30,22 @@ import {
 } from '../../ui/select';
 import { useAppDispatch, useAppSelector } from '../../../hooks/hooks';
 import {
-  setSelectedEntity,
   setSelectedDepartment,
   setSelectedReportType,
-  setSelectedLocation,
   setSelectedDuration,
   cycleValueUnit,
-  setIsAdvancedFiltersOpen,
-  setIsRevenueFullScreen,
-  setIsLeaderboardOpen,
-  setIsTodaysReportOpen,
 } from '../../../redux/slices/filterSlice';
-import { DEPARTMENTS } from '../../../constants/enums/departments';
-import { DURATIONS } from '../../../constants/enums/durations';
-import { getReportTypesForDepartment } from '../../../constants/enums/reportTypes';
+import {
+  DEPARTMENTS,
+  DepartmentType,
+} from '../../../constants/enums/departments';
+import { DURATIONS, DurationType } from '../../../constants/enums/durations';
+import {
+  getReportTypesForDepartment,
+  ReportType,
+} from '../../../constants/enums/reportTypes';
 import { filterStyles } from './style';
-import { getFilterWidths, getWidthSx } from './dynamicWidth';
+import { getFilterWidths } from './dynamicWidth';
 
 // Import filter components
 import MoreFilter from './moreFilter';
@@ -58,10 +58,8 @@ import PresentationFilter from './presentationFilter';
 export default function FilterPage() {
   const dispatch = useAppDispatch();
   const {
-    selectedEntity,
     selectedDepartment,
     selectedReportType,
-    selectedLocation,
     selectedDuration,
     valueUnit,
   } = useAppSelector(state => state.filter);
@@ -72,39 +70,34 @@ export default function FilterPage() {
   const [isFullScreenFilterOpen, setIsFullScreenFilterOpen] = useState(false);
   const [isLeaderboardFilterOpen, setIsLeaderboardFilterOpen] = useState(false);
   const [isPlaylistFilterOpen, setIsPlaylistFilterOpen] = useState(false);
-  const [isPresentationFilterOpen, setIsPresentationFilterOpen] = useState(false);
+  const [isPresentationFilterOpen, setIsPresentationFilterOpen] =
+    useState(false);
 
   // Calculate dynamic widths based on content (like analytics App.tsx)
   const filterWidths = getFilterWidths(
-    selectedEntity,
+    '', // selectedEntity - not used anymore
     selectedDepartment,
     selectedReportType,
     selectedDuration,
-    selectedLocation
+    '' // selectedLocation - not used anymore
   );
 
-  const handleEntityChange = (event: any) => {
-    dispatch(setSelectedEntity(event.target.value));
-  };
-
   const handleDepartmentChange = (value: string) => {
-    dispatch(setSelectedDepartment(value));
+    dispatch(setSelectedDepartment(value as DepartmentType));
   };
 
   const handleReportTypeChange = (value: string) => {
-    dispatch(setSelectedReportType(value));
-  };
-
-  const handleLocationChange = (value: string) => {
-    dispatch(setSelectedLocation(value));
+    dispatch(setSelectedReportType(value as ReportType));
   };
 
   const handleDurationChange = (value: string) => {
-    dispatch(setSelectedDuration(value));
+    dispatch(setSelectedDuration(value as DurationType));
   };
 
   const handleValueUnitCycle = () => {
+    console.log('Value unit button clicked - current valueUnit:', valueUnit);
     dispatch(cycleValueUnit());
+    console.log('cycleValueUnit dispatched');
   };
 
   const handleMoreFilters = () => {
@@ -173,7 +166,9 @@ export default function FilterPage() {
               <Grid item xs={12} sm={6} lg="auto">
                 <Box sx={filterStyles.filterItem}>
                   <Box sx={filterStyles.labelContainer}>
-                    <CalendarDays style={filterStyles.filterIcon} />
+                    <CalendarDays
+                      style={{ width: 16, height: 16, color: '#2563eb' }}
+                    />
                     <Typography sx={filterStyles.labelText}>
                       Duration
                     </Typography>
@@ -185,7 +180,10 @@ export default function FilterPage() {
                     >
                       <SelectTrigger
                         style={{
-                          ...getWidthSx(filterWidths.durationWidth),
+                          width:
+                            typeof window !== 'undefined' && window.innerWidth >= 1200
+                              ? filterWidths.durationWidth
+                              : '100%',
                           minWidth: 110,
                         }}
                       >
@@ -207,7 +205,9 @@ export default function FilterPage() {
               <Grid item xs={12} sm={6} lg="auto">
                 <Box sx={filterStyles.filterItem}>
                   <Box sx={filterStyles.labelContainer}>
-                    <Building2 style={filterStyles.filterIcon} />
+                    <Building2
+                      style={{ width: 16, height: 16, color: '#2563eb' }}
+                    />
                     <Typography sx={filterStyles.labelText}>
                       Department
                     </Typography>
@@ -219,7 +219,10 @@ export default function FilterPage() {
                     >
                       <SelectTrigger
                         style={{
-                          ...getWidthSx(filterWidths.departmentWidth),
+                          width:
+                            typeof window !== 'undefined' && window.innerWidth >= 1200
+                              ? filterWidths.departmentWidth
+                              : '100%',
                           minWidth: 100,
                         }}
                       >
@@ -241,7 +244,9 @@ export default function FilterPage() {
               <Grid item xs={12} sm={6} lg="auto">
                 <Box sx={filterStyles.filterItem}>
                   <Box sx={filterStyles.labelContainer}>
-                    <BarChart3 style={filterStyles.filterIcon} />
+                    <BarChart3
+                      style={{ width: 16, height: 16, color: '#2563eb' }}
+                    />
                     <Typography sx={filterStyles.labelText}>
                       Report Type
                     </Typography>
@@ -253,8 +258,11 @@ export default function FilterPage() {
                     >
                       <SelectTrigger
                         style={{
-                          ...getWidthSx(filterWidths.reportTypeWidth),
-                          minWidth: 180,
+                          width:
+                            typeof window !== 'undefined' && window.innerWidth >= 1200
+                              ? filterWidths.reportTypeWidth
+                              : '100%',
+                          minWidth: 100,
                         }}
                       >
                         <SelectValue placeholder="Report type" />

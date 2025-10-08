@@ -1,16 +1,15 @@
 'use client';
 
-import Header from '@/components/layout/header/page';
+import { TopNavigation } from '@/components/layout/header/page';
 import { Box } from '@mui/material';
 
 export default function DashboardPage() {
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
       {/* Header Component */}
-      <Header />
-      
+      <TopNavigation />
+
       {/* Main content area */}
-      
     </Box>
   );
 }

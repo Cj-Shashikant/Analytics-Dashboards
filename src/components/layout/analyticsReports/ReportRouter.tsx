@@ -49,9 +49,5 @@ export default function ReportRouter() {
     }
   };
 
-  return (
-    <div className="w-full">
-      {getReportComponent()}
-    </div>
-  );
+  return <div className="w-full">{getReportComponent()}</div>;
 }

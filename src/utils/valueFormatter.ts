@@ -10,7 +10,10 @@ export type ValueUnitType = 'K' | 'L' | 'Cr';
  * @param valueUnit - The unit to format to ('K' for thousands, 'L' for lakhs, 'Cr' for crores)
  * @returns Formatted string with currency symbol and appropriate decimal places
  */
-export const getFormattedValue = (value: number, valueUnit: ValueUnitType): string => {
+export const getFormattedValue = (
+  value: number,
+  valueUnit: ValueUnitType
+): string => {
   if (valueUnit === 'Cr') {
     return `₹${(value / 10000000).toFixed(2)}`;
   } else if (valueUnit === 'L') {
@@ -63,7 +66,10 @@ export const getUnitSymbol = (valueUnit: ValueUnitType): string => {
  * @param valueUnit - The unit to convert to
  * @returns Converted numeric value
  */
-export const convertValue = (value: number, valueUnit: ValueUnitType): number => {
+export const convertValue = (
+  value: number,
+  valueUnit: ValueUnitType
+): number => {
   if (valueUnit === 'Cr') {
     return value / 10000000;
   } else if (valueUnit === 'L') {
@@ -80,7 +86,10 @@ export const convertValue = (value: number, valueUnit: ValueUnitType): number =>
  * @param valueUnit - The unit to format to
  * @returns Formatted string suitable for charts
  */
-export const formatChartValue = (value: number, valueUnit: ValueUnitType): string => {
+export const formatChartValue = (
+  value: number,
+  valueUnit: ValueUnitType
+): string => {
   const formattedValue = getFormattedValue(value, valueUnit);
   const unitLabel = getUnitLabel(valueUnit);
   return `${formattedValue} ${unitLabel}`;

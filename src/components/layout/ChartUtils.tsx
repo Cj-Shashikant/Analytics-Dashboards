@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   BarChart,
   Bar,
@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-} from "recharts";
+} from 'recharts';
 
 // Enhanced scrollable chart configuration
 export interface ScrollableChartConfig {
@@ -41,7 +41,7 @@ export const EnhancedCustomTooltip: React.FC<CustomTooltipProps> = ({
   active,
   payload,
   label,
-  valueFormatter = (value) => `$${value.toLocaleString()}`,
+  valueFormatter = value => `$${value.toLocaleString()}`,
 }) => {
   if (active && payload && payload.length) {
     const data = payload[0];
@@ -51,7 +51,7 @@ export const EnhancedCustomTooltip: React.FC<CustomTooltipProps> = ({
         <p className="text-sm text-gray-600">
           <span
             className="inline-block w-3 h-3 rounded-full mr-2"
-            style={{ backgroundColor: data.color || "#3B82F6" }}
+            style={{ backgroundColor: data.color || '#3B82F6' }}
           ></span>
           {valueFormatter(data.value)}
         </p>
@@ -81,19 +81,19 @@ interface ScrollableBarChartProps {
 export const ScrollableBarChart: React.FC<ScrollableBarChartProps> = ({
   data,
   dataKey,
-  nameKey = "name",
-  color = "#3B82F6",
+  nameKey = 'name',
+  color = '#3B82F6',
   config = {},
   valueFormatter,
   onBarClick,
-  className = "",
+  className = '',
 }) => {
   const chartConfig = { ...defaultScrollConfig, ...config };
   const needsScrolling = data.length > chartConfig.scrollThreshold;
 
   // Calculate dynamic width for scrolling
   const calculateChartWidth = () => {
-    if (!needsScrolling) return "100%";
+    if (!needsScrolling) return '100%';
 
     const totalBars = data.length;
     const calculatedWidth = totalBars * chartConfig.minBarWidth + 100; // Add margin
@@ -113,7 +113,7 @@ export const ScrollableBarChart: React.FC<ScrollableBarChartProps> = ({
     originalIndex: index,
   }));
 
-  const handleBarClick = (data: any, index: number) => {
+  const handleBarClick = (data: any) => {
     if (onBarClick) {
       // Find original data using the originalIndex
       const originalData = data.payload;
@@ -131,11 +131,11 @@ export const ScrollableBarChart: React.FC<ScrollableBarChartProps> = ({
         {/* Fixed Y-axis container */}
         <div
           className="absolute  z-10 bg-white"
-          style={{ width: "70px", height: "308px" }}
+          style={{ width: '70px', height: '308px' }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={[{ temp: Math.max(...chartData.map((d) => d[dataKey])) }]}
+              data={[{ temp: Math.max(...chartData.map(d => d[dataKey])) }]}
               margin={{
                 top: 12,
                 right: 0,
@@ -146,7 +146,7 @@ export const ScrollableBarChart: React.FC<ScrollableBarChartProps> = ({
               <YAxis
                 fontSize={12}
                 tick={{ fontSize: 12 }}
-                domain={[0, Math.max(...chartData.map((d) => d[dataKey]))]}
+                domain={[0, Math.max(...chartData.map(d => d[dataKey]))]}
                 width={50}
               />
             </BarChart>
@@ -156,13 +156,13 @@ export const ScrollableBarChart: React.FC<ScrollableBarChartProps> = ({
         {/* Scrollable chart content */}
         <div
           className="overflow-x-auto overflow-y-hidden h-full"
-          style={{ marginLeft: "70px" }} // Fixed Y-axis ke liye space
+          style={{ marginLeft: '70px' }} // Fixed Y-axis ke liye space
         >
           <div
             className="h-full"
             style={{
               width:
-                typeof chartWidth === "number" ? `${chartWidth}px` : chartWidth,
+                typeof chartWidth === 'number' ? `${chartWidth}px` : chartWidth,
             }}
           >
             <ResponsiveContainer width="100%" height="125%">
@@ -190,16 +190,21 @@ export const ScrollableBarChart: React.FC<ScrollableBarChartProps> = ({
                 <YAxis hide />
                 <Tooltip
                   content={
-                    <EnhancedCustomTooltip valueFormatter={valueFormatter} />
+                    <EnhancedCustomTooltip
+                      valueFormatter={
+                        valueFormatter ||
+                        ((value: number) => `$${value.toLocaleString()}`)
+                      }
+                    />
                   }
-                  cursor={{ fill: "rgba(59, 130, 246, 0.1)" }}
+                  cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                 />
                 <Bar
                   dataKey={dataKey}
                   fill={color}
                   radius={[4, 4, 0, 0]}
                   onClick={handleBarClick}
-                  style={{ cursor: onBarClick ? "pointer" : "default" }}
+                  style={{ cursor: onBarClick ? 'pointer' : 'default' }}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -233,15 +238,22 @@ export const ScrollableBarChart: React.FC<ScrollableBarChartProps> = ({
           />
           <YAxis fontSize={12} />
           <Tooltip
-            content={<EnhancedCustomTooltip valueFormatter={valueFormatter} />}
-            cursor={{ fill: "rgba(59, 130, 246, 0.1)" }}
+            content={
+              <EnhancedCustomTooltip
+                valueFormatter={
+                  valueFormatter ||
+                  ((value: number) => `$${value.toLocaleString()}`)
+                }
+              />
+            }
+            cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
           />
           <Bar
             dataKey={dataKey}
             fill={color}
             radius={[4, 4, 0, 0]}
             onClick={handleBarClick}
-            style={{ cursor: onBarClick ? "pointer" : "default" }}
+            style={{ cursor: onBarClick ? 'pointer' : 'default' }}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -264,18 +276,18 @@ interface ScrollableLineChartProps {
 export const ScrollableLineChart: React.FC<ScrollableLineChartProps> = ({
   data,
   dataKey,
-  nameKey = "name",
-  color = "#3B82F6",
+  nameKey = 'name',
+  color = '#3B82F6',
   config = {},
   valueFormatter,
-  onPointClick,
-  className = "",
+  // onPointClick,
+  className = '',
 }) => {
   const chartConfig = { ...defaultScrollConfig, ...config };
   const needsScrolling = data.length > chartConfig.scrollThreshold;
 
   const calculateChartWidth = () => {
-    if (!needsScrolling) return "100%";
+    if (!needsScrolling) return '100%';
 
     const totalPoints = data.length;
     const calculatedWidth = totalPoints * 60 + 100; // 60px per point + margin
@@ -305,7 +317,7 @@ export const ScrollableLineChart: React.FC<ScrollableLineChartProps> = ({
         {/* Fixed Y-axis container */}
         <div
           className="absolute z-10 bg-white"
-          style={{ width: "70px", height: "308px" }}
+          style={{ width: '70px', height: '308px' }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -319,7 +331,7 @@ export const ScrollableLineChart: React.FC<ScrollableLineChartProps> = ({
             >
               <YAxis
                 fontSize={12}
-                domain={[0, Math.max(...chartData.map((d) => d[dataKey]))]}
+                domain={[0, Math.max(...chartData.map(d => d[dataKey]))]}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -328,13 +340,13 @@ export const ScrollableLineChart: React.FC<ScrollableLineChartProps> = ({
         {/* Scrollable chart content */}
         <div
           className="overflow-x-auto overflow-y-hidden h-full"
-          style={{ marginLeft: "70px" }} // Fixed Y-axis ke liye space
+          style={{ marginLeft: '70px' }} // Fixed Y-axis ke liye space
         >
           <div
             className="h-full"
             style={{
               width:
-                typeof chartWidth === "number" ? `${chartWidth}px` : chartWidth
+                typeof chartWidth === 'number' ? `${chartWidth}px` : chartWidth,
             }}
           >
             <ResponsiveContainer width="100%" height="105%">
@@ -361,7 +373,12 @@ export const ScrollableLineChart: React.FC<ScrollableLineChartProps> = ({
                 <YAxis hide />
                 <Tooltip
                   content={
-                    <EnhancedCustomTooltip valueFormatter={valueFormatter} />
+                    <EnhancedCustomTooltip
+                      valueFormatter={
+                        valueFormatter ||
+                        ((value: number) => `$${value.toLocaleString()}`)
+                      }
+                    />
                   }
                 />
                 <Line
@@ -403,7 +420,14 @@ export const ScrollableLineChart: React.FC<ScrollableLineChartProps> = ({
           />
           <YAxis fontSize={12} />
           <Tooltip
-            content={<EnhancedCustomTooltip valueFormatter={valueFormatter} />}
+            content={
+              <EnhancedCustomTooltip
+                valueFormatter={
+                  valueFormatter ||
+                  ((value: number) => `$${value.toLocaleString()}`)
+                }
+              />
+            }
           />
           <Line
             type="monotone"
@@ -446,30 +470,36 @@ export const renderEnhancedChart = (
 ) => {
   const useScrollable = shouldUseScrollableChart(topFilter, data.length);
 
-  if (chartType === "bar" && useScrollable) {
+  if (chartType === 'bar' && useScrollable) {
     return (
       <ScrollableBarChart
         data={data}
         dataKey={config.dataKey}
-        nameKey={config.nameKey}
-        color={config.color}
-        config={config.scrollConfig}
-        valueFormatter={config.valueFormatter}
-        onBarClick={config.onItemClick}
+        nameKey={config.nameKey || 'name'}
+        color={config.color || '#3B82F6'}
+        config={config.scrollConfig || {}}
+        valueFormatter={
+          config.valueFormatter ||
+          ((value: number) => `$${value.toLocaleString()}`)
+        }
+        onBarClick={config.onItemClick || (() => {})}
       />
     );
   }
 
-  if (chartType === "line" && useScrollable) {
+  if (chartType === 'line' && useScrollable) {
     return (
       <ScrollableLineChart
         data={data}
         dataKey={config.dataKey}
-        nameKey={config.nameKey}
-        color={config.color}
-        config={config.scrollConfig}
-        valueFormatter={config.valueFormatter}
-        onPointClick={config.onItemClick}
+        nameKey={config.nameKey || 'name'}
+        color={config.color || '#3B82F6'}
+        config={config.scrollConfig || {}}
+        valueFormatter={
+          config.valueFormatter ||
+          ((value: number) => `$${value.toLocaleString()}`)
+        }
+        onPointClick={config.onItemClick || (() => {})}
       />
     );
   }

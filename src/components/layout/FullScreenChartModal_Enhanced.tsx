@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { X, Download, Maximize2, Filter, ChevronDown } from 'lucide-react';
+import { X, Maximize2, Filter, ChevronDown } from 'lucide-react';
 import { ThreeDotsMenu } from './ThreeDotsMenu';
 import { ChartType } from './ChartTypeSwitcher';
 import { AdvancedFilters } from './AdvancedFilters';
@@ -42,7 +54,6 @@ export function FullScreenChartModalEnhanced({
   chartType,
   onChartTypeChange,
   onDownload,
-  badges,
   centerIcon,
   additionalInfo,
   isExpenses = false,
@@ -50,10 +61,13 @@ export function FullScreenChartModalEnhanced({
   onExpenseFilterChange,
   filterOptions = ['Top 5', 'Top 10', 'Top 15', 'Top 20', 'All'],
   showAdvancedFilters = false,
-  onAdvancedFiltersChange
+  onAdvancedFiltersChange,
 }: FullScreenChartModalEnhancedProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({ insurers: 0, regions: 0 });
+  const [activeFilters, setActiveFilters] = useState({
+    insurers: 0,
+    regions: 0,
+  });
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[1440px] h-[1040px] max-w-none max-h-none p-0 bg-white overflow-hidden">
@@ -78,7 +92,7 @@ export function FullScreenChartModalEnhanced({
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 {/* Comprehensive Filter - Show when enabled */}
                 {showAdvancedFilters && (
@@ -87,12 +101,16 @@ export function FullScreenChartModalEnhanced({
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`h-8 gap-2 text-xs ${(activeFilters.insurers > 0 || activeFilters.regions > 0) ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}`}
+                        className={`h-8 gap-2 text-xs ${activeFilters.insurers > 0 || activeFilters.regions > 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}`}
                       >
                         <Filter className="w-4 h-4" />
                         Advanced Filters
-                        {(activeFilters.insurers > 0 || activeFilters.regions > 0) && (
-                          <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs bg-blue-100 text-blue-700">
+                        {(activeFilters.insurers > 0 ||
+                          activeFilters.regions > 0) && (
+                          <Badge
+                            variant="secondary"
+                            className="ml-1 px-1.5 py-0 text-xs bg-blue-100 text-blue-700"
+                          >
                             {activeFilters.insurers + activeFilters.regions}
                           </Badge>
                         )}
@@ -101,10 +119,12 @@ export function FullScreenChartModalEnhanced({
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0" align="end">
                       <AdvancedFilters
-                        onFilterChange={(filters) => {
+                        isOpen={isFilterOpen}
+                        onOpenChange={setIsFilterOpen}
+                        onFiltersChange={filters => {
                           setActiveFilters({
                             insurers: filters.insurers?.length || 0,
-                            regions: filters.regions?.length || 0
+                            regions: filters.regions?.length || 0,
                           });
                           onAdvancedFiltersChange?.(filters);
                         }}
@@ -112,27 +132,32 @@ export function FullScreenChartModalEnhanced({
                     </PopoverContent>
                   </Popover>
                 )}
-                
+
                 {/* Expense Filter - Only show for expenses when comprehensive filter is not shown */}
-                {isExpenses && onExpenseFilterChange && !showAdvancedFilters && (
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-gray-500" />
-                    <Select value={expenseFilter} onValueChange={onExpenseFilterChange}>
-                      <SelectTrigger className="w-32 h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filterOptions.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                <ThreeDotsMenu 
+                {isExpenses &&
+                  onExpenseFilterChange &&
+                  !showAdvancedFilters && (
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-gray-500" />
+                      <Select
+                        value={expenseFilter}
+                        onValueChange={onExpenseFilterChange}
+                      >
+                        <SelectTrigger className="w-32 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {filterOptions.map(option => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                <ThreeDotsMenu
                   currentChartType={chartType}
                   onChartTypeChange={onChartTypeChange}
                   onDownload={onDownload}
@@ -159,27 +184,27 @@ export function FullScreenChartModalEnhanced({
               {/* Center icon for donut charts */}
               {centerIcon}
             </div>
-            
+
             {/* Information Side - Fixed width, scrollable content only */}
             <div className="w-2/5 flex flex-col border-l border-gray-200 bg-white">
               {/* Legend Header - Fixed */}
               <div className="flex-shrink-0 p-6 pb-4 border-b border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900">
-                  {title.includes('Revenue') ? 'Revenue Breakdown' : 
-                   title.includes('Expense') ? 'Expenses Breakdown' : 
-                   `${title} Breakdown`}
+                  {title.includes('Revenue')
+                    ? 'Revenue Breakdown'
+                    : title.includes('Expense')
+                      ? 'Expenses Breakdown'
+                      : `${title} Breakdown`}
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Detailed analysis and category breakdown
                 </p>
               </div>
-              
+
               {/* Legend Content - Scrollable */}
               <div className="flex-1 overflow-y-auto p-6">
                 {legendComponent && (
-                  <div className="h-full">
-                    {legendComponent}
-                  </div>
+                  <div className="h-full">{legendComponent}</div>
                 )}
               </div>
             </div>

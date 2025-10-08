@@ -1,10 +1,10 @@
-import React from "react";
+import React from 'react';
 import {
   ScrollableBarChart,
   ScrollableChartConfig,
   defaultScrollConfig,
   shouldUseScrollableChart,
-} from "../../../ChartUtils";
+} from '../../../ChartUtils';
 import {
   BarChart,
   Bar,
@@ -13,7 +13,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 
 // TypeScript interfaces
 export interface BarChartData {
@@ -38,11 +38,11 @@ export interface BarChartProps {
 }
 
 // Enhanced Custom Tooltip
-const EnhancedCustomTooltip = ({ 
-  active, 
-  payload, 
-  label, 
-  valueFormatter = (value: number) => `$${value.toLocaleString()}` 
+const EnhancedCustomTooltip = ({
+  active,
+  payload,
+  label,
+  valueFormatter = (value: number) => `$${value.toLocaleString()}`,
 }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
@@ -52,7 +52,7 @@ const EnhancedCustomTooltip = ({
         <p className="text-sm text-gray-600">
           <span
             className="inline-block w-3 h-3 rounded-full mr-2"
-            style={{ backgroundColor: data.color || "#3B82F6" }}
+            style={{ backgroundColor: data.color || '#3B82F6' }}
           ></span>
           {valueFormatter(data.value)}
         </p>
@@ -69,20 +69,21 @@ const EnhancedCustomTooltip = ({
 
 export const BarChartComponent: React.FC<BarChartProps> = ({
   data,
-  dataKey = "value",
-  nameKey = "name",
-  color = "#3B82F6",
+  dataKey = 'value',
+  nameKey = 'name',
+  color = '#3B82F6',
   config = {},
   valueFormatter,
   onBarClick,
-  className = "",
+  className = '',
   scrollable = false,
-  topFilter = "Top 10",
+  topFilter = 'Top 10',
 }) => {
   const chartConfig = { ...defaultScrollConfig, ...config };
-  
+
   // Use the enhanced logic to determine if scrolling is needed
-  const needsScrolling = scrollable || shouldUseScrollableChart(topFilter, data.length);
+  const needsScrolling =
+    scrollable || shouldUseScrollableChart(topFilter, data.length);
 
   // If scrolling is needed, use the ScrollableBarChart component
   if (needsScrolling) {
@@ -93,8 +94,10 @@ export const BarChartComponent: React.FC<BarChartProps> = ({
         nameKey={nameKey}
         color={color}
         config={config}
-        valueFormatter={valueFormatter}
-        onBarClick={onBarClick}
+        valueFormatter={
+          valueFormatter || ((value: number) => `$${value.toLocaleString()}`)
+        }
+        onBarClick={onBarClick || (() => {})}
         className={className}
       />
     );
@@ -111,7 +114,7 @@ export const BarChartComponent: React.FC<BarChartProps> = ({
     originalIndex: index,
   }));
 
-  const handleBarClick = (data: any, index: number) => {
+  const handleBarClick = (data: any) => {
     if (onBarClick) {
       const originalData = data.payload;
       onBarClick(originalData, data.originalIndex);
@@ -143,14 +146,14 @@ export const BarChartComponent: React.FC<BarChartProps> = ({
           <YAxis fontSize={12} />
           <Tooltip
             content={<EnhancedCustomTooltip valueFormatter={valueFormatter} />}
-            cursor={{ fill: "rgba(59, 130, 246, 0.1)" }}
+            cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
           />
           <Bar
             dataKey={dataKey}
             fill={color}
             radius={[4, 4, 0, 0]}
             onClick={handleBarClick}
-            style={{ cursor: onBarClick ? "pointer" : "default" }}
+            style={{ cursor: onBarClick ? 'pointer' : 'default' }}
           />
         </BarChart>
       </ResponsiveContainer>

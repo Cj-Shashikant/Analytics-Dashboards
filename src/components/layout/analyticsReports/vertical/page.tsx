@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { getFormattedValue, getUnitLabel } from '@/utils/valueFormatter';
+import { getFormattedValue } from '@/utils/valueFormatter';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Barcode, TrendingUp } from 'lucide-react';
+import { Barcode } from 'lucide-react';
 import { RevenueBreakdownCards } from '../../RevenueBreakdownCards';
 import { ThreeDotsMenu } from '../../ThreeDotsMenu';
 import { ChartType } from '../../ChartTypeSwitcher';
@@ -66,22 +66,28 @@ interface ChartsSectionProps {
 }
 
 export function ChartsSection({
-  valueUnit,
+  valueUnit: propValueUnit,
   selectedReportType = 'Revenue by Products',
   chartType,
   baseMetricsData,
-  onPresentationMode,
+  // onPresentationMode: _onPresentationMode,
   autoZoomActive = false,
   currentFocusedElement = 0,
   onTotalElementsChange,
 }: ChartsSectionProps) {
   // Redux hooks
-  const dispatch = useDispatch();
   const revenueState = useSelector((state: RootState) => state.revenue);
   const filterState = useSelector((state: RootState) => state.filter);
 
   // Get current value unit from Redux state with fallback
-  const currentValueUnit = filterState.valueUnit || valueUnit || 'K';
+  const valueUnit = filterState.valueUnit || propValueUnit || 'K';
+
+  console.log(
+    'ChartsSection render - filterState.valueUnit:',
+    filterState.valueUnit,
+    'final valueUnit:',
+    valueUnit
+  );
 
   // Chart type switching capability added back for bar/line chart support
   const [chartTypeState, setChartTypeState] = useState<ChartType>('donut');
@@ -98,7 +104,7 @@ export function ChartsSection({
   }, [topFilter, chartTypeState]);
 
   // Client types filter for Revenue by Products
-  const [selectedClientTypes, setSelectedClientTypes] = useState<string[]>([
+  const [selectedClientTypes] = useState<string[]>([
     'Corporate',
     'Retail',
     'Affinity',
@@ -122,40 +128,8 @@ export function ChartsSection({
     if (selectedReportType === 'Cross-Sell Penetration') {
       return value.toLocaleString('en-IN');
     }
-    return getFormattedValue(value, currentValueUnit);
+    return getFormattedValue(value, valueUnit);
   };
-
-  // // Get formatted total for center display with separate lines for number and unit
-  // const getFormattedTotal = (value: number) => {
-  //   // For Cross-Sell Penetration, show customer counts
-  //   if (selectedReportType === 'Cross-Sell Penetration') {
-  //     const number = (value / 1000).toFixed(0);
-  //     const unit = 'customers';
-  //     return (
-  //       <div className="text-center">
-  //         <div>{number}K</div>
-  //         <div className="text-xs">{unit}</div>
-  //       </div>
-  //     );
-  //   }
-
-  //   const formattedValue = getFormattedValue(value, currentValueUnit);
-  //   const unitLabel = getUnitLabel(currentValueUnit);
-
-  //   // Extract number from formatted value
-  //   const numberMatch = formattedValue.match(/[\d.]+/);
-  //   const number = numberMatch ? numberMatch[0] : '0';
-
-  //   return (
-  //     <div className="text-center">
-  //       <div>{number}</div>
-  //       <div className="text-xs">{unitLabel}</div>
-  //     </div>
-  //   );
-  // };
-
-  // // Get professional colors from Redux
-  // const professionalColors = revenueState.professionalColors;
 
   // Get metrics data from Redux or fallback
   const getMetricsData = () => {
@@ -198,13 +172,15 @@ export function ChartsSection({
   // Filter data based on selected client types (only for Revenue by Products)
   const getFilteredData = () => {
     const data = getReportData();
-
     if (selectedReportType === 'Revenue by Products') {
       return data.map(item => {
-        if (!item.clientTypes) return item;
+        if (!item?.clientTypes) return item;
 
         const filteredValue = selectedClientTypes.reduce((sum, clientType) => {
-          return sum + (item.clientTypes[clientType] || 0);
+          const clientTypeValue =
+            item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
+            0;
+          return sum + clientTypeValue;
         }, 0);
 
         return {
@@ -234,9 +210,6 @@ export function ChartsSection({
 
   const filteredData = getTopFilteredData();
 
-  // Calculate total for filtered data
-  const filteredTotal = filteredData.reduce((sum, item) => sum + item.value, 0);
-
   // Auto-zoom effect
   useEffect(() => {
     if (onTotalElementsChange) {
@@ -256,41 +229,23 @@ export function ChartsSection({
 
   const displayData = autoZoomActive ? getFocusedData() : filteredData;
 
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold text-gray-800">{data.name}</p>
-          <p className="text-blue-600">
-            <span className="font-medium">Value: </span>
-            {getFormattedValueLocal(data.value)}
-          </p>
-          <p className="text-gray-600">
-            <span className="font-medium">Percentage: </span>
-            {data.percentage.toFixed(1)}%
-          </p>
-          {data.description && (
-            <p className="text-gray-500 text-sm mt-1">{data.description}</p>
-          )}
-        </div>
-      );
-    }
-    return null;
-  };
-
   // Handle item click for details panel
   const handleItemClick = (item: any) => {
-    console.log('handleItemClick called with:', item);
     setSelectedItem(item);
     setIsItemDetailsOpen(true);
-    console.log('handleItemClick - state should now be true');
   };
 
   // Render chart based on selected chart type
   const renderChart = () => {
-    const chartData = displayData;
+    const chartData = displayData
+      .filter(item => item != null)
+      .map(item => ({
+        id: item.id || '',
+        name: item.name || '',
+        value: item.value || 0,
+        percentage: item.percentage || 0,
+        color: item.color || '#3B82F6',
+      }));
 
     // Use existing chart components based on chart type
     switch (chartTypeState) {
@@ -298,12 +253,10 @@ export function ChartsSection({
         return (
           <DonutChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
-            innerRadius={chartDimensions.innerRadius}
-            outerRadius={chartDimensions.outerRadius}
-            valueUnit={currentValueUnit}
+            size={{ width: 621, height: chartDimensions.height }}
+            valueUnit={valueUnit}
           />
         );
 
@@ -311,9 +264,8 @@ export function ChartsSection({
         return (
           <BarChartComponent
             data={chartData}
-            onItemClick={handleItemClick}
+            onBarClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
             dataKey="value"
             nameKey="name"
             color="#3B82F6"
@@ -324,9 +276,8 @@ export function ChartsSection({
         return (
           <LineChartComponent
             data={chartData}
-            onItemClick={handleItemClick}
+            onPointClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
             dataKey="value"
             nameKey="name"
             color="#3B82F6"
@@ -337,46 +288,30 @@ export function ChartsSection({
         return (
           <SimpleStackedBarChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onBarClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
             height={chartDimensions.height}
           />
         );
 
       default:
-        // Fallback to donut chart
         return (
           <DonutChart
             data={chartData}
-            onItemClick={handleItemClick}
+            onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            height={chartDimensions.height}
-            innerRadius={chartDimensions.innerRadius}
-            outerRadius={chartDimensions.outerRadius}
+            size={{ width: 400, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
     }
   };
 
-  // Get expense data for Revenue vs Expenses view using Redux data
-  const getExpenseData = () => {
-    return revenueState.expenseData || [];
-  };
-
   // Main component return
   return (
     <div className={commonStyles.container}>
       {/* Revenue vs Expenses Cards */}
-      {chartType && (
-        <RevenueBreakdownCards
-          totalRevenue={metricsData.totalRevenue}
-          expenses={metricsData.expenses}
-          grossProfit={metricsData.grossProfit}
-          valueUnit={valueUnit}
-          chartType={chartType}
-        />
-      )}
+      {chartType && <RevenueBreakdownCards />}
 
       {/* Main Layout - Left and Right Sections */}
       <div className={commonStyles.splitLayout}>
@@ -419,7 +354,6 @@ export function ChartsSection({
                   currentChartType={chartTypeState}
                   onChartTypeChange={setChartTypeState}
                   onDownload={format => console.log('Download:', format)}
-                  onPresentationMode={onPresentationMode}
                   topFilter={topFilter}
                 />
               </div>
@@ -449,9 +383,8 @@ export function ChartsSection({
       <ProductDetailsPanel
         isOpen={isItemDetailsOpen}
         onClose={handleClosePanel}
-        item={selectedItem}
-        valueUnit={valueUnit}
-        reportType={selectedReportType}
+        product={selectedItem}
+        valueUnit={propValueUnit}
       />
 
       {/* Full Screen Modals - Commented out for now */}

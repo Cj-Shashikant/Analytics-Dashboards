@@ -18,15 +18,8 @@ interface MoreFilterProps {
 
 export default function MoreFilter({ isOpen, onClose }: MoreFilterProps) {
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
-      <DialogTitle>
-        More Filters
-      </DialogTitle>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>More Filters</DialogTitle>
       <DialogContent>
         <Box sx={{ py: 2 }}>
           <Typography variant="body1">

@@ -194,11 +194,13 @@ export const DATA_STATUSES = Object.values(DataStatus);
 export const SORT_ORDERS = Object.values(SortOrder);
 export const SORT_BY_OPTIONS = Object.values(SortBy);
 export const FILTER_TYPES = Object.values(FilterType);
-export const VALUE_UNITS = Object.values(ValueUnit);
+export const REVENUE_VALUE_UNITS = Object.values(ValueUnit);
 export const COLOR_THEMES = Object.values(ColorTheme);
 
 // Helper functions for enum validation
-export const isValidRevenueReportType = (value: string): value is RevenueReportType => {
+export const isValidRevenueReportType = (
+  value: string
+): value is RevenueReportType => {
   return Object.values(RevenueReportType).includes(value as RevenueReportType);
 };
 
@@ -206,7 +208,9 @@ export const isValidClientType = (value: string): value is ClientType => {
   return Object.values(ClientType).includes(value as ClientType);
 };
 
-export const isValidInsuranceCompany = (value: string): value is InsuranceCompany => {
+export const isValidInsuranceCompany = (
+  value: string
+): value is InsuranceCompany => {
   return Object.values(InsuranceCompany).includes(value as InsuranceCompany);
 };
 
@@ -214,14 +218,17 @@ export const isValidPolicyType = (value: string): value is PolicyType => {
   return Object.values(PolicyType).includes(value as PolicyType);
 };
 
-export const isValidExpenseCategory = (value: string): value is ExpenseCategory => {
+export const isValidExpenseCategory = (
+  value: string
+): value is ExpenseCategory => {
   return Object.values(ExpenseCategory).includes(value as ExpenseCategory);
 };
 
-// Default values
-export const DEFAULT_REPORT_TYPE = RevenueReportType.REVENUE_BY_INSURERS;
+// Default values for revenue
+export const REVENUE_DEFAULT_REPORT_TYPE =
+  RevenueReportType.REVENUE_BY_INSURERS;
 export const DEFAULT_SORT_BY = SortBy.VALUE;
 export const DEFAULT_SORT_ORDER = SortOrder.DESC;
 export const DEFAULT_CHART_TYPE = ChartType.PIE_CHART;
-export const DEFAULT_VALUE_UNIT = ValueUnit.RUPEES;
+export const REVENUE_DEFAULT_VALUE_UNIT = ValueUnit.RUPEES;
 export const DEFAULT_COLOR_THEME = ColorTheme.PROFESSIONAL;

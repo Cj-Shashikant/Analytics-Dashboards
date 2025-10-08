@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { productsListStyles } from "./style";
-import { Card } from "../../../ui/card";
+import React, { useState, useMemo } from 'react';
+import { productsListStyles } from './style';
+import { Card } from '../../../ui/card';
 import { getFormattedValue as utilGetFormattedValue } from '@/utils/valueFormatter';
 
 interface Product {
@@ -8,12 +8,12 @@ interface Product {
   name: string;
   value: number;
   color: string;
-  percentage: number;
+  description?: string;
 }
 
 interface ProductsListProps {
   data: Product[];
-  valueUnit: string;
+  valueUnit: 'K' | 'L' | 'Cr';
   onItemClick?: (product: Product) => void;
   selectedReportType?: string;
   className?: string;
@@ -26,8 +26,6 @@ export function ProductsList({
   data,
   valueUnit,
   onItemClick,
-  selectedReportType,
-  className = "",
 }: ProductsListProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortState, setSortState] = useState<SortState>('none');
@@ -66,9 +64,7 @@ export function ProductsList({
   if (!data || !Array.isArray(data)) {
     return (
       <Card className={productsListStyles.container}>
-        <div className="p-4 text-center text-gray-500">
-          No data available
-        </div>
+        <div className="p-4 text-center text-gray-500">No data available</div>
       </Card>
     );
   }
@@ -127,19 +123,21 @@ export function ProductsList({
 
   return (
     <Card className={productsListStyles.container}>
-      <div className="overflow-auto relative" style={{ height: '26rem'}}>
+      <div className="overflow-auto relative" style={{ height: '26rem' }}>
         {/* Sticky Table Header */}
         <div
           className={`${productsListStyles.table.headerRow} sticky top-0 z-20 bg-white`}
-          style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr" }}
+          style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}
         >
           {/* Sticky Product Header */}
-          <div className={`${productsListStyles.table.headerCell} sticky flex items-center justify-center`}>
+          <div
+            className={`${productsListStyles.table.headerCell} sticky flex items-center justify-center`}
+          >
             Product
           </div>
-          
+
           {/* Sortable Headers */}
-          <div 
+          <div
             className={`${productsListStyles.table.headerCellCenter} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors flex items-center justify-center`}
             onClick={() => handleSort('policies')}
           >
@@ -160,8 +158,8 @@ export function ProductsList({
               <path d="m19 12-7 7-7-7"></path>
             </svg>
           </div>
-          
-          <div 
+
+          <div
             className={`${productsListStyles.table.headerCellRight} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors justify-center`}
             onClick={() => handleSort('amount')}
           >
@@ -182,8 +180,8 @@ export function ProductsList({
               <path d="m19 12-7 7-7-7"></path>
             </svg>
           </div>
-          
-          <div 
+
+          <div
             className={`${productsListStyles.table.headerCellRight} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors justify-center`}
             onClick={() => handleSort('revenue')}
           >
@@ -208,7 +206,7 @@ export function ProductsList({
 
         {/* Table Body */}
         <div className={productsListStyles.table.body}>
-          {sortedProducts.map((product, index) => {
+          {sortedProducts.map(product => {
             const originalIndex = data.findIndex(p => p.id === product.id);
             const policyCount = getPolicyCount(originalIndex);
 
@@ -217,10 +215,12 @@ export function ProductsList({
                 key={product.id}
                 onClick={() => onItemClick?.(product)}
                 className={productsListStyles.productRow.container}
-                style={{ gridTemplateColumns: "1.5fr 1fr 1fr 1fr" }}
+                style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}
               >
                 {/* Sticky Product Column */}
-                <div className={`${productsListStyles.productRow.productColumn} sticky`}>
+                <div
+                  className={`${productsListStyles.productRow.productColumn} sticky`}
+                >
                   <div
                     className={productsListStyles.productRow.colorIndicator}
                     style={{ backgroundColor: product.color }}
@@ -229,7 +229,11 @@ export function ProductsList({
                     <div className={productsListStyles.productRow.productName}>
                       {product.name}
                     </div>
-                    <div className={productsListStyles.productRow.productDescription}>
+                    <div
+                      className={
+                        productsListStyles.productRow.productDescription
+                      }
+                    >
                       {product.description}
                     </div>
                   </div>

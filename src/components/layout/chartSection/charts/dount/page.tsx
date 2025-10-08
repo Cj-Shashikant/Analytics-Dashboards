@@ -1,12 +1,5 @@
-
-import React, { useState, useRef, useEffect } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import React, { useState, useRef, useEffect } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 // TypeScript interfaces
 export interface DonutChartData {
@@ -31,10 +24,10 @@ export interface DonutChartProps {
 }
 
 // Custom Tooltip Component
-const CustomTooltip = ({ 
-  active, 
-  payload, 
-  valueFormatter = (value) => `$${value.toLocaleString()}` 
+const CustomTooltip = ({
+  active,
+  payload,
+  valueFormatter = (value: number) => `$${value.toLocaleString()}`,
 }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
@@ -58,19 +51,20 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   size = { width: 630, height: 350 },
   isPresentation = false,
   onSegmentClick,
-  valueFormatter = (value) => `$${value.toLocaleString()}`,
-  totalFormatter = (total) => `$${total.toLocaleString()}`,
-  className = "",
+  valueFormatter = (value: number) => `$${value.toLocaleString()}`,
+  className = '',
   autoZoom = true,
-  valueUnit = "Cr",
+  valueUnit = 'Cr',
 }) => {
-  const [focusedElement, setFocusedElement] = useState<DonutChartData | null>(null);
+  const [focusedElement, setFocusedElement] = useState<DonutChartData | null>(
+    null
+  );
   const [autoZoomActive, setAutoZoomActive] = useState(false);
-  
+
   // State for dynamic font sizing
-  const [fontSize, setFontSize] = useState<string>("1rem");
-  const [fontWeight, setFontWeight] = useState<string>("500");
-  
+  const [fontSize, setFontSize] = useState<string>('1rem');
+  const [fontWeight, setFontWeight] = useState<string>('500');
+
   // Refs for measuring text dimensions
   const textRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,6 +74,12 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
   // Format total value based on unit
   const getFormattedTotal = (value: number) => {
+    console.log(
+      'getFormattedTotal called with value:',
+      value,
+      'valueUnit:',
+      valueUnit
+    );
     if (valueUnit === 'Cr') {
       return `${(value / 10000000).toFixed(1)}`;
     } else if (valueUnit === 'L') {
@@ -87,16 +87,21 @@ export const DonutChart: React.FC<DonutChartProps> = ({
     } else if (valueUnit === 'K') {
       return `${(value / 1000).toFixed(1)}`;
     }
-    return `₹${value.toLocaleString('en-IN')}`;
+    return `${value.toLocaleString('en-IN')}`;
   };
 
   // Get unit display name
   const getUnitDisplayName = () => {
+    console.log('getUnitDisplayName called with valueUnit:', valueUnit);
     switch (valueUnit) {
-      case 'Cr': return 'crores';
-      case 'L': return 'lakhs';
-      case 'K': return 'thousands';
-      default: return '';
+      case 'Cr':
+        return 'crores';
+      case 'L':
+        return 'lakhs';
+      case 'K':
+        return 'thousands';
+      default:
+        return '';
     }
   };
 
@@ -106,58 +111,67 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
     const textElement = textRef.current;
     const containerElement = containerRef.current;
-    
+
     // Get container dimensions (the white circle in the center)
     const containerWidth = containerElement.offsetWidth * 0.8; // 80% of container for padding
     const containerHeight = containerElement.offsetHeight * 0.6; // 60% for main text
-    
+
     // Reset to default values first
-    textElement.style.fontSize = "1rem";
-    textElement.style.fontWeight = "500";
-    
+    textElement.style.fontSize = '1rem';
+    textElement.style.fontWeight = '500';
+
     // Get text dimensions with default styling
     const textWidth = textElement.scrollWidth;
     const textHeight = textElement.scrollHeight;
-    
+
     // Check if text overflows
     if (textWidth > containerWidth || textHeight > containerHeight) {
       // Calculate scale factors
       const widthScale = containerWidth / textWidth;
       const heightScale = containerHeight / textHeight;
       const scale = Math.min(widthScale, heightScale);
-      
+
       // Calculate new font size (minimum 0.5rem, maximum 1rem)
       const baseFontSize = 18; // 1rem = 12px
-      const newFontSize = Math.max(8, Math.min(baseFontSize, baseFontSize * scale));
-      
+      const newFontSize = Math.max(
+        8,
+        Math.min(baseFontSize, baseFontSize * scale)
+      );
+
       // Adjust font weight based on size reduction
-      let newFontWeight = "500";
+      let newFontWeight = '500';
       if (scale < 0.7) {
-        newFontWeight = "400"; // Lighter weight for smaller text
+        newFontWeight = '400'; // Lighter weight for smaller text
       } else if (scale < 0.85) {
-        newFontWeight = "450";
+        newFontWeight = '450';
       }
-      
+
       setFontSize(`${newFontSize}px`);
       setFontWeight(newFontWeight);
     } else {
       // Text fits, use default values
-      setFontSize("1rem");
-      setFontWeight("500");
+      setFontSize('1rem');
+      setFontWeight('500');
     }
   };
 
   // Effect to recalculate font size when total value changes
   useEffect(() => {
+    console.log(
+      'DonutChart useEffect triggered - valueUnit:',
+      valueUnit,
+      'total:',
+      total
+    );
     const timer = setTimeout(() => {
       calculateOptimalFontSize();
     }, 100); // Small delay to ensure DOM is updated
-    
+
     return () => clearTimeout(timer);
   }, [total, valueUnit, isPresentation]);
 
   // Configuration based on presentation mode
-  const presentationMultiplier = isPresentation ? 1.4 : 1.0;
+  // const _presentationMultiplier = isPresentation ? 1.4 : 1.0;
   const outerRadiusMultiplier = isPresentation ? 0.38 : 0.32;
   const innerRadiusMultiplier = isPresentation ? 0.2 : 0.18;
   const labelDistance = isPresentation ? 45 : 30;
@@ -172,9 +186,9 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   const backgroundRadius =
     Math.min(size.width, size.height) * innerRadiusMultiplier * 0.85;
 
-  const handleSegmentClick = (data: any, index: number) => {
+  const handleSegmentClick = (data: any) => {
     const clickedData = data.payload;
-    
+
     if (autoZoom) {
       if (focusedElement && focusedElement.id === clickedData.id) {
         // Unfocus if clicking the same element
@@ -192,7 +206,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
     }
   };
 
-  const handleSegmentHover = (data: any, index: number) => {
+  const handleSegmentHover = (data: any) => {
     const hovered = data.payload;
     if (!autoZoomActive) {
       setFocusedElement(hovered);
@@ -252,10 +266,8 @@ export const DonutChart: React.FC<DonutChartProps> = ({
               cx,
               cy,
               midAngle,
-              innerRadius,
               outerRadius,
               percent,
-              index,
               payload,
             }: {
               cx: number;
@@ -265,68 +277,84 @@ export const DonutChart: React.FC<DonutChartProps> = ({
               outerRadius: number;
               percent: number;
               index: number;
-              payload: any;
+              payload: {
+                id: string;
+                value: number;
+                label: string;
+              };
             }) => {
               const RADIAN = Math.PI / 180;
-              
+
               // Adjust label distance based on position to use top space
               let dynamicLabelDistance = labelDistance;
-              
+
               // Top area (270° to 90°, i.e., -90° to 90°): Give more space
               if (midAngle >= 270 || midAngle <= 90) {
                 dynamicLabelDistance = labelDistance + 25;
               }
               // Left and right middle areas: Normal spacing
-              else if ((midAngle > 90 && midAngle < 150) || (midAngle > 210 && midAngle < 270)) {
+              else if (
+                (midAngle > 90 && midAngle < 150) ||
+                (midAngle > 210 && midAngle < 270)
+              ) {
                 dynamicLabelDistance = labelDistance + 10;
               }
               // Bottom area: Tighter spacing
               else {
                 dynamicLabelDistance = labelDistance;
               }
-              
+
               if (data.length > 6) {
                 dynamicLabelDistance += 10;
               }
-              
+
               const radius = outerRadius + dynamicLabelDistance;
               const x = cx + radius * Math.cos(-midAngle * RADIAN);
-              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+              // const _y = cy + radius * Math.sin(-midAngle * RADIAN);
 
               // Calculate line points
               const lineStartRadius = outerRadius + 5;
-              const lineBreakRadius = outerRadius + (dynamicLabelDistance * 0.6);
+              const lineBreakRadius = outerRadius + dynamicLabelDistance * 0.6;
               const lineLabelRadius = outerRadius + dynamicLabelDistance;
-              
-              const lineStartX = cx + lineStartRadius * Math.cos(-midAngle * RADIAN);
-              const lineStartY = cy + lineStartRadius * Math.sin(-midAngle * RADIAN);
-              
-              const lineBreakX = cx + lineBreakRadius * Math.cos(-midAngle * RADIAN);
-              const lineBreakY = cy + lineBreakRadius * Math.sin(-midAngle * RADIAN);
-              
+
+              const lineStartX =
+                cx + lineStartRadius * Math.cos(-midAngle * RADIAN);
+              const lineStartY =
+                cy + lineStartRadius * Math.sin(-midAngle * RADIAN);
+
+              const lineBreakX =
+                cx + lineBreakRadius * Math.cos(-midAngle * RADIAN);
+              const lineBreakY =
+                cy + lineBreakRadius * Math.sin(-midAngle * RADIAN);
+
               const isRightSide = x > cx;
-              const lineLabelX = cx + lineLabelRadius * Math.cos(-midAngle * RADIAN);
-              const horizontalLineX = isRightSide ? lineLabelX + 40 : lineLabelX - 40;
+              const lineLabelX =
+                cx + lineLabelRadius * Math.cos(-midAngle * RADIAN);
+              const horizontalLineX = isRightSide
+                ? lineLabelX + 40
+                : lineLabelX - 40;
 
               const isFocused =
                 focusedElement && payload.id === focusedElement.id;
               const isAutoZooming = autoZoomActive && focusedElement;
 
               // Use lineBreakY directly without extra adjustments
-              let adjustedY = lineBreakY;
+              const adjustedY = lineBreakY;
 
               // Truncate text with ellipsis
               const maxLength = 20; // Adjust based on your needs
               const labelText = `${payload.name} (${(percent * 100).toFixed(1)}%)`;
               let displayText = labelText;
-              
+
               if (labelText.length > maxLength) {
                 if (isRightSide) {
                   // Right side: truncate from end
-                  displayText = labelText.substring(0, maxLength - 3) + "...";
+                  displayText = labelText.substring(0, maxLength - 3) + '...';
                 } else {
                   // Left side: truncate from start
-                  displayText = "..." + labelText.substring(labelText.length - (maxLength - 3));
+                  displayText =
+                    '...' +
+                    labelText.substring(labelText.length - (maxLength - 3));
                 }
               }
 
@@ -335,29 +363,29 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                   {/* Connecting line */}
                   <path
                     d={`M ${lineStartX} ${lineStartY} L ${lineBreakX} ${lineBreakY} L ${horizontalLineX} ${adjustedY}`}
-                    stroke={isFocused ? "#3B82F6" : "#9CA3AF"}
+                    stroke={isFocused ? '#3B82F6' : '#9CA3AF'}
                     strokeWidth={isFocused ? 2 : 1}
                     fill="none"
                     className="transition-all duration-300"
                   />
-                  
+
                   {/* Label text with percentage in same line */}
                   <text
                     x={horizontalLineX}
                     y={adjustedY}
                     fill={
                       isFocused
-                        ? "#3B82F6"
+                        ? '#3B82F6'
                         : isAutoZooming
-                        ? "#9CA3AF"
-                        : "#374151"
+                          ? '#9CA3AF'
+                          : '#374151'
                     }
-                    textAnchor={isRightSide ? "start" : "end"}
+                    textAnchor={isRightSide ? 'start' : 'end'}
                     dominantBaseline="central"
                     className={
                       isFocused
-                        ? "transition-all duration-500 font-semibold"
-                        : "transition-all duration-500 font-medium"
+                        ? 'transition-all duration-500 font-semibold'
+                        : 'transition-all duration-500 font-medium'
                     }
                     style={{ fontSize: '0.725rem' }}
                   >
@@ -390,14 +418,14 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                   fill={entry.color}
                   className={
                     isFocused
-                      ? "cursor-pointer transition-all duration-500 drop-shadow-lg"
-                      : "cursor-pointer transition-all duration-500 hover:opacity-90"
+                      ? 'cursor-pointer transition-all duration-500 drop-shadow-lg'
+                      : 'cursor-pointer transition-all duration-500 hover:opacity-90'
                   }
                   fillOpacity={isAutoZooming ? (isFocused ? 1.0 : 0.2) : 1.0}
-                  stroke={isFocused ? "#3B82F6" : "#ffffff"}
+                  stroke={isFocused ? '#3B82F6' : '#ffffff'}
                   strokeWidth={isFocused ? 8 : 2}
-                  filter={isFocused ? "url(#magnifyGlow)" : undefined}
-                  onMouseEnter={() => handleSegmentHover(entry, index)}
+                  filter={isFocused ? 'url(#magnifyGlow)' : undefined}
+                  onMouseEnter={() => handleSegmentHover(entry)}
                   onMouseLeave={handleSegmentLeave}
                 />
               );
@@ -408,7 +436,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             cursor={false}
             wrapperStyle={{
               zIndex: 1000,
-              pointerEvents: "none",
+              pointerEvents: 'none',
             }}
           />
         </PieChart>
@@ -421,9 +449,9 @@ export const DonutChart: React.FC<DonutChartProps> = ({
         style={{
           width: backgroundRadius * 2,
           height: backgroundRadius * 2,
-          left: "50%",
-          top: "50%",
-          transform: "translate(-50%, -50%)",
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
         }}
       >
         <div className="text-center">
@@ -433,14 +461,14 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             style={{
               fontSize: fontSize,
               fontWeight: fontWeight,
-              lineHeight: "1.2",
+              lineHeight: '1.2',
             }}
           >
             {getFormattedTotal(total)}
           </div>
           <div
             className={`${
-              isPresentation ? "text-lg" : "text-sm"
+              isPresentation ? 'text-lg' : 'text-sm'
             } text-gray-600 mt-1`}
           >
             {getUnitDisplayName()}

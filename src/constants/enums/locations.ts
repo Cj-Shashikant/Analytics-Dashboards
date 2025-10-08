@@ -2,7 +2,7 @@ import { DepartmentType } from './departments';
 
 // Location options by department
 export const LOCATIONS_BY_DEPARTMENT = {
-  'Business': [
+  Business: [
     'All Location',
     'Mumbai',
     'Delhi',
@@ -11,9 +11,9 @@ export const LOCATIONS_BY_DEPARTMENT = {
     'Hyderabad',
     'Pune',
     'Kolkata',
-    'Ahmedabad'
+    'Ahmedabad',
   ],
-  'Operations': [
+  Operations: [
     'All Location',
     'Mumbai HQ',
     'Delhi Operations',
@@ -21,27 +21,27 @@ export const LOCATIONS_BY_DEPARTMENT = {
     'Chennai Support',
     'Hyderabad Center',
     'Pune Office',
-    'Remote Teams'
+    'Remote Teams',
   ],
-  'Finance': [
+  Finance: [
     'All Location',
     'Mumbai Finance',
     'Delhi Treasury',
     'Bangalore Accounts',
     'Chennai Audit',
     'Corporate Finance',
-    'Regional Finance'
+    'Regional Finance',
   ],
-  'Marketing': [
+  Marketing: [
     'All Location',
     'Mumbai Marketing',
     'Delhi Campaign',
     'Bangalore Digital',
     'Chennai Creative',
     'National Marketing',
-    'Regional Marketing'
+    'Regional Marketing',
   ],
-  'Sales': [
+  Sales: [
     'All Location',
     'Mumbai Sales',
     'Delhi Sales',
@@ -51,9 +51,9 @@ export const LOCATIONS_BY_DEPARTMENT = {
     'Pune Sales',
     'Kolkata Sales',
     'Ahmedabad Sales',
-    'Online Sales'
+    'Online Sales',
   ],
-  'Retention': [
+  Retention: [
     'All Location',
     'Mumbai Retention',
     'Delhi Retention',
@@ -61,16 +61,17 @@ export const LOCATIONS_BY_DEPARTMENT = {
     'Chennai Retention',
     'Regional Retention',
     'Corporate Retention',
-    'Retail Retention'
+    'Retail Retention',
   ],
-  'Customer Analysis': [
-    'All Location'
-  ]
+  'Customer Analysis': ['All Location'],
 } as const;
 
-export type LocationType = typeof LOCATIONS_BY_DEPARTMENT[keyof typeof LOCATIONS_BY_DEPARTMENT][number];
+export type LocationType =
+  (typeof LOCATIONS_BY_DEPARTMENT)[keyof typeof LOCATIONS_BY_DEPARTMENT][number];
 
-export const getLocationOptions = (department: DepartmentType): readonly string[] => {
+export const getLocationOptions = (
+  department: DepartmentType
+): readonly string[] => {
   return LOCATIONS_BY_DEPARTMENT[department] || ['All Location'];
 };
 

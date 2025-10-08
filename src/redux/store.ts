@@ -7,7 +7,7 @@ export const store = configureStore({
     filter: filterReducer,
     revenue: revenueReducer,
   },
-  middleware: (getDefaultMiddleware) =>
+  middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ['filter/setCustomDates'],

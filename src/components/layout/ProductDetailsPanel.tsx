@@ -1,14 +1,12 @@
-import React from "react";
-import { Card } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+import React from 'react';
+import { Card } from '../ui/card';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import {
   X,
   Package,
   TrendingUp,
-  TrendingDown,
   Users,
-  Calendar,
   MapPin,
   Building2,
   DollarSign,
@@ -16,7 +14,7 @@ import {
   BarChart3,
   PieChart,
   ArrowLeft,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -28,7 +26,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-} from "recharts";
+} from 'recharts';
 
 interface ProductDetails {
   id?: string;
@@ -64,37 +62,37 @@ export function ProductDetailsPanel({
   if (!product) return null;
 
   const getFormattedValue = (value: number) => {
-    if (valueUnit === "Cr") {
+    if (valueUnit === 'Cr') {
       return `₹${(value / 10000000).toFixed(2)}`;
-    } else if (valueUnit === "L") {
+    } else if (valueUnit === 'L') {
       return `₹${(value / 100000).toFixed(2)}`;
-    } else if (valueUnit === "K") {
+    } else if (valueUnit === 'K') {
       return `₹${(value / 1000).toFixed(2)}`;
     }
-    return `₹${value.toLocaleString("en-IN")}`;
+    return `₹${value.toLocaleString('en-IN')}`;
   };
 
   const formatNumber = (num: number) => {
-    return num.toLocaleString("en-IN");
+    return num.toLocaleString('en-IN');
   };
 
   // Executive-grade color palette
   const colorPalette = {
-    softBlue: "#4C9AFF",
-    tealGreen: "#00C7B7",
-    coralOrange: "#FF715B",
-    skyBlue: "#73C2FB",
-    warmYellow: "#FFCE56",
-    lightPurple: "#A480CF",
-    mintGreen: "#5ADBB5",
-    slateGray: "#6B7B8C",
-    lavenderBlue: "#B4C5E4",
-    peachBeige: "#F4A896",
-    paleAqua: "#A3F7BF",
-    deepLilac: "#8566AA",
-    seafoamGray: "#B5D2CB",
-    dustyRose: "#D58A94",
-    coolTaupe: "#A9A9B2",
+    softBlue: '#4C9AFF',
+    tealGreen: '#00C7B7',
+    coralOrange: '#FF715B',
+    skyBlue: '#73C2FB',
+    warmYellow: '#FFCE56',
+    lightPurple: '#A480CF',
+    mintGreen: '#5ADBB5',
+    slateGray: '#6B7B8C',
+    lavenderBlue: '#B4C5E4',
+    peachBeige: '#F4A896',
+    paleAqua: '#A3F7BF',
+    deepLilac: '#8566AA',
+    seafoamGray: '#B5D2CB',
+    dustyRose: '#D58A94',
+    coolTaupe: '#A9A9B2',
   };
 
   // Prepare client breakdown data for charts - with fallback if clientBreakdown is missing
@@ -102,7 +100,7 @@ export function ProductDetailsPanel({
     // If clientBreakdown exists, use it
     if (
       product.clientBreakdown &&
-      typeof product.clientBreakdown === "object"
+      typeof product.clientBreakdown === 'object'
     ) {
       return Object.entries(product.clientBreakdown).map(
         ([clientType, data]) => ({
@@ -111,11 +109,11 @@ export function ProductDetailsPanel({
           revenue: data.revenue,
           policies: data.policies,
           color:
-            clientType === "Corporate"
+            clientType === 'Corporate'
               ? colorPalette.softBlue
-              : clientType === "Retail"
-              ? colorPalette.tealGreen
-              : colorPalette.lightPurple,
+              : clientType === 'Retail'
+                ? colorPalette.tealGreen
+                : colorPalette.lightPurple,
         })
       );
     }
@@ -127,21 +125,21 @@ export function ProductDetailsPanel({
 
     return [
       {
-        name: "Corporate",
+        name: 'Corporate',
         premium: Math.round(totalPremium * 0.52),
         revenue: Math.round(estimatedRevenue * 0.52),
         policies: Math.floor(estimatedPolicies * 0.52),
         color: colorPalette.softBlue,
       },
       {
-        name: "Retail",
+        name: 'Retail',
         premium: Math.round(totalPremium * 0.35),
         revenue: Math.round(estimatedRevenue * 0.35),
         policies: Math.floor(estimatedPolicies * 0.35),
         color: colorPalette.tealGreen,
       },
       {
-        name: "Affinity",
+        name: 'Affinity',
         premium: Math.round(totalPremium * 0.13),
         revenue: Math.round(estimatedRevenue * 0.13),
         policies: Math.floor(estimatedPolicies * 0.13),
@@ -160,25 +158,25 @@ export function ProductDetailsPanel({
   // Sample historical performance data
   const performanceData = [
     {
-      period: "Q1 2023",
+      period: 'Q1 2023',
       premium: premiumValue * 0.8,
       revenue: revenueValue * 0.8,
       policies: Math.floor(policiesValue * 0.8),
     },
     {
-      period: "Q2 2023",
+      period: 'Q2 2023',
       premium: premiumValue * 0.9,
       revenue: revenueValue * 0.9,
       policies: Math.floor(policiesValue * 0.9),
     },
     {
-      period: "Q3 2023",
+      period: 'Q3 2023',
       premium: premiumValue * 0.95,
       revenue: revenueValue * 0.95,
       policies: Math.floor(policiesValue * 0.95),
     },
     {
-      period: "Q4 2023",
+      period: 'Q4 2023',
       premium: premiumValue,
       revenue: revenueValue,
       policies: policiesValue,
@@ -188,27 +186,27 @@ export function ProductDetailsPanel({
   // Sample geographic distribution
   const geographicData = [
     {
-      region: "Mumbai",
+      region: 'Mumbai',
       premium: premiumValue * 0.35,
       policies: Math.floor(policiesValue * 0.35),
     },
     {
-      region: "Delhi",
+      region: 'Delhi',
       premium: premiumValue * 0.25,
       policies: Math.floor(policiesValue * 0.25),
     },
     {
-      region: "Bangalore",
+      region: 'Bangalore',
       premium: premiumValue * 0.15,
       policies: Math.floor(policiesValue * 0.15),
     },
     {
-      region: "Chennai",
+      region: 'Chennai',
       premium: premiumValue * 0.12,
       policies: Math.floor(policiesValue * 0.12),
     },
     {
-      region: "Others",
+      region: 'Others',
       premium: premiumValue * 0.13,
       policies: Math.floor(policiesValue * 0.13),
     },
@@ -217,25 +215,25 @@ export function ProductDetailsPanel({
   // Sample insurer partnerships for this product
   const insurerData = [
     {
-      name: "ICICI Lombard",
+      name: 'ICICI Lombard',
       premium: premiumValue * 0.3,
       policies: Math.floor(policiesValue * 0.3),
       commission: 15,
     },
     {
-      name: "HDFC ERGO",
+      name: 'HDFC ERGO',
       premium: premiumValue * 0.25,
       policies: Math.floor(policiesValue * 0.25),
       commission: 14,
     },
     {
-      name: "Bajaj Allianz",
+      name: 'Bajaj Allianz',
       premium: premiumValue * 0.2,
       policies: Math.floor(policiesValue * 0.2),
       commission: 13,
     },
     {
-      name: "Others",
+      name: 'Others',
       premium: premiumValue * 0.25,
       policies: Math.floor(policiesValue * 0.25),
       commission: 12,
@@ -265,7 +263,7 @@ export function ProductDetailsPanel({
 
   const renderCustomLabel = (entry: any) => {
     const percentage = (entry.premium / premiumValue) * 100;
-    return percentage >= 10 ? `${percentage.toFixed(1)}%` : "";
+    return percentage >= 10 ? `${percentage.toFixed(1)}%` : '';
   };
 
   return (
@@ -275,7 +273,7 @@ export function ProductDetailsPanel({
         <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
           onClick={() => {
-            console.log("Backdrop clicked, calling onClose");
+            console.log('Backdrop clicked, calling onClose');
             onClose();
           }}
           aria-hidden="true"
@@ -285,12 +283,12 @@ export function ProductDetailsPanel({
       {/* Right-side panel */}
       <div
         className={`fixed top-0 right-0 h-full bg-white shadow-2xl border-l border-gray-200 z-50 transform ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+          isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         style={{
-          width: "100vw",
-          maxWidth: "100vw",
-          transition: "transform 3.5s ease-in-out",
+          width: '100vw',
+          maxWidth: '100vw',
+          transition: 'transform 3.5s ease-in-out',
         }}
       >
         {/* Enhanced Header */}
@@ -300,7 +298,7 @@ export function ProductDetailsPanel({
               variant="ghost"
               size="sm"
               onClick={() => {
-                console.log("ArrowLeft button clicked, calling onClose");
+                console.log('ArrowLeft button clicked, calling onClose');
                 onClose();
               }}
               className="h-10 w-10 p-0 rounded-lg transition-all duration-200 hover:bg-white/50"
@@ -319,8 +317,8 @@ export function ProductDetailsPanel({
                 {product.name}
               </h1>
               <p className="text-lg text-gray-600 mt-1">
-                Comprehense business records and performance analytics for{" "}
-                {product.category || "insurance"} product
+                Comprehense business records and performance analytics for{' '}
+                {product.category || 'insurance'} product
               </p>
             </div>
           </div>
@@ -333,13 +331,13 @@ export function ProductDetailsPanel({
                 border: `1px solid ${product.color}40`,
               }}
             >
-              {product.category || "Insurance"} Product
+              {product.category || 'Insurance'} Product
             </Badge>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
-                console.log("X button clicked, calling onClose");
+                console.log('X button clicked, calling onClose');
                 onClose();
               }}
               className="h-10 w-10 p-0 rounded-lg transition-all duration-200 hover:bg-white text-gray-600"
@@ -579,11 +577,11 @@ export function ProductDetailsPanel({
                       <YAxis stroke="#888" fontSize={14} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "white",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "12px",
-                          fontSize: "14px",
-                          padding: "12px",
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '12px',
+                          fontSize: '14px',
+                          padding: '12px',
                         }}
                       />
                       <Bar
