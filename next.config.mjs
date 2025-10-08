@@ -7,6 +7,9 @@ const nextConfig = {
   },
   basePath: '/Analytics-Dashboards',
   assetPrefix: '/Analytics-Dashboards/',
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

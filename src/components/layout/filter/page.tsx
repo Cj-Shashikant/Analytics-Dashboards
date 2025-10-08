@@ -181,7 +181,8 @@ export default function FilterPage() {
                       <SelectTrigger
                         style={{
                           width:
-                            typeof window !== 'undefined' && window.innerWidth >= 1200
+                            typeof window !== 'undefined' &&
+                            window.innerWidth >= 1200
                               ? filterWidths.durationWidth
                               : '100%',
                           minWidth: 110,
@@ -220,7 +221,8 @@ export default function FilterPage() {
                       <SelectTrigger
                         style={{
                           width:
-                            typeof window !== 'undefined' && window.innerWidth >= 1200
+                            typeof window !== 'undefined' &&
+                            window.innerWidth >= 1200
                               ? filterWidths.departmentWidth
                               : '100%',
                           minWidth: 100,
@@ -259,7 +261,8 @@ export default function FilterPage() {
                       <SelectTrigger
                         style={{
                           width:
-                            typeof window !== 'undefined' && window.innerWidth >= 1200
+                            typeof window !== 'undefined' &&
+                            window.innerWidth >= 1200
                               ? filterWidths.reportTypeWidth
                               : '100%',
                           minWidth: 100,

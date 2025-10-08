@@ -343,7 +343,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
               // Truncate text with ellipsis
               const maxLength = 20; // Adjust based on your needs
-              const labelText = `${payload.name} (${(percent * 100).toFixed(1)}%)`;
+              const labelText = `${payload.label} (${(percent * 100).toFixed(1)}%)`;
               let displayText = labelText;
 
               if (labelText.length > maxLength) {
