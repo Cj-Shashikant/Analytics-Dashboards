@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import filterReducer from './slices/filterSlice';
 import revenueReducer from './slices/revenueSlice';
+import relationReducer from './slices/relationSlice';
 
 export const store = configureStore({
   reducer: {
     filter: filterReducer,
     revenue: revenueReducer,
+    relation: relationReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({

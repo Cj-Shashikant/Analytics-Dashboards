@@ -21,6 +21,7 @@ export interface DonutChartProps {
   className?: string;
   autoZoom?: boolean;
   valueUnit?: string;
+  customTooltip?: React.ComponentType<any>;
 }
 
 // Custom Tooltip Component
@@ -55,6 +56,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   className = '',
   autoZoom = true,
   valueUnit = 'Cr',
+  customTooltip,
 }) => {
   const [focusedElement, setFocusedElement] = useState<DonutChartData | null>(
     null
@@ -343,7 +345,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
               // Truncate text with ellipsis
               const maxLength = 20; // Adjust based on your needs
-              const labelText = `${payload.label} (${(percent * 100).toFixed(1)}%)`;
+              const labelText = `${(percent * 100).toFixed(1)}%`;
               let displayText = labelText;
 
               if (labelText.length > maxLength) {
@@ -432,7 +434,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             })}
           </Pie>
           <Tooltip
-            content={<CustomTooltip valueFormatter={valueFormatter} />}
+            content={customTooltip || CustomTooltip}
             cursor={false}
             wrapperStyle={{
               zIndex: 1000,

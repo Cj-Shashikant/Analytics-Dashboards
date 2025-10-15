@@ -46,14 +46,14 @@ import {
 } from '../../../constants/enums/reportTypes';
 import { filterStyles } from './style';
 import { getFilterWidths } from './dynamicWidth';
+import { AdvancedFilters } from './moreFilter';
+import { SettingFilters } from './settingFilter';
 
 // Import filter components
-import MoreFilter from './moreFilter';
-import SettingFilter from './settingFilter';
 import FullScreenFilter from './fullScreenFillter';
-import LeaderboardFilter from './leaderboardFilter';
-import PlaylistFilter from './playlistFilter';
-import PresentationFilter from './presentationFilter';
+import { LeaderboardModal } from './leaderboardFilter';
+import { SaveToPlaylist } from './playlistFilter';
+import { PlaylistManager } from './playListManager';
 
 export default function FilterPage() {
   const dispatch = useAppDispatch();
@@ -213,7 +213,7 @@ export default function FilterPage() {
                       Department
                     </Typography>
                   </Box>
-                  <FormControl size="small" fullWidth>
+                  <FormControl size="medium" fullWidth>
                     <Select
                       value={selectedDepartment}
                       onValueChange={handleDepartmentChange}
@@ -372,14 +372,14 @@ export default function FilterPage() {
 
       {/* Modal Components */}
       {isMoreFilterOpen && (
-        <MoreFilter
+        <AdvancedFilters
           isOpen={isMoreFilterOpen}
           onClose={() => setIsMoreFilterOpen(false)}
         />
       )}
 
       {isSettingFilterOpen && (
-        <SettingFilter
+        <SettingFilters
           isOpen={isSettingFilterOpen}
           onClose={() => setIsSettingFilterOpen(false)}
         />
@@ -393,21 +393,21 @@ export default function FilterPage() {
       )}
 
       {isLeaderboardFilterOpen && (
-        <LeaderboardFilter
+        <LeaderboardModal
           isOpen={isLeaderboardFilterOpen}
           onClose={() => setIsLeaderboardFilterOpen(false)}
         />
       )}
 
       {isPlaylistFilterOpen && (
-        <PlaylistFilter
+        <SaveToPlaylist
           isOpen={isPlaylistFilterOpen}
           onClose={() => setIsPlaylistFilterOpen(false)}
         />
       )}
 
       {isPresentationFilterOpen && (
-        <PresentationFilter
+        <PlaylistManager
           isOpen={isPresentationFilterOpen}
           onClose={() => setIsPresentationFilterOpen(false)}
         />

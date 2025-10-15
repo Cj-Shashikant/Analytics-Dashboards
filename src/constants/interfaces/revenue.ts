@@ -32,6 +32,15 @@ export interface CrossSellDataItem {
   percentage: number;
 }
 
+export interface NumberOfProductsData {
+  id: string;
+  name: string;
+  value: number;
+  percentage: number;
+  avgPremium: number;
+  color: string;
+}
+
 export interface TableDataItem {
   id: string;
   name: string;
@@ -53,8 +62,14 @@ export interface RevenueState {
   revenueByLOB: RevenueDataItem[];
   revenueByProducts: RevenueDataItem[];
   crossSellPenetration: CrossSellDataItem[];
+  numberOfProducts: NumberOfProductsData[];
   expenseData: ExpenseDataItem[];
   tableData: TableDataItem[];
+  lossReasonData: LossReasonData[];
+  brokerRetentionData: BrokerRetentionData[];
+  insurerRetentionData: InsurerRetentionRow[];
+  retentionMetrics: RetentionMetrics;
+
   baseMetrics: BaseMetricsData;
   loading: boolean;
   error: string | null;
@@ -149,6 +164,55 @@ export interface PieChartConfig extends ChartConfig {
 export interface BarChartConfig extends ChartConfig {
   barSize?: number;
   layout?: 'horizontal' | 'vertical';
+}
+
+export interface LossReasonData {
+  id: string;
+  name: string;
+  value: number;
+  color: string;
+  percentage: number;
+  premium: number;
+  policies: number;
+}
+
+export interface BrokerRetentionData {
+  id: string;
+  name: string;
+  value: number;
+  premium: number;
+  policies: number;
+  color: string;
+  percentage: number;
+  clientTypes?: {
+    Corporate: number;
+    Retail: number;
+    Affinity: number;
+  };
+}
+
+export interface InsurerRetentionRow {
+  id: string;
+  name: string;
+  value: number;
+  color: string;
+  percentage: number;
+  description?: string;
+  clientTypes?: {
+    Corporate: number;
+    Retail: number;
+    Affinity: number;
+  };
+  rank?: number;
+}
+
+export interface RetentionMetrics {
+  retentionRate: number;
+  lostBusinessRate: number;
+  premiumRetained: number;
+  premiumLost: number;
+  revenueEarned: number;
+  potentialLoss: number;
 }
 
 // Data Processing Interfaces

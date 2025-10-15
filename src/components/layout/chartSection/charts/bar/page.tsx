@@ -35,6 +35,7 @@ export interface BarChartProps {
   className?: string;
   scrollable?: boolean;
   topFilter?: string;
+  customTooltip?: React.ComponentType<any>;
 }
 
 // Enhanced Custom Tooltip
@@ -78,6 +79,7 @@ export const BarChartComponent: React.FC<BarChartProps> = ({
   className = '',
   scrollable = false,
   topFilter = 'Top 10',
+  customTooltip,
 }) => {
   const chartConfig = { ...defaultScrollConfig, ...config };
 
@@ -145,7 +147,7 @@ export const BarChartComponent: React.FC<BarChartProps> = ({
           />
           <YAxis fontSize={12} />
           <Tooltip
-            content={<EnhancedCustomTooltip valueFormatter={valueFormatter} />}
+            content={customTooltip || EnhancedCustomTooltip}
             cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
           />
           <Bar

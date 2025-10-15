@@ -446,25 +446,25 @@ export function PlaylistManager({
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // // Available report types for playlist creation
-  // const availableReports = [
-  //   {
-  //     value: 'Revenue vs Expenses',
-  //     label: 'Revenue vs Expenses',
-  //     chartTypes: ['revenue', 'expenses'],
-  //   },
-  //   { value: 'Revenue by Products', label: 'Revenue by Products' },
-  //   { value: 'Revenue by Insurers', label: 'Revenue by Insurers' },
-  //   { value: 'Revenue by Policy Type', label: 'Revenue by Policy Type' },
-  //   {
-  //     value: 'Revenue by Business Vertical',
-  //     label: 'Revenue by Business Vertical',
-  //   },
-  //   { value: 'Revenue by LOB', label: 'Revenue by LOB' },
-  //   { value: 'Retention Analysis', label: 'Retention Analysis' },
-  //   { value: 'Retention - By Insurer', label: 'Retention - By Insurer' },
-  //   { value: 'Retention - Broker', label: 'Retention - Broker' },
-  // ];
+  // Available report types for playlist creation
+  //   const availableReports = [
+  //     {
+  //       value: 'Revenue vs Expenses',
+  //       label: 'Revenue vs Expenses',
+  //       chartTypes: ['revenue', 'expenses'],
+  //     },
+  //     { value: 'Revenue by Products', label: 'Revenue by Products' },
+  //     { value: 'Revenue by Insurers', label: 'Revenue by Insurers' },
+  //     { value: 'Revenue by Policy Type', label: 'Revenue by Policy Type' },
+  //     {
+  //       value: 'Revenue by Business Vertical',
+  //       label: 'Revenue by Business Vertical',
+  //     },
+  //     { value: 'Revenue by LOB', label: 'Revenue by LOB' },
+  //     { value: 'Retention Analysis', label: 'Retention Analysis' },
+  //     { value: 'Retention - By Insurer', label: 'Retention - By Insurer' },
+  //     { value: 'Retention - Broker', label: 'Retention - Broker' },
+  //   ];
 
   // Toggle playlist expansion
   const togglePlaylistExpansion = (playlistId: string) => {
