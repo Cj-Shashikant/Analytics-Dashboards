@@ -2,12 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": "out",
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
