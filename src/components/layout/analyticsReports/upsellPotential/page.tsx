@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  TrendingUp,
-  DollarSign,
-  Users,
-  Target,
-} from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Target, Layers } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -31,11 +26,7 @@ interface CrossSellUpsellProps {
   onPlayFullView?: (filters: any, chartData: any, chartType?: string) => void;
 }
 
-export function CrossSellUpsell({
-  valueUnit,
-  currentFilters,
-  onPlayFullView,
-}: CrossSellUpsellProps) {
+export function CrossSellUpsell({ valueUnit }: CrossSellUpsellProps) {
   const getFormattedValue = (value: number) => {
     if (valueUnit === 'Crore') {
       return `₹${(value / 10000000).toFixed(2)}`;
