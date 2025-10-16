@@ -5,17 +5,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { X, Maximize2, Filter, ChevronDown } from 'lucide-react';
 import { ThreeDotsMenu } from './ThreeDotsMenu';
 import { ChartType } from './ChartTypeSwitcher';
