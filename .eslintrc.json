@@ -7,7 +7,6 @@
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "ignorePatterns": ["out/**/*", ".next/**/*", "node_modules/**/*"],
   "rules": {
     "prettier/prettier": "error",
     "@typescript-eslint/no-unused-vars": "error",
