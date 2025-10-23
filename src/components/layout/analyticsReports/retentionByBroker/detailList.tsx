@@ -24,25 +24,68 @@ interface ProductsListProps {
 type SortState = 'none' | 'desc' | 'asc';
 type SortColumn = 'policies' | 'amount' | 'revenue' | 'percentage';
 
-export function ProductsList({
-  data,
-  valueUnit,
-  onItemClick,
-}: ProductsListProps) {
+export function ProductsList({ data, valueUnit }: ProductsListProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortState, setSortState] = useState<SortState>('none');
 
+  // Sort products based on current sort state - moved before early return
+  const sortedProducts = useMemo(() => {
+    if (!data || !Array.isArray(data)) {
+      return [];
+    }
+    if (!sortColumn || sortState === 'none') {
+      return data;
+    }
+
+    return [...data].sort((a, b) => {
+      let aValue: number;
+      let bValue: number;
+
+      switch (sortColumn) {
+        case 'policies':
+          const baseCounts = [
+            33300, 27360, 23040, 16740, 12780, 8950, 7200, 6100, 5400, 4800,
+            4200, 3600, 3100, 2700, 2300,
+          ];
+          aValue =
+            baseCounts[data.indexOf(a) % baseCounts.length] ||
+            Math.floor(Math.random() * 10000) + 1000;
+          bValue =
+            baseCounts[data.indexOf(b) % baseCounts.length] ||
+            Math.floor(Math.random() * 10000) + 1000;
+          break;
+        case 'amount':
+        case 'revenue':
+          aValue = a.value;
+          bValue = b.value;
+          break;
+        case 'percentage':
+          aValue = a.percentage;
+          bValue = b.percentage;
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortState === 'desc') {
+        return bValue - aValue;
+      } else {
+        return aValue - bValue;
+      }
+    });
+  }, [data, sortColumn, sortState]);
+
   // Generate mock policy numbers for each product
-  const getPolicyCount = (index: number) => {
-    const baseCounts = [
-      33300, 27360, 23040, 16740, 12780, 8950, 7200, 6100, 5400, 4800, 4200,
-      3600, 3100, 2700, 2300,
-    ];
-    return (
-      baseCounts[index % baseCounts.length] ||
-      Math.floor(Math.random() * 10000) + 1000
-    );
-  };
+  // const getPolicyCount = (index: number) => {
+  //   const baseCounts = [
+  //     33300, 27360, 23040, 16740, 12780, 8950, 7200, 6100, 5400, 4800, 4200,
+  //     3600, 3100, 2700, 2300,
+  //   ];
+  //   return (
+  //     baseCounts[index % baseCounts.length] ||
+  //     Math.floor(Math.random() * 10000) + 1000
+  //   );
+  // };
 
   // Handle sort click
   const handleSort = (column: SortColumn) => {
@@ -75,43 +118,6 @@ export function ProductsList({
     );
   }
 
-  // Local getFormattedValue function
-  const getFormattedValue = (value: number) => {
-    return utilGetFormattedValue(value, valueUnit);
-  };
-
-  // Sort products based on current sort state
-  const sortedProducts = useMemo(() => {
-    if (!sortColumn || sortState === 'none') {
-      return data;
-    }
-
-    return [...data].sort((a, b) => {
-      let aValue: number;
-      let bValue: number;
-
-      switch (sortColumn) {
-        case 'policies':
-          aValue = getPolicyCount(data.indexOf(a));
-          bValue = getPolicyCount(data.indexOf(b));
-          break;
-        case 'amount':
-        case 'revenue':
-          aValue = a.value;
-          bValue = b.value;
-          break;
-        default:
-          return 0;
-      }
-
-      if (sortState === 'desc') {
-        return bValue - aValue;
-      } else {
-        return aValue - bValue;
-      }
-    });
-  }, [data, sortColumn, sortState]);
-
   // Get SVG color based on sort state
   const getSvgColor = (column: SortColumn) => {
     if (sortColumn !== column) return 'currentColor';
@@ -129,7 +135,7 @@ export function ProductsList({
 
   return (
     <Card className={productsListStyles.container}>
-      <div className="overflow-auto relative" style={{ height: '26rem' }}>
+      <div className="overflow-auto relative" style={{ height: '31rem' }}>
         {/* Table Header */}
         <div
           className={`${productsListStyles.table.headerRow} sticky top-0 z-20 bg-white`}

@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
   FileText,
   Presentation,
+  Upload,
 } from 'lucide-react';
 import { ChartType } from './ChartTypeSwitcher';
 
@@ -25,6 +26,7 @@ interface ThreeDotsMenuProps {
   currentChartType: ChartType;
   onChartTypeChange: (type: ChartType) => void;
   onDownload: (format: string) => void;
+  onImport?: () => void;
   onPresentationMode?: () => void;
   className?: string;
   topFilter?: string; // Add topFilter prop to block donut chart for Top 20
@@ -34,6 +36,7 @@ export function ThreeDotsMenu({
   currentChartType,
   onChartTypeChange,
   onDownload,
+  onImport,
   onPresentationMode,
   className = '',
   topFilter,
@@ -77,6 +80,12 @@ export function ThreeDotsMenu({
   // Enhanced Download Options for Version 82
   const downloadFormats = [
     {
+      format: 'import',
+      label: 'Import to Excel',
+      icon: Upload,
+      description: 'Import Excel data',
+    },
+    {
       format: 'csv',
       label: 'Download as CSV',
       icon: FileSpreadsheet,
@@ -107,8 +116,12 @@ export function ThreeDotsMenu({
     setIsOpen(false);
   };
 
-  const handleDownloadSelect = (format: string) => {
-    onDownload(format);
+  const handleActionSelect = (format: string) => {
+    if (format === 'import' && onImport) {
+      onImport();
+    } else {
+      onDownload(format);
+    }
     setIsOpen(false);
   };
 
@@ -276,7 +289,7 @@ export function ThreeDotsMenu({
           return (
             <DropdownMenuItem
               key={download.format}
-              onClick={() => handleDownloadSelect(download.format)}
+              onClick={() => handleActionSelect(download.format)}
               className="cursor-pointer m-1 p-3 rounded-lg hover:bg-gray-50 transition-all"
             >
               <div className="flex items-center w-full">

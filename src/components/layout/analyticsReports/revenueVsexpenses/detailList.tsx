@@ -123,7 +123,7 @@ export function ProductsList({
 
   return (
     <Card className={productsListStyles.container}>
-      <div className="overflow-auto relative" style={{ height: '26rem' }}>
+      <div className="overflow-auto relative" style={{ height: '31rem' }}>
         {/* Table Header */}
         <div
           className={`${productsListStyles.table.headerRow} sticky top-0 z-20 bg-white`}

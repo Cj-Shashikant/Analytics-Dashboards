@@ -15,6 +15,13 @@ import {
   getReportTypesForDepartment,
   getLocationOptions,
 } from '../../constants/enums';
+import {
+  productAnalyticsData,
+  insurerAnalyticsData,
+  verticalAnalyticsData,
+  lobAnalyticsData,
+  revenueExpensesAnalyticsData,
+} from '../../data';
 
 export interface FilterState {
   // Filter selections
@@ -165,67 +172,21 @@ const initialState: FilterState = {
     expenseGrowth: 8.3,
     profitMargin: 30.0,
 
-    productData: [
-      {
-        name: 'Motor Insurance',
-        revenue: 95000000,
-        growth: 15.2,
-        percentage: 39.6,
-        color: '#4C9AFF',
-      },
-      {
-        name: 'Health Insurance',
-        revenue: 72000000,
-        growth: 22.8,
-        percentage: 30.0,
-        color: '#00C7B7',
-      },
-      {
-        name: 'Life Insurance',
-        revenue: 48000000,
-        growth: 8.5,
-        percentage: 20.0,
-        color: '#FF715B',
-      },
-      {
-        name: 'Property Insurance',
-        revenue: 25000000,
-        growth: -2.1,
-        percentage: 10.4,
-        color: '#FFCE56',
-      },
-    ],
+    productData: productAnalyticsData.map(product => ({
+      name: product.name,
+      revenue: product.premiumRevenue,
+      growth: Math.random() * 20 - 5, // Random growth between -5% and 15%
+      percentage: product.revenuePercentage,
+      color: product.color,
+    })),
 
-    insurerData: [
-      {
-        name: 'HDFC ERGO',
-        revenue: 85000000,
-        policies: 12500,
-        retention: 92.5,
-        color: '#4C9AFF',
-      },
-      {
-        name: 'ICICI Lombard',
-        revenue: 68000000,
-        policies: 9800,
-        retention: 89.2,
-        color: '#00C7B7',
-      },
-      {
-        name: 'Bajaj Allianz',
-        revenue: 52000000,
-        policies: 7600,
-        retention: 87.8,
-        color: '#FF715B',
-      },
-      {
-        name: 'Tata AIG',
-        revenue: 35000000,
-        policies: 5200,
-        retention: 85.1,
-        color: '#FFCE56',
-      },
-    ],
+    insurerData: insurerAnalyticsData.map(insurer => ({
+      name: insurer.name,
+      revenue: insurer.premiumRevenue,
+      growth: Math.random() * 20 - 5, // Random growth between -5% and 15%
+      percentage: insurer.revenuePercentage,
+      color: insurer.color,
+    })),
 
     locationPerformance: [
       { location: 'Mumbai', revenue: 85000000, growth: 18.5, target: 80000000 },
@@ -543,3 +504,60 @@ export const {
 } = filterSlice.actions;
 
 export default filterSlice.reducer;
+
+// Selectors that use imported data when available, otherwise fallback to dummy data
+export const selectAnalyticsData = (state: any) => {
+  const importedData = state.importedData;
+  const filterData = state.filter.dummyData;
+
+  if (importedData.isDataImported) {
+    return {
+      totalRevenue: importedData.totalRevenue,
+      expenses: importedData.expenses,
+      grossProfit: importedData.grossProfit,
+      netProfit: importedData.netProfit,
+      revenueGrowth: importedData.revenueGrowth,
+      expenseGrowth: importedData.expenseGrowth,
+      profitMargin: importedData.profitMargin,
+      productData: importedData.productData,
+      insurerData: importedData.insurerData,
+      locationPerformance: importedData.locationPerformance,
+      monthlyTrends: importedData.monthlyTrends,
+    };
+  }
+
+  return filterData;
+};
+
+export const selectProductData = (state: any) => {
+  const data = selectAnalyticsData(state);
+  return data.productData;
+};
+
+export const selectInsurerData = (state: any) => {
+  const data = selectAnalyticsData(state);
+  return data.insurerData;
+};
+
+export const selectLocationData = (state: any) => {
+  const data = selectAnalyticsData(state);
+  return data.locationPerformance;
+};
+
+export const selectMonthlyTrends = (state: any) => {
+  const data = selectAnalyticsData(state);
+  return data.monthlyTrends;
+};
+
+export const selectMainMetrics = (state: any) => {
+  const data = selectAnalyticsData(state);
+  return {
+    totalRevenue: data.totalRevenue,
+    expenses: data.expenses,
+    grossProfit: data.grossProfit,
+    netProfit: data.netProfit,
+    revenueGrowth: data.revenueGrowth,
+    expenseGrowth: data.expenseGrowth,
+    profitMargin: data.profitMargin,
+  };
+};

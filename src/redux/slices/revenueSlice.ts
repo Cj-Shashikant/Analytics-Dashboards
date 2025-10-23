@@ -9,6 +9,13 @@ import {
   RetentionMetrics,
 } from '../../constants/interfaces';
 import { DEFAULT_REPORT_TYPE } from '../../constants/enums';
+import {
+  productAnalyticsData,
+  insurerAnalyticsData,
+  verticalAnalyticsData,
+  lobAnalyticsData,
+  revenueExpensesAnalyticsData,
+} from '../../data';
 
 // Professional color palette
 const professionalColors: ColorPalette = {
@@ -689,169 +696,16 @@ const getRevenueData = () => {
   ];
 
   return {
-    revenueByInsurers: [
-      {
-        id: 'hdfc-ergo',
-        name: 'HDFC ERGO',
-        value: Math.round(productsRevenue * 0.225),
-        color: getColorSafely(professionalColors.revenueColors, 0),
-        percentage: 22.5,
-      },
-      {
-        id: 'icici-lombard',
-        name: 'ICICI Lombard',
-        value: Math.round(productsRevenue * 0.195),
-        color: getColorSafely(professionalColors.revenueColors, 1),
-        percentage: 19.5,
-      },
-      {
-        id: 'bajaj-allianz',
-        name: 'Bajaj Allianz',
-        value: Math.round(productsRevenue * 0.165),
-        color: getColorSafely(professionalColors.revenueColors, 2),
-        percentage: 16.5,
-      },
-      {
-        id: 'tata-aig',
-        name: 'Tata AIG',
-        value: Math.round(productsRevenue * 0.135),
-        color: getColorSafely(professionalColors.revenueColors, 3),
-        percentage: 13.5,
-      },
-      {
-        id: 'reliance-general',
-        name: 'Reliance General',
-        value: Math.round(productsRevenue * 0.115),
-        color: getColorSafely(professionalColors.revenueColors, 4),
-        percentage: 11.5,
-      },
-      {
-        id: 'new-india-assurance',
-        name: 'New India Assurance',
-        value: Math.round(productsRevenue * 0.085),
-        color: getColorSafely(professionalColors.revenueColors, 5),
-        percentage: 8.5,
-      },
-      {
-        id: 'oriental-insurance',
-        name: 'Oriental Insurance',
-        value: Math.round(productsRevenue * 0.055),
-        color: getColorSafely(professionalColors.revenueColors, 6),
-        percentage: 5.5,
-      },
-      {
-        id: 'united-india',
-        name: 'United India',
-        value: Math.round(productsRevenue * 0.025),
-        color: getColorSafely(professionalColors.revenueColors, 7),
-        percentage: 2.5,
-      },
-      {
-        id: 'national-insurance',
-        name: 'National Insurance',
-        value: Math.round(productsRevenue * 0.022),
-        color: getColorSafely(professionalColors.extendedColors, 10),
-        percentage: 2.2,
-      },
-      {
-        id: 'future-generali',
-        name: 'Future Generali',
-        value: Math.round(productsRevenue * 0.018),
-        color: getColorSafely(professionalColors.extendedColors, 11),
-        percentage: 1.8,
-      },
-      {
-        id: 'liberty-general',
-        name: 'Liberty General',
-        value: Math.round(productsRevenue * 0.015),
-        color: getColorSafely(professionalColors.extendedColors, 12),
-        percentage: 1.5,
-      },
-      {
-        id: 'iffco-tokio',
-        name: 'IFFCO Tokio',
-        value: Math.round(productsRevenue * 0.012),
-        color: getColorSafely(professionalColors.extendedColors, 13),
-        percentage: 1.2,
-      },
-      {
-        id: 'cholamandalam',
-        name: 'Cholamandalam MS',
-        value: Math.round(productsRevenue * 0.01),
-        color: getColorSafely(professionalColors.extendedColors, 14),
-        percentage: 1.0,
-      },
-      {
-        id: 'shriram-general',
-        name: 'Shriram General',
-        value: Math.round(productsRevenue * 0.008),
-        color: getColorSafely(professionalColors.extendedColors, 15),
-        percentage: 0.8,
-      },
-      {
-        id: 'go-digit',
-        name: 'Go Digit',
-        value: Math.round(productsRevenue * 0.007),
-        color: getColorSafely(professionalColors.extendedColors, 16),
-        percentage: 0.7,
-      },
-      {
-        id: 'acko-general',
-        name: 'Acko General',
-        value: Math.round(productsRevenue * 0.006),
-        color: getColorSafely(professionalColors.extendedColors, 17),
-        percentage: 0.6,
-      },
-      {
-        id: 'kotak-mahindra',
-        name: 'Kotak Mahindra',
-        value: Math.round(productsRevenue * 0.005),
-        color: getColorSafely(professionalColors.extendedColors, 18),
-        percentage: 0.5,
-      },
-      {
-        id: 'magma-hdi',
-        name: 'Magma HDI',
-        value: Math.round(productsRevenue * 0.004),
-        color: getColorSafely(professionalColors.extendedColors, 19),
-        percentage: 0.4,
-      },
-      {
-        id: 'raheja-qbe',
-        name: 'Raheja QBE',
-        value: Math.round(productsRevenue * 0.003),
-        color: getColorSafely(professionalColors.extendedColors, 20),
-        percentage: 0.3,
-      },
-      {
-        id: 'universal-sompo',
-        name: 'Universal Sompo',
-        value: Math.round(productsRevenue * 0.002),
-        color: getColorSafely(professionalColors.extendedColors, 21),
-        percentage: 0.2,
-      },
-      {
-        id: 'sbi-general',
-        name: 'SBI General',
-        value: Math.round(productsRevenue * 0.002),
-        color: getColorSafely(professionalColors.extendedColors, 22),
-        percentage: 0.2,
-      },
-      {
-        id: 'bharti-axa',
-        name: 'Bharti AXA',
-        value: Math.round(productsRevenue * 0.001),
-        color: getColorSafely(professionalColors.extendedColors, 23),
-        percentage: 0.1,
-      },
-      {
-        id: 'royal-sundaram',
-        name: 'Royal Sundaram',
-        value: Math.round(productsRevenue * 0.001),
-        color: getColorSafely(professionalColors.extendedColors, 24),
-        percentage: 0.1,
-      },
-    ],
+    revenueByInsurers: insurerAnalyticsData.map((insurer, index) => ({
+      id: insurer.name
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, ''),
+      name: insurer.name,
+      value: insurer.premiumRevenue,
+      color: insurer.color,
+      percentage: insurer.revenuePercentage,
+    })),
     revenueByPolicyType: policyTypeData.map((policy, index) => ({
       id: policy.name
         .toLowerCase()
@@ -866,417 +720,42 @@ const getRevenueData = () => {
       percentage: policy.percentage,
       description: `${policy.name} policies and coverage`,
     })),
-    revenueByVertical: [
-      {
-        id: 'life-health',
-        name: 'Life & Health',
-        value: Math.round(productsRevenue * 0.385),
-        color: getColorSafely(professionalColors.revenueColors, 0),
-        percentage: 38.5,
+    revenueByVertical: verticalAnalyticsData.map((vertical, index) => ({
+      id: vertical.name
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, ''),
+      name: vertical.name,
+      value: vertical.premiumRevenue,
+      color: vertical.color,
+      percentage: vertical.revenuePercentage,
+    })),
+    revenueByLOB: lobAnalyticsData.map((lob, index) => ({
+      id: lob.name
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, ''),
+      name: lob.name,
+      value: lob.premiumRevenue,
+      color: lob.color,
+      percentage: lob.revenuePercentage,
+    })),
+    revenueByProducts: productAnalyticsData.map((product, index) => ({
+      id: product.name
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, ''),
+      name: product.name,
+      value: product.premiumRevenue,
+      color: product.color,
+      percentage: product.revenuePercentage,
+      policies: product.policies,
+      clientTypes: {
+        Corporate: Math.round(product.premiumRevenue * 0.4),
+        Retail: Math.round(product.premiumRevenue * 0.35),
+        Affinity: Math.round(product.premiumRevenue * 0.25),
       },
-      {
-        id: 'property-casualty',
-        name: 'Property & Casualty',
-        value: Math.round(productsRevenue * 0.295),
-        color: getColorSafely(professionalColors.revenueColors, 1),
-        percentage: 29.5,
-      },
-      {
-        id: 'commercial-lines',
-        name: 'Commercial Lines',
-        value: Math.round(productsRevenue * 0.185),
-        color: getColorSafely(professionalColors.revenueColors, 2),
-        percentage: 18.5,
-      },
-      {
-        id: 'specialty-lines',
-        name: 'Specialty Lines',
-        value: Math.round(productsRevenue * 0.135),
-        color: getColorSafely(professionalColors.revenueColors, 3),
-        percentage: 13.5,
-      },
-      {
-        id: 'reinsurance',
-        name: 'Reinsurance',
-        value: Math.round(productsRevenue * 0.085),
-        color: getColorSafely(professionalColors.revenueColors, 4),
-        percentage: 8.5,
-      },
-      {
-        id: 'international',
-        name: 'International',
-        value: Math.round(productsRevenue * 0.065),
-        color: getColorSafely(professionalColors.revenueColors, 5),
-        percentage: 6.5,
-      },
-      {
-        id: 'digital-insurance',
-        name: 'Digital Insurance',
-        value: Math.round(productsRevenue * 0.045),
-        color: getColorSafely(professionalColors.revenueColors, 6),
-        percentage: 4.5,
-      },
-      {
-        id: 'bancassurance',
-        name: 'Bancassurance',
-        value: Math.round(productsRevenue * 0.035),
-        color: getColorSafely(professionalColors.revenueColors, 7),
-        percentage: 3.5,
-      },
-      {
-        id: 'microinsurance',
-        name: 'Microinsurance',
-        value: Math.round(productsRevenue * 0.025),
-        color: getColorSafely(professionalColors.extendedColors, 10),
-        percentage: 2.5,
-      },
-      {
-        id: 'crop-insurance',
-        name: 'Crop Insurance',
-        value: Math.round(productsRevenue * 0.018),
-        color: getColorSafely(professionalColors.extendedColors, 11),
-        percentage: 1.8,
-      },
-      {
-        id: 'cyber-insurance',
-        name: 'Cyber Insurance',
-        value: Math.round(productsRevenue * 0.015),
-        color: getColorSafely(professionalColors.extendedColors, 12),
-        percentage: 1.5,
-      },
-      {
-        id: 'parametric-insurance',
-        name: 'Parametric Insurance',
-        value: Math.round(productsRevenue * 0.012),
-        color: getColorSafely(professionalColors.extendedColors, 13),
-        percentage: 1.2,
-      },
-      {
-        id: 'climate-insurance',
-        name: 'Climate Insurance',
-        value: Math.round(productsRevenue * 0.008),
-        color: getColorSafely(professionalColors.extendedColors, 14),
-        percentage: 0.8,
-      },
-      {
-        id: 'insurtech',
-        name: 'InsurTech',
-        value: Math.round(productsRevenue * 0.005),
-        color: getColorSafely(professionalColors.extendedColors, 15),
-        percentage: 0.5,
-      },
-      {
-        id: 'peer-to-peer',
-        name: 'Peer-to-Peer',
-        value: Math.round(productsRevenue * 0.003),
-        color: getColorSafely(professionalColors.extendedColors, 16),
-        percentage: 0.3,
-      },
-    ],
-    revenueByLOB: [
-      {
-        id: 'employee-benefit',
-        name: 'Employee Benefit',
-        value: Math.round(productsRevenue * 0.325),
-        color: getColorSafely(professionalColors.revenueColors, 0),
-        percentage: 32.5,
-      },
-      {
-        id: 'property-engineering',
-        name: 'Property & Engineering',
-        value: Math.round(productsRevenue * 0.265),
-        color: getColorSafely(professionalColors.revenueColors, 1),
-        percentage: 26.5,
-      },
-      {
-        id: 'marine',
-        name: 'Marine',
-        value: Math.round(productsRevenue * 0.185),
-        color: getColorSafely(professionalColors.revenueColors, 2),
-        percentage: 18.5,
-      },
-      {
-        id: 'specie',
-        name: 'Specie',
-        value: Math.round(productsRevenue * 0.125),
-        color: getColorSafely(professionalColors.revenueColors, 3),
-        percentage: 12.5,
-      },
-      {
-        id: 'specialities',
-        name: 'Specialities',
-        value: Math.round(productsRevenue * 0.105),
-        color: getColorSafely(professionalColors.revenueColors, 4),
-        percentage: 10.5,
-      },
-    ],
-    revenueByProducts: [
-      {
-        id: 'health-insurance',
-        name: 'Health Insurance',
-        value: Math.round(productsRevenue * 0.285),
-        color: getColorSafely(professionalColors.revenueColors, 0),
-        percentage: 28.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.285 * 0.45),
-          Retail: Math.round(productsRevenue * 0.285 * 0.35),
-          Affinity: Math.round(productsRevenue * 0.285 * 0.2),
-        },
-      },
-      {
-        id: 'motor-insurance',
-        name: 'Motor Insurance',
-        value: Math.round(productsRevenue * 0.245),
-        color: getColorSafely(professionalColors.revenueColors, 1),
-        percentage: 24.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.245 * 0.3),
-          Retail: Math.round(productsRevenue * 0.245 * 0.55),
-          Affinity: Math.round(productsRevenue * 0.245 * 0.15),
-        },
-      },
-      {
-        id: 'life-insurance',
-        name: 'Life Insurance',
-        value: Math.round(productsRevenue * 0.185),
-        color: getColorSafely(professionalColors.revenueColors, 2),
-        percentage: 18.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.185 * 0.4),
-          Retail: Math.round(productsRevenue * 0.185 * 0.45),
-          Affinity: Math.round(productsRevenue * 0.185 * 0.15),
-        },
-      },
-      {
-        id: 'property-insurance',
-        name: 'Property Insurance',
-        value: Math.round(productsRevenue * 0.125),
-        color: getColorSafely(professionalColors.revenueColors, 3),
-        percentage: 12.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.125 * 0.6),
-          Retail: Math.round(productsRevenue * 0.125 * 0.25),
-          Affinity: Math.round(productsRevenue * 0.125 * 0.15),
-        },
-      },
-      {
-        id: 'travel-insurance',
-        name: 'Travel Insurance',
-        value: Math.round(productsRevenue * 0.095),
-        color: getColorSafely(professionalColors.revenueColors, 4),
-        percentage: 9.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.095 * 0.35),
-          Retail: Math.round(productsRevenue * 0.095 * 0.5),
-          Affinity: Math.round(productsRevenue * 0.095 * 0.15),
-        },
-      },
-      {
-        id: 'marine-insurance',
-        name: 'Marine Insurance',
-        value: Math.round(productsRevenue * 0.065),
-        color: getColorSafely(professionalColors.revenueColors, 5),
-        percentage: 6.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.065 * 0.8),
-          Retail: Math.round(productsRevenue * 0.065 * 0.1),
-          Affinity: Math.round(productsRevenue * 0.065 * 0.1),
-        },
-      },
-
-      {
-        id: 'cyber-insurance',
-        name: 'Cyber Insurance',
-        value: Math.round(productsRevenue * 0.05),
-        color: getColorSafely(professionalColors.revenueColors, 6),
-        percentage: 5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.05 * 0.7),
-          Retail: Math.round(productsRevenue * 0.05 * 0.2),
-          Affinity: Math.round(productsRevenue * 0.05 * 0.1),
-        },
-      },
-      {
-        id: 'crop-insurance',
-        name: 'Crop Insurance',
-        value: Math.round(productsRevenue * 0.04),
-        color: getColorSafely(professionalColors.revenueColors, 3),
-        percentage: 4,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.04 * 0.25),
-          Retail: Math.round(productsRevenue * 0.04 * 0.6),
-          Affinity: Math.round(productsRevenue * 0.04 * 0.15),
-        },
-      },
-      {
-        id: 'pet-insurance',
-        name: 'Pet Insurance',
-        value: Math.round(productsRevenue * 0.03),
-        color: getColorSafely(professionalColors.revenueColors, 8),
-        percentage: 3,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.03 * 0.15),
-          Retail: Math.round(productsRevenue * 0.03 * 0.75),
-          Affinity: Math.round(productsRevenue * 0.03 * 0.1),
-        },
-      },
-      {
-        id: 'education-insurance',
-        name: 'Education Insurance',
-        value: Math.round(productsRevenue * 0.025),
-        color: getColorSafely(professionalColors.revenueColors, 9),
-        percentage: 2.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.025 * 0.2),
-          Retail: Math.round(productsRevenue * 0.025 * 0.65),
-          Affinity: Math.round(productsRevenue * 0.025 * 0.15),
-        },
-      },
-      {
-        id: 'burglary-insurance',
-        name: 'Burglary Insurance',
-        value: Math.round(productsRevenue * 0.035),
-        color: getColorSafely(professionalColors.revenueColors, 10),
-        percentage: 3.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.035 * 0.4),
-          Retail: Math.round(productsRevenue * 0.035 * 0.45),
-          Affinity: Math.round(productsRevenue * 0.035 * 0.15),
-        },
-      },
-      {
-        id: 'liability-insurance',
-        name: 'Liability Insurance',
-        value: Math.round(productsRevenue * 0.055),
-        color: getColorSafely(professionalColors.revenueColors, 11),
-        percentage: 5.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.055 * 0.65),
-          Retail: Math.round(productsRevenue * 0.055 * 0.25),
-          Affinity: Math.round(productsRevenue * 0.055 * 0.1),
-        },
-      },
-      {
-        id: 'credit-insurance',
-        name: 'Credit Insurance',
-        value: Math.round(productsRevenue * 0.045),
-        color: getColorSafely(professionalColors.revenueColors, 12),
-        percentage: 4.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.045 * 0.6),
-          Retail: Math.round(productsRevenue * 0.045 * 0.3),
-          Affinity: Math.round(productsRevenue * 0.045 * 0.1),
-        },
-      },
-      {
-        id: 'event-insurance',
-        name: 'Event Insurance',
-        value: Math.round(productsRevenue * 0.02),
-        color: getColorSafely(professionalColors.revenueColors, 13),
-        percentage: 2,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.02 * 0.3),
-          Retail: Math.round(productsRevenue * 0.02 * 0.6),
-          Affinity: Math.round(productsRevenue * 0.02 * 0.1),
-        },
-      },
-      {
-        id: 'fire-insurance',
-        name: 'Fire Insurance',
-        value: Math.round(productsRevenue * 0.06),
-        color: getColorSafely(professionalColors.revenueColors, 14),
-        percentage: 6,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.06 * 0.55),
-          Retail: Math.round(productsRevenue * 0.06 * 0.35),
-          Affinity: Math.round(productsRevenue * 0.06 * 0.1),
-        },
-      },
-      {
-        id: 'disability-insurance',
-        name: 'Disability Insurance',
-        value: Math.round(productsRevenue * 0.025),
-        color: getColorSafely(professionalColors.revenueColors, 15),
-        percentage: 2.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.025 * 0.25),
-          Retail: Math.round(productsRevenue * 0.025 * 0.6),
-          Affinity: Math.round(productsRevenue * 0.025 * 0.15),
-        },
-      },
-      {
-        id: 'dental-insurance',
-        name: 'Dental Insurance',
-        value: Math.round(productsRevenue * 0.02),
-        color: getColorSafely(professionalColors.revenueColors, 16),
-        percentage: 2,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.02 * 0.2),
-          Retail: Math.round(productsRevenue * 0.02 * 0.7),
-          Affinity: Math.round(productsRevenue * 0.02 * 0.1),
-        },
-      },
-      {
-        id: 'vision-insurance',
-        name: 'Vision Insurance',
-        value: Math.round(productsRevenue * 0.015),
-        color: getColorSafely(professionalColors.revenueColors, 17),
-        percentage: 1.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.015 * 0.15),
-          Retail: Math.round(productsRevenue * 0.015 * 0.75),
-          Affinity: Math.round(productsRevenue * 0.015 * 0.1),
-        },
-      },
-      {
-        id: 'aviation-insurance',
-        name: 'Aviation Insurance',
-        value: Math.round(productsRevenue * 0.035),
-        color: getColorSafely(professionalColors.revenueColors, 18),
-        percentage: 3.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.035 * 0.75),
-          Retail: Math.round(productsRevenue * 0.035 * 0.15),
-          Affinity: Math.round(productsRevenue * 0.035 * 0.1),
-        },
-      },
-      {
-        id: 'home-insurance',
-        name: 'Home Insurance',
-        value: Math.round(productsRevenue * 0.05),
-        color: getColorSafely(professionalColors.revenueColors, 19),
-        percentage: 5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.05 * 0.25),
-          Retail: Math.round(productsRevenue * 0.05 * 0.6),
-          Affinity: Math.round(productsRevenue * 0.05 * 0.15),
-        },
-      },
-      {
-        id: 'gadget-insurance',
-        name: 'Gadget Insurance',
-        value: Math.round(productsRevenue * 0.025),
-        color: getColorSafely(professionalColors.revenueColors, 20),
-        percentage: 2.5,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.025 * 0.1),
-          Retail: Math.round(productsRevenue * 0.025 * 0.8),
-          Affinity: Math.round(productsRevenue * 0.025 * 0.1),
-        },
-      },
-      {
-        id: 'mutualfund-protection',
-        name: 'Mutual Fund Protection',
-        value: Math.round(productsRevenue * 0.03),
-        color: getColorSafely(professionalColors.revenueColors, 21),
-        percentage: 3,
-        clientTypes: {
-          Corporate: Math.round(productsRevenue * 0.03 * 0.4),
-          Retail: Math.round(productsRevenue * 0.03 * 0.5),
-          Affinity: Math.round(productsRevenue * 0.03 * 0.1),
-        },
-      },
-    ],
+    })),
     crossSellPenetration: [
       {
         id: 'health-motor',
@@ -1482,5 +961,269 @@ export const {
 // Selectors
 export const selectNumberOfProducts = (state: any) =>
   state.revenue?.numberOfProducts || [];
+
+// Enhanced selectors that use imported data when available
+export const selectRevenueByProducts = (state: any) => {
+  const importedData = state.importedData;
+
+  if (importedData?.isDataImported && importedData.productData?.length > 0) {
+    // Transform imported product data to match the expected format
+    return importedData.productData.map((product: any, index: number) => ({
+      id: `product-${index}`,
+      name: product.name,
+      value: product.revenue,
+      percentage: product.percentage,
+      color: product.color,
+      growth: product.growth,
+      policies: product.policies, // Include policies from Excel
+      premium: product.premium, // Include premium from Excel
+      revenuePercentage: product.revenuePercentage, // Include revenue percentage from Excel
+      // Add additional fields that components might expect
+      clientTypes: {
+        Corporate: product.revenue * 0.4,
+        Retail: product.revenue * 0.35,
+        Affinity: product.revenue * 0.25,
+      },
+    }));
+  }
+
+  return state.revenue?.revenueByProducts || [];
+};
+
+export const selectRevenueByInsurers = (state: any) => {
+  const importedData = state.importedData;
+
+  if (importedData?.isDataImported && importedData.insurerData?.length > 0) {
+    // Transform imported insurer data to match the expected format
+    return importedData.insurerData.map((insurer: any, index: number) => ({
+      id: `insurer-${index}`,
+      name: insurer.name,
+      value: insurer.revenue,
+      policies: insurer.policies,
+      premium: insurer.premium, // Include premium from Excel
+      revenuePercentage: insurer.revenuePercentage, // Include revenue percentage from Excel
+      retention: insurer.retention,
+      color: insurer.color,
+      percentage: (insurer.revenue / importedData.totalRevenue) * 100,
+      // Add additional fields that components might expect
+      clientTypes: {
+        Corporate: insurer.revenue * 0.45,
+        Retail: insurer.revenue * 0.35,
+        Affinity: insurer.revenue * 0.2,
+      },
+    }));
+  }
+
+  return state.revenue?.revenueByInsurers || [];
+};
+
+export const selectBaseMetrics = (state: any) => {
+  const importedData = state.importedData;
+
+  if (importedData?.isDataImported) {
+    return {
+      totalRevenue: importedData.totalRevenue,
+      expenses: importedData.expenses,
+      grossProfit: importedData.grossProfit,
+    };
+  }
+
+  return state.revenue?.baseMetrics || {};
+};
+
+export const selectRevenueByPolicyType = (state: any) => {
+  const importedData = state.importedData;
+
+  if (importedData?.isDataImported && importedData.policyTypeData?.length > 0) {
+    // Transform imported policy type data to match the expected format
+    return importedData.policyTypeData.map(
+      (policyType: any, index: number) => ({
+        id: `policy-type-${index}`,
+        name: policyType.name,
+        value: policyType.revenue,
+        policies: policyType.policies,
+        premium: policyType.premium,
+        revenuePercentage: policyType.revenuePercentage,
+        color: policyType.color,
+        percentage: (policyType.revenue / importedData.totalRevenue) * 100,
+        // Add additional fields that components might expect
+        clientTypes: {
+          Corporate: policyType.revenue * 0.45,
+          Retail: policyType.revenue * 0.35,
+          Affinity: policyType.revenue * 0.2,
+        },
+      })
+    );
+  }
+
+  return state.revenue?.revenueByPolicyType || [];
+};
+
+export const selectRevenueByLOB = (state: any) => {
+  const importedData = state.importedData;
+
+  if (importedData?.isDataImported && importedData.lobData?.length > 0) {
+    // Transform imported LOB data to match the expected format
+    return importedData.lobData.map((lob: any, index: number) => ({
+      id: `lob-${index}`,
+      name: lob.name,
+      value: lob.revenue,
+      policies: lob.policies,
+      premium: lob.premium,
+      revenuePercentage: lob.revenuePercentage,
+      color: lob.color,
+      percentage: (lob.revenue / importedData.totalRevenue) * 100,
+      // Add additional fields that components might expect
+      clientTypes: {
+        Corporate: lob.revenue * 0.45,
+        Retail: lob.revenue * 0.35,
+        Affinity: lob.revenue * 0.2,
+      },
+    }));
+  }
+
+  return state.revenue?.revenueByLOB || [];
+};
+
+export const selectRevenueByVertical = (state: any) => {
+  const importedData = state.importedData;
+
+  if (importedData?.isDataImported && importedData.verticalData?.length > 0) {
+    // Transform imported vertical data to match the expected format
+    return importedData.verticalData.map((vertical: any, index: number) => ({
+      id: `vertical-${index}`,
+      name: vertical.name,
+      value: vertical.revenue,
+      policies: vertical.policies,
+      premium: vertical.premium,
+      revenuePercentage: vertical.revenuePercentage,
+      color: vertical.color,
+      percentage: (vertical.revenue / importedData.totalRevenue) * 100,
+      // Add additional fields that components might expect
+      clientTypes: {
+        Corporate: vertical.revenue * 0.45,
+        Retail: vertical.revenue * 0.35,
+        Affinity: vertical.revenue * 0.2,
+      },
+    }));
+  }
+
+  return state.revenue?.revenueByVertical || [];
+};
+
+export const selectRetentionByInsurer = (state: any) => {
+  const importedData = state.importedData;
+
+  if (
+    importedData?.isDataImported &&
+    importedData.retentionByInsurerData?.length > 0
+  ) {
+    // Transform imported retention by insurer data to match the expected format
+    return importedData.retentionByInsurerData.map(
+      (insurer: any, index: number) => ({
+        id: `retention-insurer-${index}`,
+        name: insurer.name,
+        value: insurer.revenue,
+        policies: insurer.policies,
+        retention: insurer.retention,
+        premium: insurer.premium,
+        revenuePercentage: insurer.revenuePercentage,
+        color: insurer.color,
+        percentage: (insurer.revenue / importedData.totalRevenue) * 100,
+        // Add additional fields that components might expect
+        clientTypes: {
+          Corporate: insurer.revenue * 0.45,
+          Retail: insurer.revenue * 0.35,
+          Affinity: insurer.revenue * 0.2,
+        },
+      })
+    );
+  }
+
+  return state.revenue?.revenueByInsurers || [];
+};
+
+export const selectRetentionByBroker = (state: any) => {
+  const importedData = state.importedData;
+
+  if (
+    importedData?.isDataImported &&
+    importedData.retentionByBrokerData?.length > 0
+  ) {
+    // Transform imported retention by broker data to match the expected format
+    return importedData.retentionByBrokerData.map(
+      (broker: any, index: number) => ({
+        id: `retention-broker-${index}`,
+        name: broker.name,
+        value: broker.revenue,
+        policies: broker.policies,
+        retention: broker.retention,
+        premium: broker.premium,
+        revenuePercentage: broker.revenuePercentage,
+        color: broker.color,
+        percentage: (broker.revenue / importedData.totalRevenue) * 100,
+        // Add additional fields that components might expect
+        clientTypes: {
+          Corporate: broker.revenue * 0.45,
+          Retail: broker.revenue * 0.35,
+          Affinity: broker.revenue * 0.2,
+        },
+      })
+    );
+  }
+
+  return state.revenue?.brokerRetentionData || [];
+};
+
+export const selectNumberOfProductsData = (state: any) => {
+  const importedData = state.importedData;
+
+  if (
+    importedData?.isDataImported &&
+    importedData.numberOfProductData?.length > 0
+  ) {
+    // Transform imported number of product data to match the expected format
+    return importedData.numberOfProductData.map(
+      (product: any, index: number) => ({
+        id: `number-product-${index}`,
+        name: product.name,
+        value: product.revenue,
+        policies: product.policies,
+        premium: product.premium,
+        revenuePercentage: product.revenuePercentage,
+        color: product.color,
+        percentage: (product.revenue / importedData.totalRevenue) * 100,
+        // Add additional fields that components might expect
+        clientTypes: {
+          Corporate: product.revenue * 0.45,
+          Retail: product.revenue * 0.35,
+          Affinity: product.revenue * 0.2,
+        },
+      })
+    );
+  }
+
+  return state.revenue?.numberOfProducts || [];
+};
+
+export const selectRevenueVsExpenses = (state: any) => {
+  const importedData = state.importedData;
+
+  if (importedData?.isDataImported) {
+    return {
+      revenueByProducts: importedData.revenueByProducts || [],
+      expenseData: importedData.expenseData || [],
+    };
+  }
+
+  return {
+    revenueByProducts: state.revenue?.revenueByProducts || [],
+    expenseData: state.revenue?.expenseData || [],
+  };
+};
+
+export const selectCrossSellData = (state: any) => {
+  return state.revenue?.crossSellPenetration || [];
+};
 
 export default revenueSlice.reducer;

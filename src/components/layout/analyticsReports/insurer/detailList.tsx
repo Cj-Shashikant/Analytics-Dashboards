@@ -3,35 +3,38 @@ import { productsListStyles } from './style';
 import { Card } from '../../../ui/card';
 import { getFormattedValue as utilGetFormattedValue } from '@/utils/valueFormatter';
 
-interface Product {
+interface Insurer {
   id: string;
   name: string;
   value: number;
   color: string;
   percentage: number;
   description?: string;
+  policies?: number;
+  premium?: number;
+  revenuePercentage?: number;
 }
 
-interface ProductsListProps {
-  data: Product[];
+interface InsurersListProps {
+  data: Insurer[];
   valueUnit: 'K' | 'L' | 'Cr';
-  onItemClick?: (product: Product) => void;
+  onItemClick?: (insurer: Insurer) => void;
   selectedReportType?: string;
   className?: string;
 }
 
 type SortState = 'none' | 'desc' | 'asc';
-type SortColumn = 'policies' | 'amount' | 'revenue';
+type SortColumn = 'policies' | 'premium' | 'revenue' | 'revenuePercentage';
 
-export function ProductsList({
+export function InsurersList({
   data,
   valueUnit,
   onItemClick,
-}: ProductsListProps) {
+}: InsurersListProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortState, setSortState] = useState<SortState>('none');
 
-  // Generate mock policy numbers for each product
+  // Generate mock policy numbers for each insurer
   const getPolicyCount = (index: number) => {
     const baseCounts = [
       33300, 27360, 23040, 16740, 12780, 8950, 7200, 6100, 5400, 4800, 4200,
@@ -61,39 +64,42 @@ export function ProductsList({
     }
   };
 
-  // Add null check for data prop
-  if (!data || !Array.isArray(data)) {
-    return (
-      <Card className={productsListStyles.container}>
-        <div className="p-4 text-center text-gray-500">No data available</div>
-      </Card>
-    );
-  }
-
   // Local getFormattedValue function
   const getFormattedValue = (value: number) => {
     return utilGetFormattedValue(value, valueUnit);
   };
 
-  // Sort products based on current sort state
-  const sortedProducts = useMemo(() => {
+  // Sort insurers based on current sort state - moved before early return
+  const sortedInsurers = useMemo(() => {
+    // Add null check for data prop inside useMemo
+    if (!data || !Array.isArray(data)) {
+      return [];
+    }
+
     if (!sortColumn || sortState === 'none') {
       return data;
     }
 
-    return [...data].sort((a, b) => {
+    return [...data].sort((a: Insurer, b: Insurer) => {
       let aValue: number;
       let bValue: number;
 
       switch (sortColumn) {
         case 'policies':
-          aValue = getPolicyCount(data.indexOf(a));
-          bValue = getPolicyCount(data.indexOf(b));
+          aValue = a.policies || getPolicyCount(data.indexOf(a));
+          bValue = b.policies || getPolicyCount(data.indexOf(b));
           break;
-        case 'amount':
+        case 'premium':
+          aValue = a.premium || a.value;
+          bValue = b.premium || b.value;
+          break;
         case 'revenue':
           aValue = a.value;
           bValue = b.value;
+          break;
+        case 'revenuePercentage':
+          aValue = a.revenuePercentage || a.percentage;
+          bValue = b.revenuePercentage || b.percentage;
           break;
         default:
           return 0;
@@ -106,6 +112,15 @@ export function ProductsList({
       }
     });
   }, [data, sortColumn, sortState]);
+
+  // Early return moved after all hooks
+  if (!data || !Array.isArray(data)) {
+    return (
+      <Card className={productsListStyles.container}>
+        <div className="p-4 text-center text-gray-500">No data available</div>
+      </Card>
+    );
+  }
 
   // Get SVG color based on sort state
   const getSvgColor = (column: SortColumn) => {
@@ -124,17 +139,17 @@ export function ProductsList({
 
   return (
     <Card className={productsListStyles.container}>
-      <div className="overflow-auto relative" style={{ height: '26rem' }}>
+      <div className="overflow-auto relative" style={{ height: '31rem' }}>
         {/* Sticky Table Header */}
         <div
           className={`${productsListStyles.table.headerRow} sticky top-0 z-20 bg-white`}
-          style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}
+          style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr' }}
         >
-          {/* Sticky Product Header */}
+          {/* Sticky Insurer Header */}
           <div
             className={`${productsListStyles.table.headerCell} sticky flex items-center justify-center`}
           >
-            Product
+            Insurer
           </div>
 
           {/* Sortable Headers */}
@@ -162,20 +177,20 @@ export function ProductsList({
 
           <div
             className={`${productsListStyles.table.headerCellRight} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors justify-center`}
-            onClick={() => handleSort('amount')}
+            onClick={() => handleSort('premium')}
           >
-            <span className="mr-1">Amount</span>
+            <span className="mr-1">Premium</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke={getSvgColor('amount')}
+              stroke={getSvgColor('premium')}
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className={`transition-all duration-200 ${getSvgRotation('amount')}`}
+              className={`transition-all duration-200 ${getSvgRotation('premium')}`}
             >
               <path d="M12 5v14"></path>
               <path d="m19 12-7 7-7-7"></path>
@@ -203,20 +218,43 @@ export function ProductsList({
               <path d="m19 12-7 7-7-7"></path>
             </svg>
           </div>
+
+          <div
+            className={`${productsListStyles.table.headerCellRight} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors justify-center`}
+            onClick={() => handleSort('revenuePercentage')}
+          >
+            <span className="mr-1">Revenue %</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke={getSvgColor('revenuePercentage')}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-all duration-200 ${getSvgRotation('revenuePercentage')}`}
+            >
+              <path d="M12 5v14"></path>
+              <path d="m19 12-7 7-7-7"></path>
+            </svg>
+          </div>
         </div>
 
         {/* Table Body */}
         <div className={productsListStyles.table.body}>
-          {sortedProducts.map(product => {
-            const originalIndex = data.findIndex(p => p.id === product.id);
-            const policyCount = getPolicyCount(originalIndex);
+          {sortedInsurers.map(insurer => {
+            const originalIndex = data.findIndex(p => p.id === insurer.id);
+            const policyCount =
+              insurer.policies || getPolicyCount(originalIndex);
 
             return (
               <div
-                key={product.id}
-                onClick={() => onItemClick?.(product)}
+                key={insurer.id}
+                onClick={() => onItemClick?.(insurer)}
                 className={productsListStyles.productRow.container}
-                style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}
+                style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr' }}
               >
                 {/* Sticky Product Column */}
                 <div
@@ -224,18 +262,18 @@ export function ProductsList({
                 >
                   <div
                     className={productsListStyles.productRow.colorIndicator}
-                    style={{ backgroundColor: product.color }}
+                    style={{ backgroundColor: insurer.color }}
                   />
                   <div className={productsListStyles.productRow.productInfo}>
                     <div className={productsListStyles.productRow.productName}>
-                      {product.name}
+                      {insurer.name}
                     </div>
                     <div
                       className={
                         productsListStyles.productRow.productDescription
                       }
                     >
-                      {product.description}
+                      {insurer.description}
                     </div>
                   </div>
                 </div>
@@ -247,17 +285,27 @@ export function ProductsList({
                   </div>
                 </div>
 
-                {/* Amount Column */}
+                {/* Premium Column */}
                 <div className={productsListStyles.productRow.rightColumn}>
                   <div className={productsListStyles.productRow.cellValue}>
-                    {getFormattedValue(product.value)}
+                    {getFormattedValue(insurer.premium || insurer.value)}
                   </div>
                 </div>
 
                 {/* Revenue Column */}
                 <div className={productsListStyles.productRow.rightColumn}>
                   <div className={productsListStyles.productRow.cellValue}>
-                    {getFormattedValue(product.value)}
+                    {getFormattedValue(insurer.value)}
+                  </div>
+                </div>
+
+                {/* Revenue Percentage Column */}
+                <div className={productsListStyles.productRow.rightColumn}>
+                  <div className={productsListStyles.productRow.cellValue}>
+                    {(insurer.revenuePercentage || insurer.percentage).toFixed(
+                      2
+                    )}
+                    %
                   </div>
                 </div>
               </div>

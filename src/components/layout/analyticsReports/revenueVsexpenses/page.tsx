@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks/hooks';
 import { RootState } from '@/redux/store';
+import {
+  selectRevenueVsExpenses,
+  selectBaseMetrics,
+} from '../../../../redux/slices/revenueSlice';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -62,7 +67,9 @@ export function ChartsSection({
   onTotalElementsChange,
 }: ChartsSectionProps) {
   // Redux hooks
-  const revenueState = useSelector((state: RootState) => state.revenue);
+  const dispatch = useAppDispatch();
+  const revenueVsExpensesData = useSelector(selectRevenueVsExpenses);
+  const baseMetrics = useSelector(selectBaseMetrics);
   const filterState = useSelector((state: RootState) => state.filter);
 
   // Use valueUnit from Redux state, fallback to prop if needed
@@ -125,7 +132,7 @@ export function ChartsSection({
     }
 
     // Use Redux base metrics
-    const baseMetrics = revenueState.baseMetrics;
+    const reduxBaseMetrics = baseMetrics;
 
     // Adjust values slightly based on report type
     const adjustmentFactor =
@@ -142,22 +149,89 @@ export function ChartsSection({
                 : 0.92;
 
     return {
-      totalRevenue: baseMetrics.totalRevenue * adjustmentFactor,
-      expenses: baseMetrics.expenses * adjustmentFactor,
-      grossProfit: baseMetrics.grossProfit * adjustmentFactor,
+      totalRevenue: reduxBaseMetrics.totalRevenue * adjustmentFactor,
+      expenses: reduxBaseMetrics.expenses * adjustmentFactor,
+      grossProfit: reduxBaseMetrics.grossProfit * adjustmentFactor,
     };
   };
 
   const metricsData = getMetricsData();
 
+  // Import handler function
+  const handleImport = async () => {
+    // Create a file input element for importing Excel files
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.xlsx,.xls,.csv';
+    fileInput.style.display = 'none';
+
+    fileInput.onchange = async (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+
+      if (file) {
+        try {
+          console.log('File selected for import:', file.name);
+
+          // Import and parse the Excel file
+          const { parseExcelFile } = await import(
+            '../../../../utils/excelParser'
+          );
+          const parsedData = await parseExcelFile(file);
+
+          // Import Redux action
+          const { setImportedData } = await import(
+            '../../../../redux/slices/importedDataSlice'
+          );
+
+          // Dispatch the parsed data to Redux store
+          dispatch(
+            setImportedData({
+              fileName: file.name,
+              data: parsedData,
+            })
+          );
+
+          console.log('Data imported successfully:', parsedData);
+
+          // Show success message
+          alert(
+            `✅ File "${file.name}" imported successfully!\n\n` +
+              `📊 Data Summary:\n` +
+              `• Total Revenue: ₹${(parsedData.totalRevenue / 10000000).toFixed(2)} Cr\n` +
+              `• Products: ${parsedData.productData.length} items\n` +
+              `• Insurers: ${parsedData.insurerData.length} items\n` +
+              `• Locations: ${parsedData.locationPerformance.length} items\n` +
+              `• Monthly Data: ${parsedData.monthlyTrends.length} months\n\n` +
+              `🔄 Dashboard data has been updated with imported values.`
+          );
+        } catch (error) {
+          console.error('Error importing file:', error);
+          alert(
+            `❌ Error importing file: ${error}\n\n` +
+              `Please ensure the Excel file has the correct format with these sheets:\n` +
+              `• Main Metrics\n• Product Data\n• Insurer Data\n• Location Performance\n• Monthly Trends`
+          );
+        }
+      }
+    };
+
+    // Trigger the file selection dialog
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+
+    console.log('Import dialog opened');
+  };
+
   // Get data - Revenue data for left container
   const getRevenueData = () => {
-    return revenueState.revenueByProducts || [];
+    return revenueVsExpensesData.revenueByProducts || [];
   };
 
   // Get data - Expense data for right container
   const getExpenseData = () => {
-    return revenueState.expenseData || [];
+    return revenueVsExpensesData.expenseData || [];
   };
 
   // Filter revenue data based on selected client types and top filter
@@ -277,7 +351,7 @@ export function ChartsSection({
             data={chartData}
             onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            size={{ width: 621, height: chartDimensions.height }}
+            size={{ width: 636, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -348,7 +422,7 @@ export function ChartsSection({
             data={chartData}
             onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            size={{ width: 621, height: chartDimensions.height }}
+            size={{ width: 636, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -393,7 +467,7 @@ export function ChartsSection({
             data={chartData}
             onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            size={{ width: 621, height: chartDimensions.height }}
+            size={{ width: 636, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -452,13 +526,14 @@ export function ChartsSection({
                   onDownload={format =>
                     console.log('Download Revenue:', format)
                   }
+                  onImport={handleImport}
                   topFilter={revenueTopFilter}
                 />
               </div>
             </div>
 
             {/* Revenue Chart */}
-            <div style={{ height: '21.9rem' }}>
+            <div style={{ height: '27rem' }}>
               <div className={commonStyles.chartContainer}>
                 <div className={commonStyles.chartWrapper}>
                   {renderRevenueChart()}
@@ -512,13 +587,14 @@ export function ChartsSection({
                   onDownload={format =>
                     console.log('Download Expenses:', format)
                   }
+                  onImport={handleImport}
                   topFilter={expenseTopFilter}
                 />
               </div>
             </div>
 
             {/* Expense Chart */}
-            <div style={{ height: '21.9rem' }}>
+            <div style={{ height: '27rem' }}>
               <div className={commonStyles.chartContainer}>
                 <div className={commonStyles.chartWrapper}>
                   {renderExpenseChart()}

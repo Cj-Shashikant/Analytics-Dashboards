@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import { useAppDispatch } from '../../../../hooks/hooks';
+import { RootState } from '../../../../redux/store';
+import {
+  selectRevenueByProducts,
+  selectBaseMetrics,
+} from '../../../../redux/slices/revenueSlice';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -62,8 +67,76 @@ export function ChartsSection({
   onTotalElementsChange,
 }: ChartsSectionProps) {
   // Redux hooks
-  const revenueState = useSelector((state: RootState) => state.revenue);
+  const dispatch = useAppDispatch();
+  // Removed unused revenueState variable
   const filterState = useSelector((state: RootState) => state.filter);
+
+  // Import handler function
+  const handleImport = async () => {
+    // Create a file input element for importing Excel files
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.xlsx,.xls,.csv';
+    fileInput.style.display = 'none';
+
+    fileInput.onchange = async (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+
+      if (file) {
+        try {
+          console.log('File selected for import:', file.name);
+
+          // Import and parse the Excel file
+          const { parseExcelFile } = await import(
+            '../../../../utils/excelParser'
+          );
+          const parsedData = await parseExcelFile(file);
+
+          // Import Redux action
+          const { setImportedData } = await import(
+            '../../../../redux/slices/importedDataSlice'
+          );
+
+          // Dispatch the parsed data to Redux store
+          dispatch(
+            setImportedData({
+              fileName: file.name,
+              data: parsedData,
+            })
+          );
+
+          console.log('Data imported successfully:', parsedData);
+
+          // Show success message
+          alert(
+            `File "${file.name}" imported successfully!\n\n` +
+              `Data Summary:\n` +
+              `• Total Revenue: ₹${(parsedData.totalRevenue / 10000000).toFixed(2)} Cr\n` +
+              `• Products: ${parsedData.productData.length} items\n` +
+              `• Insurers: ${parsedData.insurerData.length} items\n` +
+              `• Locations: ${parsedData.locationPerformance.length} items\n` +
+              `• Monthly Data: ${parsedData.monthlyTrends.length} months\n\n` +
+              ` Dashboard data has been updated with imported values.`
+          );
+        } catch (error) {
+          console.error('Error importing file:', error);
+          alert(
+            `Error importing file: ${error}\n\n` +
+              `Please ensure the Excel file has the correct format with these sheets:\n` +
+              `• Main Metrics\n• Product Data\n• Insurer Data\n• Location Performance\n• Monthly Trends`
+          );
+        }
+      }
+    };
+
+    // Trigger the file selection dialog
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+
+    console.log('Import dialog opened');
+  };
 
   // Use valueUnit from Redux state, fallback to prop if needed
   const valueUnit = filterState.valueUnit || propValueUnit || 'K';
@@ -109,13 +182,15 @@ export function ChartsSection({
   };
 
   // Get metrics data from Redux or fallback
+  const baseMetricsFromSelector = useSelector(selectBaseMetrics);
+
   const getMetricsData = () => {
     if (baseMetricsData) {
       return baseMetricsData;
     }
 
-    // Use Redux base metrics
-    const baseMetrics = revenueState.baseMetrics;
+    // Use Redux base metrics (now includes imported data support)
+    const baseMetrics = baseMetricsFromSelector;
 
     // Adjust values slightly based on report type
     const adjustmentFactor =
@@ -141,8 +216,10 @@ export function ChartsSection({
   const metricsData = getMetricsData();
 
   // Get data - Product folder specifically uses revenueByProducts data
+  const productData = useSelector(selectRevenueByProducts);
+
   const getReportData = () => {
-    return revenueState.revenueByProducts || [];
+    return productData || [];
   };
 
   // Filter data based on selected client types (only for Revenue by Products)
@@ -150,20 +227,26 @@ export function ChartsSection({
     const data = getReportData();
 
     if (selectedReportType === 'Revenue by Products') {
-      return data.map(item => {
+      return data.map((item: any) => {
         if (!item?.clientTypes) return item;
 
-        const filteredValue = selectedClientTypes.reduce((sum, clientType) => {
-          const clientTypeValue =
-            item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
-            0;
-          return sum + clientTypeValue;
-        }, 0);
+        const filteredValue = selectedClientTypes.reduce(
+          (sum: number, clientType: string) => {
+            const clientTypeValue =
+              item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
+              0;
+            return sum + clientTypeValue;
+          },
+          0
+        );
 
         return {
           ...item,
           value: filteredValue,
           percentage: (filteredValue / metricsData.totalRevenue) * 100,
+          policies: item.policies, // Preserve policies data from imported Excel
+          premium: item.premium, // Preserve premium data from imported Excel
+          revenuePercentage: item.revenuePercentage, // Preserve revenue percentage from imported Excel
         };
       });
     }
@@ -177,9 +260,9 @@ export function ChartsSection({
   const getTopFilteredData = () => {
     const topCount = parseInt(topFilter.replace('Top ', ''));
     return reportData
-      .sort((a, b) => b.value - a.value)
+      .sort((a: any, b: any) => b.value - a.value)
       .slice(0, topCount)
-      .map((item, index) => ({
+      .map((item: any, index: number) => ({
         ...item,
         rank: index + 1,
       }));
@@ -215,8 +298,8 @@ export function ChartsSection({
   // Render chart based on selected chart type
   const renderChart = () => {
     const chartData = displayData
-      .filter(item => item != null)
-      .map(item => ({
+      .filter((item: any) => item != null)
+      .map((item: any) => ({
         id: item.id || '',
         name: item.name || '',
         value: item.value || 0,
@@ -231,7 +314,7 @@ export function ChartsSection({
             data={chartData}
             onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            size={{ width: 621, height: chartDimensions.height }}
+            size={{ width: 636, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -330,13 +413,14 @@ export function ChartsSection({
                   currentChartType={chartTypeState}
                   onChartTypeChange={setChartTypeState}
                   onDownload={format => console.log('Download:', format)}
+                  onImport={handleImport}
                   topFilter={topFilter}
                 />
               </div>
             </div>
 
             {/* Chart */}
-            <div style={{ height: '21.9rem' }}>
+            <div style={{ height: '27rem' }}>
               <div className={commonStyles.chartContainer}>
                 <div className={commonStyles.chartWrapper}>{renderChart()}</div>
               </div>

@@ -9,9 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -22,7 +20,6 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  X,
   Settings,
   Filter,
   Calendar,
@@ -37,16 +34,32 @@ import {
   Pin,
   PinOff,
   Check,
-  Sliders,
   Monitor,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
+
+// Redux imports
+import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
+import {
+  setSelectedDepartment,
+  setSelectedReportType,
+  setSelectedDuration,
+  setValueUnit,
+  setTopExpenseCategories,
+} from '@/redux/slices/filterSlice';
+
+// Constants imports
+import { DEPARTMENTS, DepartmentType } from '@/constants/enums/departments';
+import { DURATIONS, DurationType } from '@/constants/enums/durations';
+import {
+  getReportTypesForDepartment,
+  ReportType,
+} from '@/constants/enums/reportTypes';
+import { VALUE_UNITS, ValueUnitType } from '@/constants/enums/valueUnits';
 
 interface AdvancedFiltersProps {
   isOpen: boolean;
   onClose: () => void;
-  // Optional props with default values
+  // Optional props with default values - keeping for backward compatibility
   valueUnit?: string;
   onValueUnitChange?: (unit: string) => void;
   topExpenseCategories?: string;
@@ -63,22 +76,33 @@ interface AdvancedFiltersProps {
 export function AdvancedFilters({
   isOpen,
   onClose,
-  valueUnit = 'Cr',
-  onValueUnitChange = () => {},
-  topExpenseCategories = '10',
-  onTopExpenseCategoriesChange = () => {},
-  selectedEntity = '',
-  selectedBusinessType = '',
-  selectedLocation = '',
-  selectedReportType = '',
-  selectedDuration = '',
-  pinnedItems = [],
-  onPinnedItemsChange = () => {},
+  // Legacy props - keeping for backward compatibility but using Redux state instead
+  valueUnit: legacyValueUnit,
+  onValueUnitChange,
+  topExpenseCategories: legacyTopExpenseCategories,
+  onTopExpenseCategoriesChange,
+  selectedEntity: legacySelectedEntity,
+  selectedBusinessType: legacySelectedBusinessType,
+  selectedLocation: legacySelectedLocation,
+  selectedReportType: legacySelectedReportType,
+  selectedDuration: legacySelectedDuration,
+  pinnedItems: legacyPinnedItems = [],
+  onPinnedItemsChange,
 }: AdvancedFiltersProps) {
+  const dispatch = useAppDispatch();
+
+  // Get current filter state from Redux
+  const {
+    selectedDepartment,
+    selectedReportType,
+    selectedDuration,
+    valueUnit,
+    topExpenseCategories,
+    pinnedItems,
+  } = useAppSelector(state => state.filter);
+
   // Date Range Filters
   const [dateRange, setDateRange] = useState('FY 2022-23');
-  // const [customStartDate, setCustomStartDate] = useState('');
-  // const [customEndDate, setCustomEndDate] = useState('');
 
   // Regional Filters
   const [selectedRegions, setSelectedRegions] = useState<string[]>([
@@ -142,10 +166,7 @@ export function AdvancedFilters({
   const [autoSave, setAutoSave] = useState(false);
   const [exportFormat, setExportFormat] = useState('xlsx');
 
-  // More options state
-  const [showMoreOptions, setShowMoreOptions] = useState(false);
-
-  // Primary filter options data (from App.tsx)
+  // Primary filter options data
   const entities = [
     'ABC Broking Pvt Ltd',
     'XYZ Insurance Agency',
@@ -153,142 +174,27 @@ export function AdvancedFilters({
     'DEF Risk Management',
   ];
 
-  const businessTypes = [
-    'Business',
-    'Operations',
-    'Finance',
-    'Marketing',
-    'Sales',
-    'Retention',
+  const businessTypes = DEPARTMENTS;
+
+  // Get report types based on selected department
+  const reportTypes = getReportTypesForDepartment(selectedDepartment);
+
+  // Get locations based on department (simplified for now)
+  const locations = [
+    'All Location',
+    'Mumbai',
+    'Delhi',
+    'Bangalore',
+    'Chennai',
+    'Hyderabad',
+    'Pune',
+    'Kolkata',
+    'Ahmedabad',
   ];
 
-  const reportTypes = {
-    Business: [
-      'Revenue vs Expenses',
-      'Revenue by Products',
-      'Revenue by Insurers',
-      'Revenue by Policy Type',
-      'Revenue by Vertical',
-      'Revenue by LOB',
-      'Cross-Sell Penetration',
-    ],
-    Operations: [
-      'Revenue vs Expenses',
-      'Revenue by Products',
-      'Revenue by Insurers',
-      'Revenue by Policy Type',
-      'Revenue by Vertical',
-      'Revenue by LOB',
-      'Cross-Sell Penetration',
-    ],
-    Finance: [
-      'Revenue vs Expenses',
-      'Revenue by Products',
-      'Revenue by Insurers',
-      'Revenue by Policy Type',
-      'Revenue by Vertical',
-      'Revenue by LOB',
-      'Cross-Sell Penetration',
-    ],
-    Marketing: [
-      'Revenue vs Expenses',
-      'Revenue by Products',
-      'Revenue by Insurers',
-      'Revenue by Policy Type',
-      'Revenue by Vertical',
-      'Revenue by LOB',
-      'Cross-Sell Penetration',
-    ],
-    Sales: [
-      'Revenue vs Expenses',
-      'Revenue by Products',
-      'Revenue by Insurers',
-      'Revenue by Policy Type',
-      'Revenue by Vertical',
-      'Revenue by LOB',
-      'Cross-Sell Penetration',
-    ],
-    Retention: ['Retention - By Insurer', 'Retention - Broker'],
-  };
-
-  const locations = {
-    Business: [
-      'All Location',
-      'Mumbai',
-      'Delhi',
-      'Bangalore',
-      'Chennai',
-      'Hyderabad',
-      'Pune',
-      'Kolkata',
-      'Ahmedabad',
-    ],
-    Operations: [
-      'All Location',
-      'Mumbai HQ',
-      'Delhi Operations',
-      'Bangalore Tech Hub',
-      'Chennai Support',
-      'Hyderabad Center',
-      'Pune Office',
-      'Remote Teams',
-    ],
-    Finance: [
-      'All Location',
-      'Mumbai Finance',
-      'Delhi Treasury',
-      'Bangalore Accounts',
-      'Chennai Audit',
-      'Corporate Finance',
-      'Regional Finance',
-    ],
-    Marketing: [
-      'All Location',
-      'Mumbai Marketing',
-      'Delhi Campaign',
-      'Bangalore Digital',
-      'Chennai Creative',
-      'National Marketing',
-      'Regional Marketing',
-    ],
-    Sales: [
-      'All Location',
-      'Mumbai Sales',
-      'Delhi Sales',
-      'Bangalore Sales',
-      'Chennai Sales',
-      'Hyderabad Sales',
-      'Pune Sales',
-      'Kolkata Sales',
-      'Ahmedabad Sales',
-      'Online Sales',
-    ],
-    Retention: [
-      'All Location',
-      'Mumbai Retention',
-      'Delhi Retention',
-      'Bangalore Retention',
-      'Chennai Retention',
-      'Regional Retention',
-      'Corporate Retention',
-      'Retail Retention',
-    ],
-  };
-
-  const durations = [
-    'FY 2023-24',
-    'FY 2022-23',
-    'FY 2021-22',
-    'Q4 2023-24',
-    'Q3 2023-24',
-    'Q2 2023-24',
-    'Q1 2023-24',
-    'Custom Period',
-  ];
-
-  const valueUnits = ['K', 'L', 'C'];
-
-  const topExpenseOptions = ['Top 5', 'Top 10', 'Top 15', 'Top 20', 'All'];
+  const durations = DURATIONS;
+  const valueUnits = VALUE_UNITS;
+  const topExpenseOptions = ['5', '10', '15', '20', 'All'];
 
   // Regional filters
   const regions = [
@@ -301,27 +207,6 @@ export function AdvancedFilters({
     'Kolkata',
     'Ahmedabad',
   ];
-  const states = [
-    'Maharashtra',
-    'Delhi',
-    'Karnataka',
-    'Tamil Nadu',
-    'Telangana',
-    'Gujarat',
-    'West Bengal',
-  ];
-  // const cities = [
-  //   'Mumbai',
-  //   'Delhi',
-  //   'Bangalore',
-  //   'Chennai',
-  //   'Hyderabad',
-  //   'Pune',
-  //   'Kolkata',
-  //   'Ahmedabad',
-  //   'Jaipur',
-  //   'Lucknow',
-  // ];
 
   // Team filters
   const teams = [
@@ -331,16 +216,6 @@ export function AdvancedFilters({
     'Marketing Team',
     'Operations Team',
     'Support Team',
-  ];
-  const members = [
-    'All Members',
-    'Top Performers',
-    'Neeta',
-    'Soham',
-    'Victoria',
-    'Cameron',
-    'Arlene',
-    'Ritesh S',
   ];
 
   // Product filters
@@ -389,20 +264,20 @@ export function AdvancedFilters({
     'Aditya Birla Health',
   ];
 
-  // All available filter items with metadata - Removed X/Y axis controls
+  // All available filter items with metadata
   const allFilterItems = [
     {
       id: 'organisation',
       name: 'Organisation',
       icon: Building2,
-      currentValue: selectedEntity,
+      currentValue: legacySelectedEntity || 'ABC Broking Pvt Ltd',
       category: 'Primary',
     },
     {
       id: 'department',
       name: 'Department',
       icon: Users,
-      currentValue: selectedBusinessType,
+      currentValue: selectedDepartment,
       category: 'Primary',
     },
     {
@@ -416,7 +291,7 @@ export function AdvancedFilters({
       id: 'location',
       name: 'Location',
       icon: MapPin,
-      currentValue: selectedLocation,
+      currentValue: legacySelectedLocation || 'All Location',
       category: 'Primary',
     },
     {
@@ -437,7 +312,7 @@ export function AdvancedFilters({
       id: 'topExpenses',
       name: 'Expense Categories',
       icon: Target,
-      currentValue: topExpenseCategories,
+      currentValue: `Top ${topExpenseCategories}`,
       category: 'Display',
     },
     {
@@ -470,6 +345,40 @@ export function AdvancedFilters({
     },
   ];
 
+  // Filter change handlers that dispatch Redux actions
+  const handleDepartmentChange = (value: string) => {
+    dispatch(setSelectedDepartment(value as DepartmentType));
+    // Also call legacy callback if provided
+    if (onValueUnitChange) {
+      onValueUnitChange(value);
+    }
+  };
+
+  const handleReportTypeChange = (value: string) => {
+    dispatch(setSelectedReportType(value as ReportType));
+  };
+
+  const handleDurationChange = (value: string) => {
+    dispatch(setSelectedDuration(value as DurationType));
+  };
+
+  const handleValueUnitChange = (value: string) => {
+    dispatch(setValueUnit(value as ValueUnitType));
+    // Also call legacy callback if provided
+    if (onValueUnitChange) {
+      onValueUnitChange(value);
+    }
+  };
+
+  const handleTopExpenseCategoriesChange = (value: string) => {
+    const numericValue = value === 'All' ? 999 : parseInt(value);
+    dispatch(setTopExpenseCategories(numericValue));
+    // Also call legacy callback if provided
+    if (onTopExpenseCategoriesChange) {
+      onTopExpenseCategoriesChange(value);
+    }
+  };
+
   const toggleArrayItem = (
     array: string[],
     setArray: (arr: string[]) => void,
@@ -483,13 +392,19 @@ export function AdvancedFilters({
   };
 
   const togglePinItem = (itemId: string) => {
+    // For now, we'll handle pinning locally
+    // In a full implementation, this would also dispatch to Redux
     let newPinnedItems;
     if (pinnedItems.includes(itemId)) {
       newPinnedItems = pinnedItems.filter(id => id !== itemId);
     } else {
       newPinnedItems = [...pinnedItems, itemId];
     }
-    onPinnedItemsChange(newPinnedItems);
+
+    // Call legacy callback if provided
+    if (onPinnedItemsChange) {
+      onPinnedItemsChange(newPinnedItems);
+    }
   };
 
   const resetFilters = () => {
@@ -563,7 +478,7 @@ export function AdvancedFilters({
       try {
         const configuration = JSON.parse(savedConfig);
         // Load pinned items if available
-        if (configuration.pinnedItems) {
+        if (configuration.pinnedItems && onPinnedItemsChange) {
           onPinnedItemsChange(configuration.pinnedItems);
         }
         // Load other settings
@@ -578,7 +493,7 @@ export function AdvancedFilters({
         console.error('Error loading saved configuration:', error);
       }
     }
-  }, []);
+  }, [onPinnedItemsChange]);
 
   // Group filter items by category, filtering out unavailable items
   const filtersByCategory = allFilterItems
@@ -605,26 +520,22 @@ export function AdvancedFilters({
                 <Settings className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <SheetTitle className="text-xl">
+                <SheetTitle className="text-base font-medium font-bold text-black">
                   Dashboard Configuration
                 </SheetTitle>
-                <SheetDescription className="text-sm text-gray-500 mt-1">
+                <SheetDescription className="text-xs text-gray-500 mt-1">
                   Customize filters, chart axes, display settings, and dashboard
                   preferences
                 </SheetDescription>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
+
               <Button
                 variant="outline"
                 onClick={saveConfiguration}
-                className="text-sm"
+                className="text-xs text-gray-600 "
               >
-                <Save className="w-4 h-4 mr-2" />
+                <Save className="w-4 h-4 text-green-600" />
                 Save
-              </Button>
-              <Button variant="ghost" onClick={onClose} className="p-2">
-                <X className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -643,12 +554,12 @@ export function AdvancedFilters({
           </TabsList>
 
           {/* Filters & Pinning Tab */}
-          <TabsContent value="filters" className="space-y-6">
+          <TabsContent value="filters" className="space-y-6 p-4">
             {/* Currently Applied Filters */}
-            <Card className="p-4 bg-blue-50 border-blue-200">
-              <div className="flex items-center gap-2 mb-4">
+            <Card className="p-2 bg-blue-50 border-blue-200 gap-4">
+              <div className="flex items-center gap-1">
                 <Filter className="w-4 h-4 text-blue-600" />
-                <h3 className="font-medium text-blue-900">
+                <h3 className="font-medium text-sm text-blue-900">
                   Currently Applied Configuration
                 </h3>
               </div>
@@ -656,13 +567,14 @@ export function AdvancedFilters({
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="default" className="bg-blue-600 text-white">
-                    Organisation: {selectedEntity}
+                    Organisation:{' '}
+                    {legacySelectedEntity || 'ABC Broking Pvt Ltd'}
                   </Badge>
                   <Badge variant="default" className="bg-blue-600 text-white">
-                    Department: {selectedBusinessType}
+                    Department: {selectedDepartment}
                   </Badge>
                   <Badge variant="default" className="bg-blue-600 text-white">
-                    Location: {selectedLocation}
+                    Location: {legacySelectedLocation || 'All Location'}
                   </Badge>
                   <Badge variant="default" className="bg-blue-600 text-white">
                     Report: {selectedReportType}
@@ -678,7 +590,7 @@ export function AdvancedFilters({
                       variant="default"
                       className="bg-purple-600 text-white"
                     >
-                      Expenses: {topExpenseCategories}
+                      Expenses: Top {topExpenseCategories}
                     </Badge>
                   )}
                 </div>
@@ -686,19 +598,22 @@ export function AdvancedFilters({
             </Card>
 
             {/* Pinned Items Management */}
-            <Card className="p-4">
-              <div className="flex items-center gap-2 mb-4">
+            <Card className="p-2 gap-4">
+              <div className="flex items-center gap-2">
                 <Pin className="w-4 h-4 text-gray-600" />
-                <h3 className="font-medium text-gray-900">
+                <h3 className="font-medium text-sm text-gray-900">
                   Pin Filters to Main Dashboard
                 </h3>
-                <Badge variant="outline" className="ml-auto text-xs">
+                <Badge
+                  variant="outline"
+                  className="ml-auto text-xs bg-blue-50 border-blue-200 text-gray-600"
+                >
                   {pinnedItems.length} pinned
                 </Badge>
               </div>
 
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-700 mb-2">
+              <div className="bg-gray-100 border-gray-200 rounded-lg p-3">
+                <p className="text-xs text-gray-700 mb-2">
                   <strong>Pinned filters</strong> appear on the main dashboard
                   for quick access.
                   <strong>Unpinned filters</strong> are available through More
@@ -713,7 +628,7 @@ export function AdvancedFilters({
               <div className="space-y-4">
                 {Object.entries(filtersByCategory).map(([category, items]) => (
                   <div key={category}>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <h4 className="text-xs font-medium text-gray-700 mb-1 flex items-center gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                       {category} Filters
                     </h4>
@@ -730,17 +645,7 @@ export function AdvancedFilters({
                             case 'department':
                               return businessTypes;
                             case 'reportType':
-                              return (
-                                reportTypes[
-                                  selectedBusinessType as keyof typeof reportTypes
-                                ] || reportTypes['Business']
-                              );
-                            case 'location':
-                              return (
-                                locations[
-                                  selectedBusinessType as keyof typeof locations
-                                ] || locations['Business']
-                              );
+                              return reportTypes;
                             case 'duration':
                               return durations;
                             case 'valueUnit':
@@ -763,19 +668,19 @@ export function AdvancedFilters({
                         const getCurrentSelection = (filterId: string) => {
                           switch (filterId) {
                             case 'organisation':
-                              return selectedEntity;
+                              return (
+                                legacySelectedEntity || 'ABC Broking Pvt Ltd'
+                              );
                             case 'department':
-                              return selectedBusinessType;
+                              return selectedDepartment;
                             case 'reportType':
                               return selectedReportType;
-                            case 'location':
-                              return selectedLocation;
                             case 'duration':
                               return selectedDuration;
                             case 'valueUnit':
                               return valueUnit;
                             case 'topExpenses':
-                              return topExpenseCategories;
+                              return topExpenseCategories.toString();
                             case 'teams':
                               return selectedTeams;
                             case 'regions':
@@ -907,10 +812,6 @@ export function AdvancedFilters({
                                             e.stopPropagation();
                                             if (isMultiSelect(item.id)) {
                                               // Handle multi-select for teams, regions, products, insurers
-                                              const currentArray =
-                                                Array.isArray(currentSelection)
-                                                  ? currentSelection
-                                                  : [];
                                               switch (item.id) {
                                                 case 'teams':
                                                   toggleArrayItem(
@@ -941,9 +842,32 @@ export function AdvancedFilters({
                                                   );
                                                   break;
                                               }
+                                            } else {
+                                              // Handle single-select filters by dispatching Redux actions
+                                              switch (item.id) {
+                                                case 'department':
+                                                  handleDepartmentChange(
+                                                    option
+                                                  );
+                                                  break;
+                                                case 'reportType':
+                                                  handleReportTypeChange(
+                                                    option
+                                                  );
+                                                  break;
+                                                case 'duration':
+                                                  handleDurationChange(option);
+                                                  break;
+                                                case 'valueUnit':
+                                                  handleValueUnitChange(option);
+                                                  break;
+                                                case 'topExpenses':
+                                                  handleTopExpenseCategoriesChange(
+                                                    option
+                                                  );
+                                                  break;
+                                              }
                                             }
-                                            // For single-select filters, we don't change the selection here
-                                            // as they should be changed through the main dashboard
                                           }}
                                         >
                                           {isSelected &&
@@ -1021,355 +945,6 @@ export function AdvancedFilters({
                   </div>
                 ))}
               </div>
-            </Card>
-
-            {/* More Options - Collapsible Section */}
-            <Card className="p-4">
-              <div
-                className="flex items-center justify-between mb-4 cursor-pointer"
-                onClick={() => setShowMoreOptions(!showMoreOptions)}
-              >
-                <div className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-gray-600" />
-                  <h3 className="font-medium text-gray-900">More Options</h3>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                >
-                  More
-                  {showMoreOptions ? (
-                    <ChevronUp className="w-4 h-4 ml-1" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 ml-1" />
-                  )}
-                </Button>
-              </div>
-
-              {/* Collapsible Content */}
-              {showMoreOptions && (
-                <div className="space-y-6 mt-6 pt-4 border-t border-gray-200">
-                  {/* Quick Filter Values - Moved under More */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Values Unit */}
-                    <Card className="p-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <DollarSign className="w-4 h-4 text-gray-600" />
-                        <h3 className="font-medium text-gray-900">
-                          Values Display
-                        </h3>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div>
-                          <Label className="text-sm font-medium mb-2 block">
-                            Values in
-                          </Label>
-                          <Select
-                            value={valueUnit}
-                            onValueChange={onValueUnitChange}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Thousands">K</SelectItem>
-                              <SelectItem value="Lakh">L</SelectItem>
-                              <SelectItem value="Crore">C</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </Card>
-
-                    {/* Top Expense Categories */}
-                    {selectedReportType === 'Revenue vs Expenses' && (
-                      <Card className="p-4">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Target className="w-4 h-4 text-gray-600" />
-                          <h3 className="font-medium text-gray-900">
-                            Expense Categories
-                          </h3>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              Show Categories
-                            </Label>
-                            <Select
-                              value={topExpenseCategories}
-                              onValueChange={onTopExpenseCategoriesChange}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Top 5">Top 5</SelectItem>
-                                <SelectItem value="Top 10">Top 10</SelectItem>
-                                <SelectItem value="Top 15">Top 15</SelectItem>
-                                <SelectItem value="Top 20">Top 20</SelectItem>
-                                <SelectItem value="All">
-                                  All Categories
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </Card>
-                    )}
-                  </div>
-
-                  {/* Additional Filters - Regional, Team, Business */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      Additional Filters
-                    </h4>
-                    <div className="space-y-6">
-                      {/* Regional Filters */}
-                      <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">
-                          Regional Filters
-                        </h5>
-                        <div className="space-y-4">
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              Regions
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {regions.map(region => (
-                                <Badge
-                                  key={region}
-                                  variant={
-                                    selectedRegions.includes(region)
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    toggleArrayItem(
-                                      selectedRegions,
-                                      setSelectedRegions,
-                                      region
-                                    )
-                                  }
-                                >
-                                  {region}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              States
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {states.map(state => (
-                                <Badge
-                                  key={state}
-                                  variant={
-                                    selectedStates.includes(state)
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    toggleArrayItem(
-                                      selectedStates,
-                                      setSelectedStates,
-                                      state
-                                    )
-                                  }
-                                >
-                                  {state}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Team Filters */}
-                      <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">
-                          Team & Performance
-                        </h5>
-                        <div className="space-y-4">
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              Teams
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {teams.map(team => (
-                                <Badge
-                                  key={team}
-                                  variant={
-                                    selectedTeams.includes(team)
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    toggleArrayItem(
-                                      selectedTeams,
-                                      setSelectedTeams,
-                                      team
-                                    )
-                                  }
-                                >
-                                  {team}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              Team Members
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {members.map(member => (
-                                <Badge
-                                  key={member}
-                                  variant={
-                                    selectedMembers.includes(member)
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    toggleArrayItem(
-                                      selectedMembers,
-                                      setSelectedMembers,
-                                      member
-                                    )
-                                  }
-                                >
-                                  {member}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              Performance Range: {performanceRange[0]}% -{' '}
-                              {performanceRange[1]}%
-                            </Label>
-                            <Slider
-                              value={performanceRange}
-                              onValueChange={setPerformanceRange}
-                              max={100}
-                              step={5}
-                              className="w-full"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Product & Business Filters */}
-                      <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">
-                          Products & Business
-                        </h5>
-                        <div className="space-y-4">
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              Products
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {products.map(product => (
-                                <Badge
-                                  key={product}
-                                  variant={
-                                    selectedProducts.includes(product)
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    toggleArrayItem(
-                                      selectedProducts,
-                                      setSelectedProducts,
-                                      product
-                                    )
-                                  }
-                                >
-                                  {product}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              Insurers
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {insurers.map(insurer => (
-                                <Badge
-                                  key={insurer}
-                                  variant={
-                                    selectedInsurers.includes(insurer)
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    toggleArrayItem(
-                                      selectedInsurers,
-                                      setSelectedInsurers,
-                                      insurer
-                                    )
-                                  }
-                                >
-                                  {insurer}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label className="text-sm font-medium mb-2 block">
-                              Business Verticals
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
-                              {['Corporate', 'Retail', 'SME', 'Enterprise'].map(
-                                vertical => (
-                                  <Badge
-                                    key={vertical}
-                                    variant={
-                                      businessVerticals.includes(vertical)
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    className="cursor-pointer"
-                                    onClick={() =>
-                                      toggleArrayItem(
-                                        businessVerticals,
-                                        setBusinessVerticals,
-                                        vertical
-                                      )
-                                    }
-                                  >
-                                    {vertical}
-                                  </Badge>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </Card>
           </TabsContent>
 

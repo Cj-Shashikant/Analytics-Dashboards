@@ -49,7 +49,7 @@ const CustomTooltip = ({
 
 export const DonutChart: React.FC<DonutChartProps> = ({
   data,
-  size = { width: 630, height: 350 },
+  size = { width: 630, height: 313 },
   isPresentation = false,
   onSegmentClick,
   valueFormatter = (value: number) => `$${value.toLocaleString()}`,

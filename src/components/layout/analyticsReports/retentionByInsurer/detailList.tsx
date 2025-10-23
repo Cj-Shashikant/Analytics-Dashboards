@@ -59,22 +59,11 @@ export function ProductsList({
     }
   };
 
-  // Add null check for data prop
-  if (!data || !Array.isArray(data)) {
-    return (
-      <Card className={productsListStyles.container}>
-        <div className="p-4 text-center text-gray-500">No data available</div>
-      </Card>
-    );
-  }
-
-  // Local getFormattedValue function
-  const getFormattedValue = (value: number) => {
-    return utilGetFormattedValue(value, valueUnit);
-  };
-
-  // Sort products based on current sort state
+  // Sort products based on current sort state - moved before early return
   const sortedProducts = useMemo(() => {
+    if (!data || !Array.isArray(data)) {
+      return [];
+    }
     if (!sortColumn || sortState === 'none') {
       return data;
     }
@@ -120,9 +109,23 @@ export function ProductsList({
     return '';
   };
 
+  // Local getFormattedValue function
+  const getFormattedValue = (value: number) => {
+    return utilGetFormattedValue(value, valueUnit);
+  };
+
+  // Add null check for data prop
+  if (!data || !Array.isArray(data)) {
+    return (
+      <Card className={productsListStyles.container}>
+        <div className="p-4 text-center text-gray-500">No data available</div>
+      </Card>
+    );
+  }
+
   return (
     <Card className={productsListStyles.container}>
-      <div className="overflow-auto relative" style={{ height: '26rem' }}>
+      <div className="overflow-auto relative" style={{ height: '31rem' }}>
         {/* Table Header */}
         <div
           className={`${productsListStyles.table.headerRow} sticky top-0 z-20 bg-white`}

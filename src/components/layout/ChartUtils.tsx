@@ -25,7 +25,7 @@ export const defaultScrollConfig: ScrollableChartConfig = {
   minBarWidth: 50, // Minimum width per bar
   maxVisibleBars: 10, // Maximum bars visible without scrolling
   scrollThreshold: 10, // Start scrolling when more than this many items
-  containerHeight: 325, // Fixed container height to match requirement
+  containerHeight: 371, // Fixed container height to match requirement
   marginBottom: 80, // Bottom margin for angled labels
 };
 
@@ -131,7 +131,7 @@ export const ScrollableBarChart: React.FC<ScrollableBarChartProps> = ({
         {/* Fixed Y-axis container */}
         <div
           className="absolute  z-10 bg-white"
-          style={{ width: '70px', height: '308px' }}
+          style={{ width: '70px', height: '365px' }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -296,7 +296,7 @@ export const ScrollableLineChart: React.FC<ScrollableLineChartProps> = ({
 
   const chartWidth = calculateChartWidth();
   // Use consistent height of 325px
-  const enhancedHeight = 325;
+  const enhancedHeight = 385;
 
   const chartData = data.map((item, index) => ({
     ...item,
@@ -317,7 +317,7 @@ export const ScrollableLineChart: React.FC<ScrollableLineChartProps> = ({
         {/* Fixed Y-axis container */}
         <div
           className="absolute z-10 bg-white"
-          style={{ width: '70px', height: '308px' }}
+          style={{ width: '70px', height: '370px' }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart

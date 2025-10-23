@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import {
+  selectRetentionByBroker,
+  selectBaseMetrics,
+} from '../../../../redux/slices/revenueSlice';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -29,6 +33,23 @@ import { DonutChart } from '../../chartSection/charts/dount/page';
 import { BarChartComponent } from '../../chartSection/charts/bar/page';
 import { LineChartComponent } from '../../chartSection/charts/line/page';
 import { SimpleStackedBarChart } from '../../chartSection/charts/stacked/page';
+
+interface BrokerRetentionDataItem {
+  id: string;
+  name: string;
+  value?: number;
+  retentionRate?: number;
+  totalPolicies?: number;
+  renewedPolicies?: number;
+  lostPolicies?: number;
+  totalPremium?: number;
+  color: string;
+  clientTypes?: {
+    Corporate: number;
+    Retail: number;
+    Affinity: number;
+  };
+}
 
 interface ChartsSectionProps {
   valueUnit: string;
@@ -62,7 +83,8 @@ export function ChartsSection({
   onTotalElementsChange,
 }: ChartsSectionProps) {
   // Redux hooks
-  const revenueState = useSelector((state: RootState) => state.revenue);
+  const brokerRetentionData = useSelector(selectRetentionByBroker);
+  const baseMetrics = useSelector(selectBaseMetrics);
   const filterState = useSelector((state: RootState) => state.filter);
 
   // Use valueUnit from Redux state, fallback to prop if needed
@@ -115,7 +137,7 @@ export function ChartsSection({
     }
 
     // Use Redux base metrics
-    const baseMetrics = revenueState.baseMetrics;
+    const reduxBaseMetrics = baseMetrics;
 
     // Adjust values slightly based on report type
     const adjustmentFactor =
@@ -132,9 +154,9 @@ export function ChartsSection({
                 : 0.92;
 
     return {
-      totalRevenue: baseMetrics.totalRevenue * adjustmentFactor,
-      expenses: baseMetrics.expenses * adjustmentFactor,
-      grossProfit: baseMetrics.grossProfit * adjustmentFactor,
+      totalRevenue: reduxBaseMetrics.totalRevenue * adjustmentFactor,
+      expenses: reduxBaseMetrics.expenses * adjustmentFactor,
+      grossProfit: reduxBaseMetrics.grossProfit * adjustmentFactor,
     };
   };
 
@@ -142,7 +164,7 @@ export function ChartsSection({
 
   // Get data - Product folder specifically uses revenueByProducts data
   const getReportData = () => {
-    return revenueState.brokerRetentionData || [];
+    return brokerRetentionData || [];
   };
 
   // Filter data based on selected client types (only for Revenue by Products)
@@ -150,7 +172,7 @@ export function ChartsSection({
     const data = getReportData();
 
     if (selectedReportType === 'Revenue by Products') {
-      return data.map(item => {
+      return data.map((item: BrokerRetentionDataItem) => {
         if (!item?.clientTypes) return item;
 
         const filteredValue = selectedClientTypes.reduce((sum, clientType) => {
@@ -164,6 +186,9 @@ export function ChartsSection({
           ...item,
           value: filteredValue,
           percentage: (filteredValue / metricsData.totalRevenue) * 100,
+          // policies: item.policies,
+          // premium: item.premium,
+          // revenuePercentage: item.revenuePercentage,
         };
       });
     }
@@ -231,7 +256,7 @@ export function ChartsSection({
             data={chartData}
             onSegmentClick={handleItemClick}
             valueFormatter={getFormattedValueLocal}
-            size={{ width: 621, height: chartDimensions.height }}
+            size={{ width: 636, height: chartDimensions.height }}
             valueUnit={valueUnit}
           />
         );
@@ -336,7 +361,7 @@ export function ChartsSection({
             </div>
 
             {/* Chart */}
-            <div style={{ height: '21.9rem' }}>
+            <div style={{ height: '27rem' }}>
               <div className={commonStyles.chartContainer}>
                 <div className={commonStyles.chartWrapper}>{renderChart()}</div>
               </div>

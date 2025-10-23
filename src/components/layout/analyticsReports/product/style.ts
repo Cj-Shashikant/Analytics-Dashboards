@@ -9,13 +9,13 @@ export const commonStyles = {
   chartTitle: 'text-lg font-semibold text-gray-900 mb-1',
   chartSubtitle: 'text-sm text-gray-600',
   selectTrigger: 'w-18 h-9 text-xs text-black',
-  chartContainer: 'flex-1 relative min-h-[350px]',
+  chartContainer: 'flex-1 relative min-h-[384px]',
   chartWrapper: 'w-full h-full',
 };
 
 // Chart dimension constants
 export const chartDimensions = {
-  height: 350,
+  height: 384,
   innerRadius: 60,
   outerRadius: 110,
 };
