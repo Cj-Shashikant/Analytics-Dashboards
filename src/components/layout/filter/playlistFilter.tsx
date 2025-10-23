@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/card';
 import { Save, Plus, List, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { PlaylistItem, Playlist } from './playListManager';
+import { PlaylistItem, Playlist } from './playlistManager';
 // import { Playlist, PlaylistItem } from '@/components/layout/filter/playlistManager';
 
 interface SaveToPlaylistButtonProps {

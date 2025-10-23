@@ -53,7 +53,7 @@ import { SettingFilters } from './settingFilter';
 import FullScreenFilter from './fullScreenFillter';
 import { LeaderboardModal } from './leaderboardFilter';
 import { SaveToPlaylist } from './playlistFilter';
-import { PlaylistManager } from './playListManager';
+import { PlaylistManager } from './playlistManager';
 
 export default function FilterPage() {
   const dispatch = useAppDispatch();
