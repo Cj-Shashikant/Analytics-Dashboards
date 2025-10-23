@@ -13,8 +13,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prepare": "husky",
-    "export": "next build && next export"
+    "prepare": "husky"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
