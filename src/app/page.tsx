@@ -1,6 +1,6 @@
 'use client';
 
-import FilterPage from '@/components/layout/filter/FilterPage';
+import FilterPage from '../components/layout/filter/FilterPage';
 import { TopNavigation } from '@/components/layout/header/page';
 import ReportRouter from '@/components/layout/analyticsReports/ReportRouter';
 
