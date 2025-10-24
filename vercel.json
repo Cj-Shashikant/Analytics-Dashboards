@@ -5,5 +5,10 @@
   "outputDirectory": ".next",
   "installCommand": "npm ci",
   "devCommand": "next dev --port $PORT",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "functions": {
+    "app/**/*.{js,ts,jsx,tsx}": {
+      "runtime": "vercel-node@3.0.0"
+    }
+  }
 }
