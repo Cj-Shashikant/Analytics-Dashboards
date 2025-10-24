@@ -18,9 +18,11 @@ import {
 import {
   productAnalyticsData,
   insurerAnalyticsData,
-  verticalAnalyticsData,
-  lobAnalyticsData,
-  revenueExpensesAnalyticsData,
+  crossSellAnalyticsData,
+  policyTypeAnalyticsData,
+  brokerRetentionAnalyticsData,
+  insurerRetentionAnalyticsData,
+  numberOfProductsAnalyticsData,
 } from '../../data';
 
 export interface FilterState {
@@ -111,6 +113,68 @@ export interface FilterState {
       expenses: number;
       profit: number;
     }>;
+
+    // Cross-sell data
+    crossSellData: Array<{
+      id: string;
+      productName: string;
+      currentCustomers: number;
+      crossSellOpportunities: number;
+      conversionRate: number;
+      potentialRevenue: number;
+      priority: string;
+      color: string;
+    }>;
+
+    // Policy type data
+    policyTypeData: Array<{
+      id: string;
+      policyType: string;
+      totalPolicies: number;
+      activePolicies: number;
+      premiumRevenue: number;
+      claimsRatio: number;
+      profitMargin: number;
+      growthRate: number;
+      color: string;
+    }>;
+
+    // Broker retention data
+    brokerRetentionData: Array<{
+      id: string;
+      brokerName: string;
+      totalClients: number;
+      retainedClients: number;
+      retentionRate: number;
+      totalPremium: number;
+      performanceRating: string;
+      region: string;
+      color: string;
+    }>;
+
+    // Insurer retention data
+    insurerRetentionData: Array<{
+      id: string;
+      insurerName: string;
+      totalPolicies: number;
+      renewedPolicies: number;
+      retentionRate: number;
+      totalPremium: number;
+      customerSatisfaction: number;
+      marketShare: number;
+      color: string;
+    }>;
+
+    // Number of products data
+    numberOfProductsData: Array<{
+      id: string;
+      customerSegment: string;
+      averageProducts: number;
+      totalCustomers: number;
+      totalRevenue: number;
+      crossSellPotential: number;
+      color: string;
+    }>;
   };
 }
 
@@ -149,7 +213,7 @@ const initialState: FilterState = {
     'location',
     'duration',
   ],
-  topExpenseCategories: 5,
+  topExpenseCategories: 10,
 
   // Full screen settings
   fullScreenChartType: 'revenue',
@@ -183,8 +247,8 @@ const initialState: FilterState = {
     insurerData: insurerAnalyticsData.map(insurer => ({
       name: insurer.name,
       revenue: insurer.premiumRevenue,
-      growth: Math.random() * 20 - 5, // Random growth between -5% and 15%
-      percentage: insurer.revenuePercentage,
+      policies: insurer.policies, // Use policies from data
+      retention: Math.random() * 30 + 70, // Generate random retention rate (70-100%) since retentionRate is not available
       color: insurer.color,
     })),
 
@@ -280,6 +344,72 @@ const initialState: FilterState = {
         profit: 10300000,
       },
     ],
+
+    // Cross-sell data
+    crossSellData: crossSellAnalyticsData.map(item => ({
+      id: item.id,
+      productName: item.productName,
+      currentCustomers: item.currentCustomers,
+      crossSellOpportunities: item.crossSellOpportunities,
+      conversionRate: item.conversionRate,
+      potentialRevenue: item.potentialRevenue,
+      priority: item.priority,
+      color: item.color,
+    })),
+
+    // Policy type data
+    policyTypeData: policyTypeAnalyticsData.map(item => ({
+      id: item.id,
+      policyType: item.policyType,
+      totalPolicies: item.totalPolicies,
+      activePolicies: item.activePolicies,
+      premiumRevenue: item.premiumRevenue,
+      claimsRatio: item.claimsRatio,
+      profitMargin: item.profitMargin,
+      growthRate: item.growthRate,
+      color: item.color,
+    })),
+
+    // Broker retention data
+    brokerRetentionData: brokerRetentionAnalyticsData.map((item, index) => ({
+      id: `broker-${index}`, // Generate ID since not available in data
+      brokerName: item.name, // Use name property
+      totalClients: item.policies, // Use policies as total clients
+      retainedClients: Math.floor(item.policies * (Math.random() * 0.3 + 0.7)), // Generate retained clients (70-100% of total)
+      retentionRate: Math.random() * 30 + 70, // Generate random retention rate (70-100%)
+      totalPremium: item.premiumRevenue, // Use premiumRevenue as totalPremium
+      performanceRating: ['Excellent', 'Good', 'Average', 'Poor'][
+        Math.floor(Math.random() * 4)
+      ], // Generate random rating
+      region: ['North', 'South', 'East', 'West', 'Central'][
+        Math.floor(Math.random() * 5)
+      ], // Generate random region
+      color: item.color,
+    })),
+
+    // Insurer retention data
+    insurerRetentionData: insurerRetentionAnalyticsData.map((item, index) => ({
+      id: `insurer-${index}`, // Generate ID since not available in data
+      insurerName: item.name, // Use name property
+      totalPolicies: item.policies, // Use policies property
+      renewedPolicies: Math.floor(item.policies * (Math.random() * 0.3 + 0.7)), // Generate renewed policies (70-100% of total)
+      retentionRate: Math.random() * 30 + 70, // Generate random retention rate (70-100%)
+      totalPremium: item.premiumRevenue, // Use premiumRevenue as totalPremium
+      customerSatisfaction: Math.random() * 2 + 3, // Generate random satisfaction (3-5)
+      marketShare: item.revenuePercentage, // Use revenuePercentage as market share
+      color: item.color,
+    })),
+
+    // Number of products data
+    numberOfProductsData: numberOfProductsAnalyticsData.map(item => ({
+      id: item.id,
+      customerSegment: item.customerSegment,
+      averageProducts: item.averageProducts,
+      totalCustomers: item.totalCustomers,
+      totalRevenue: item.totalRevenue,
+      crossSellPotential: item.crossSellPotential,
+      color: item.color,
+    })),
   },
 };
 

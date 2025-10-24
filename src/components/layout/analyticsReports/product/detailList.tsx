@@ -42,7 +42,7 @@ export function ProductsList({
     ];
     return (
       baseCounts[index % baseCounts.length] ||
-      Math.floor(Math.random() * 10000) + 1000
+      Math.floor((index * 1234 + 5678) % 10000) + 1000
     );
   };
 

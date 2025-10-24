@@ -47,7 +47,7 @@ import {
 import { filterStyles } from './style';
 import { getFilterWidths } from './dynamicWidth';
 import { AdvancedFilters } from './moreFilter';
-import { SettingFilters } from './settingFilter';
+import SettingFilters from './settingFilter';
 
 // Import filter components
 import FullScreenFilter from './fullScreenFillter';

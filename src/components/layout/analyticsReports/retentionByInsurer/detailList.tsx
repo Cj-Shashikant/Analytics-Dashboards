@@ -10,6 +10,9 @@ interface Product {
   color: string;
   percentage: number;
   description?: string;
+  policies?: number;
+  premium?: number;
+  revenuePercentage?: number;
 }
 
 interface ProductsListProps {
@@ -17,10 +20,11 @@ interface ProductsListProps {
   valueUnit: 'K' | 'L' | 'Cr';
   onItemClick?: (product: Product) => void;
   selectedReportType?: string;
+  className?: string;
 }
 
 type SortState = 'none' | 'desc' | 'asc';
-type SortColumn = 'policies' | 'amount' | 'revenue';
+type SortColumn = 'policies' | 'premium' | 'revenue' | 'revenuePercentage';
 
 export function ProductsList({
   data,
@@ -38,13 +42,14 @@ export function ProductsList({
     ];
     return (
       baseCounts[index % baseCounts.length] ||
-      Math.floor(Math.random() * 10000) + 1000
+      Math.floor((index * 1234 + 5678) % 10000) + 1000
     );
   };
 
   // Handle sort click
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
+      // Cycle through states: none -> desc -> asc -> none
       if (sortState === 'none') {
         setSortState('desc');
       } else if (sortState === 'desc') {
@@ -59,47 +64,70 @@ export function ProductsList({
     }
   };
 
+  // Local getFormattedValue function
+  const getFormattedValue = (value: number) => {
+    return utilGetFormattedValue(value, valueUnit);
+  };
+
   // Sort products based on current sort state - moved before early return
   const sortedProducts = useMemo(() => {
+    // Add null check for data prop inside useMemo
     if (!data || !Array.isArray(data)) {
       return [];
     }
+
     if (!sortColumn || sortState === 'none') {
       return data;
     }
 
-    return [...data].sort((a, b) => {
+    return [...data].sort((a: Product, b: Product) => {
       let aValue: number;
       let bValue: number;
 
       switch (sortColumn) {
         case 'policies':
-          aValue = getPolicyCount(data.indexOf(a));
-          bValue = getPolicyCount(data.indexOf(b));
+          aValue = a.policies || getPolicyCount(data.indexOf(a));
+          bValue = b.policies || getPolicyCount(data.indexOf(b));
           break;
-        case 'amount':
+        case 'premium':
+          aValue = a.premium || a.value;
+          bValue = b.premium || b.value;
+          break;
         case 'revenue':
           aValue = a.value;
           bValue = b.value;
+          break;
+        case 'revenuePercentage':
+          aValue = a.revenuePercentage || a.percentage;
+          bValue = b.revenuePercentage || b.percentage;
           break;
         default:
           return 0;
       }
 
       if (sortState === 'desc') {
-        return bValue - aValue;
+        return bValue - aValue; // High to low
       } else {
-        return aValue - bValue;
+        return aValue - bValue; // Low to high
       }
     });
   }, [data, sortColumn, sortState]);
 
+  // Early return moved after all hooks
+  if (!data || !Array.isArray(data)) {
+    return (
+      <Card className={productsListStyles.container}>
+        <div className="p-4 text-center text-gray-500">No data available</div>
+      </Card>
+    );
+  }
+
   // Get SVG color based on sort state
   const getSvgColor = (column: SortColumn) => {
     if (sortColumn !== column) return 'currentColor';
-    if (sortState === 'desc') return '#22c55e';
-    if (sortState === 'asc') return '#ef4444';
-    return 'currentColor';
+    if (sortState === 'desc') return '#22c55e'; // Green for high to low
+    if (sortState === 'asc') return '#ef4444'; // Red for low to high
+    return 'currentColor'; // Default
   };
 
   // Get SVG rotation based on sort state
@@ -109,34 +137,22 @@ export function ProductsList({
     return '';
   };
 
-  // Local getFormattedValue function
-  const getFormattedValue = (value: number) => {
-    return utilGetFormattedValue(value, valueUnit);
-  };
-
-  // Add null check for data prop
-  if (!data || !Array.isArray(data)) {
-    return (
-      <Card className={productsListStyles.container}>
-        <div className="p-4 text-center text-gray-500">No data available</div>
-      </Card>
-    );
-  }
-
   return (
     <Card className={productsListStyles.container}>
       <div className="overflow-auto relative" style={{ height: '31rem' }}>
-        {/* Table Header */}
+        {/* Sticky Table Header */}
         <div
           className={`${productsListStyles.table.headerRow} sticky top-0 z-20 bg-white`}
-          style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}
+          style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr' }}
         >
+          {/* Sticky Product Header */}
           <div
             className={`${productsListStyles.table.headerCell} sticky flex items-center justify-center`}
           >
             Product
           </div>
 
+          {/* Sortable Headers */}
           <div
             className={`${productsListStyles.table.headerCellCenter} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors flex items-center justify-center`}
             onClick={() => handleSort('policies')}
@@ -161,20 +177,20 @@ export function ProductsList({
 
           <div
             className={`${productsListStyles.table.headerCellRight} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors justify-center`}
-            onClick={() => handleSort('amount')}
+            onClick={() => handleSort('premium')}
           >
-            <span className="mr-1">Amount</span>
+            <span className="mr-1">Premium</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke={getSvgColor('amount')}
+              stroke={getSvgColor('premium')}
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className={`transition-all duration-200 ${getSvgRotation('amount')}`}
+              className={`transition-all duration-200 ${getSvgRotation('premium')}`}
             >
               <path d="M12 5v14"></path>
               <path d="m19 12-7 7-7-7"></path>
@@ -202,22 +218,45 @@ export function ProductsList({
               <path d="m19 12-7 7-7-7"></path>
             </svg>
           </div>
+
+          <div
+            className={`${productsListStyles.table.headerCellRight} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors justify-center`}
+            onClick={() => handleSort('revenuePercentage')}
+          >
+            <span className="mr-1">Revenue %</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke={getSvgColor('revenuePercentage')}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-all duration-200 ${getSvgRotation('revenuePercentage')}`}
+            >
+              <path d="M12 5v14"></path>
+              <path d="m19 12-7 7-7-7"></path>
+            </svg>
+          </div>
         </div>
 
         {/* Table Body */}
         <div className={productsListStyles.table.body}>
           {sortedProducts.map(product => {
             const originalIndex = data.findIndex(p => p.id === product.id);
-            const policyCount = getPolicyCount(originalIndex);
+            const policyCount =
+              product.policies || getPolicyCount(originalIndex);
 
             return (
               <div
                 key={product.id}
                 onClick={() => onItemClick?.(product)}
                 className={productsListStyles.productRow.container}
-                style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}
+                style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr' }}
               >
-                {/* Product Column */}
+                {/* Sticky Product Column */}
                 <div
                   className={`${productsListStyles.productRow.productColumn} sticky`}
                 >
@@ -234,8 +273,7 @@ export function ProductsList({
                         productsListStyles.productRow.productDescription
                       }
                     >
-                      {product.description ||
-                        `${product.percentage.toFixed(1)}% of total revenue`}
+                      {product.description}
                     </div>
                   </div>
                 </div>
@@ -247,10 +285,10 @@ export function ProductsList({
                   </div>
                 </div>
 
-                {/* Amount Column */}
+                {/* Premium Column */}
                 <div className={productsListStyles.productRow.rightColumn}>
                   <div className={productsListStyles.productRow.cellValue}>
-                    {getFormattedValue(product.value)}
+                    {getFormattedValue(product.premium || product.value)}
                   </div>
                 </div>
 
@@ -258,6 +296,16 @@ export function ProductsList({
                 <div className={productsListStyles.productRow.rightColumn}>
                   <div className={productsListStyles.productRow.cellValue}>
                     {getFormattedValue(product.value)}
+                  </div>
+                </div>
+
+                {/* Revenue Percentage Column */}
+                <div className={productsListStyles.productRow.rightColumn}>
+                  <div className={productsListStyles.productRow.cellValue}>
+                    {(product.revenuePercentage || product.percentage).toFixed(
+                      2
+                    )}
+                    %
                   </div>
                 </div>
               </div>

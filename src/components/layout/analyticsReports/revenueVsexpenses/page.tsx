@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../../../hooks/hooks';
 import { RootState } from '@/redux/store';
-import {
-  selectRevenueVsExpenses,
-  selectBaseMetrics,
-} from '../../../../redux/slices/revenueSlice';
+import { selectBaseMetrics } from '../../../../redux/slices/revenueSlice';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -14,6 +11,10 @@ import {
   commonStyles,
 } from './style';
 import { getFormattedValue } from '@/utils/valueFormatter';
+import {
+  revenueAnalyticsData,
+  expensesAnalyticsData,
+} from '@/data/revenueExpensesData';
 
 import {
   Select,
@@ -68,7 +69,7 @@ export function ChartsSection({
 }: ChartsSectionProps) {
   // Redux hooks
   const dispatch = useAppDispatch();
-  const revenueVsExpensesData = useSelector(selectRevenueVsExpenses);
+  // const revenueVsExpensesData = useSelector(selectRevenueVsExpenses);
   const baseMetrics = useSelector(selectBaseMetrics);
   const filterState = useSelector((state: RootState) => state.filter);
 
@@ -226,12 +227,28 @@ export function ChartsSection({
 
   // Get data - Revenue data for left container
   const getRevenueData = () => {
-    return revenueVsExpensesData.revenueByProducts || [];
+    return revenueAnalyticsData.map(item => ({
+      id: item.name.toLowerCase().replace(/\s+/g, '-'),
+      name: item.name,
+      value: item.premiumRevenue,
+      color: item.color,
+      percentage: item.revenuePercentage,
+      policies: item.policies,
+      description: `${item.name} insurance products`,
+    }));
   };
 
   // Get data - Expense data for right container
   const getExpenseData = () => {
-    return revenueVsExpensesData.expenseData || [];
+    return expensesAnalyticsData.map(item => ({
+      id: item.name.toLowerCase().replace(/\s+/g, '-'),
+      name: item.name,
+      value: item.premiumRevenue,
+      color: item.color,
+      percentage: item.revenuePercentage,
+      policies: item.policies,
+      description: `${item.name} expense category`,
+    }));
   };
 
   // Filter revenue data based on selected client types and top filter
@@ -241,7 +258,10 @@ export function ChartsSection({
 
     if (selectedReportType === 'Revenue by Products') {
       const filteredData = data.map(item => {
-        if (!item.clientTypes) return { ...item };
+        // Check if item has clientTypes property (some data sources don't have it)
+        if (!item.clientTypes || typeof item.clientTypes !== 'object') {
+          return { ...item };
+        }
 
         const filteredValue = selectedClientTypes.reduce((sum, clientType) => {
           const clientTypeValue =

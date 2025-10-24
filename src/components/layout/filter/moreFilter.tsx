@@ -9,32 +9,20 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Settings,
   Filter,
   Calendar,
   Users,
   Building2,
   MapPin,
   Target,
-  Eye,
   Save,
-  RotateCcw,
   DollarSign,
   Pin,
   PinOff,
   Check,
   Monitor,
+  Settings,
 } from 'lucide-react';
 
 // Redux imports
@@ -55,6 +43,12 @@ import {
   ReportType,
 } from '@/constants/enums/reportTypes';
 import { VALUE_UNITS, ValueUnitType } from '@/constants/enums/valueUnits';
+
+// Data imports
+import { productAnalyticsData } from '@/data/productData';
+import { lobAnalyticsData } from '@/data/lobData';
+import { verticalAnalyticsData } from '@/data/verticalData';
+import { Label } from '@/components/ui';
 
 interface AdvancedFiltersProps {
   isOpen: boolean;
@@ -77,16 +71,10 @@ export function AdvancedFilters({
   isOpen,
   onClose,
   // Legacy props - keeping for backward compatibility but using Redux state instead
-  valueUnit: legacyValueUnit,
   onValueUnitChange,
-  topExpenseCategories: legacyTopExpenseCategories,
   onTopExpenseCategoriesChange,
   selectedEntity: legacySelectedEntity,
-  selectedBusinessType: legacySelectedBusinessType,
   selectedLocation: legacySelectedLocation,
-  selectedReportType: legacySelectedReportType,
-  selectedDuration: legacySelectedDuration,
-  pinnedItems: legacyPinnedItems = [],
   onPinnedItemsChange,
 }: AdvancedFiltersProps) {
   const dispatch = useAppDispatch();
@@ -115,21 +103,15 @@ export function AdvancedFilters({
     'Delhi',
     'Karnataka',
   ]);
-  const [selectedCities, setSelectedCities] = useState<string[]>([
-    'Mumbai',
-    'Delhi',
-    'Bangalore',
-  ]);
+  const [selectedCities] = useState<string[]>(['Mumbai', 'Delhi', 'Bangalore']);
 
   // Team Filters
   const [selectedTeams, setSelectedTeams] = useState<string[]>([
     'Sales Team A',
     'Sales Team B',
   ]);
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([
-    'All Members',
-  ]);
-  const [performanceRange, setPerformanceRange] = useState([0, 100]);
+  const [selectedMembers] = useState<string[]>(['All Members']);
+  const [performanceRange] = useState([0, 100]);
 
   // Product Filters
   const [selectedProducts, setSelectedProducts] = useState<string[]>([
@@ -140,31 +122,26 @@ export function AdvancedFilters({
     'ICICI Lombard',
     'HDFC ERGO',
   ]);
-  const [policyTypes, setPolicyTypes] = useState<string[]>([
+
+  // New Business Filters
+  const [selectedLobs, setSelectedLobs] = useState<string[]>([
+    'General Insurance',
+    'Life Insurance',
+  ]);
+  const [selectedPolicyTypes, setSelectedPolicyTypes] = useState<string[]>([
     'Individual',
     'Group',
   ]);
-
-  // Business Filters
-  const [businessVerticals, setBusinessVerticals] = useState<string[]>([
+  const [selectedVerticals, setSelectedVerticals] = useState<string[]>([
     'Corporate',
     'Retail',
   ]);
-  const [clientTypes, setClientTypes] = useState<string[]>(['New', 'Existing']);
-  const [revenueRange, setRevenueRange] = useState([0, 10000000]);
 
-  // Display Settings
-  const [chartType, setChartType] = useState('donut');
-  const [showPercentages, setShowPercentages] = useState(true);
-  const [showLegend, setShowLegend] = useState(true);
-  const [animateCharts, setAnimateCharts] = useState(true);
-  const [colorScheme, setColorScheme] = useState('professional');
-  const [refreshInterval, setRefreshInterval] = useState('manual');
-
-  // Advanced Settings
-  const [enableNotifications, setEnableNotifications] = useState(true);
-  const [autoSave, setAutoSave] = useState(false);
-  const [exportFormat, setExportFormat] = useState('xlsx');
+  // Legacy Business Filters (keeping for compatibility)
+  const [policyTypes] = useState<string[]>(['Individual', 'Group']);
+  const [businessVerticals] = useState<string[]>(['Corporate', 'Retail']);
+  const [clientTypes] = useState<string[]>(['New', 'Existing']);
+  const [revenueRange] = useState([0, 10000000]);
 
   // Primary filter options data
   const entities = [
@@ -180,17 +157,17 @@ export function AdvancedFilters({
   const reportTypes = getReportTypesForDepartment(selectedDepartment);
 
   // Get locations based on department (simplified for now)
-  const locations = [
-    'All Location',
-    'Mumbai',
-    'Delhi',
-    'Bangalore',
-    'Chennai',
-    'Hyderabad',
-    'Pune',
-    'Kolkata',
-    'Ahmedabad',
-  ];
+  // const locations = [
+  //   'All Location',
+  //   'Mumbai',
+  //   'Delhi',
+  //   'Bangalore',
+  //   'Chennai',
+  //   'Hyderabad',
+  //   'Pune',
+  //   'Kolkata',
+  //   'Ahmedabad',
+  // ];
 
   const durations = DURATIONS;
   const valueUnits = VALUE_UNITS;
@@ -218,14 +195,25 @@ export function AdvancedFilters({
     'Support Team',
   ];
 
-  // Product filters
-  const products = [
-    'Health Insurance',
-    'Motor Insurance',
-    'Life Insurance',
-    'Property Insurance',
-    'Travel Insurance',
+  // Product filters - Dynamic from data
+  const products = productAnalyticsData.map(product => product.name);
+
+  // LOB filters - Dynamic from data
+  const lobs = lobAnalyticsData.map(lob => lob.name);
+
+  // Policy Type filters
+  const policyTypeOptions = [
+    'Individual',
+    'Group',
+    'Family Floater',
+    'Corporate',
+    'Retail',
+    'SME',
+    'Enterprise',
   ];
+
+  // Vertical Cross Cell Presentation filters - Dynamic from data
+  const verticals = verticalAnalyticsData.map(vertical => vertical.name);
   const insurers = [
     'ICICI Lombard',
     'HDFC ERGO',
@@ -266,13 +254,13 @@ export function AdvancedFilters({
 
   // All available filter items with metadata
   const allFilterItems = [
-    {
-      id: 'organisation',
-      name: 'Organisation',
-      icon: Building2,
-      currentValue: legacySelectedEntity || 'ABC Broking Pvt Ltd',
-      category: 'Primary',
-    },
+    // {
+    //   id: 'organisation',
+    //   name: 'Organisation',
+    //   icon: Building2,
+    //   currentValue: legacySelectedEntity || 'ABC Broking Pvt Ltd',
+    //   category: 'Primary',
+    // },
     {
       id: 'department',
       name: 'Department',
@@ -287,13 +275,13 @@ export function AdvancedFilters({
       currentValue: selectedReportType,
       category: 'Primary',
     },
-    {
-      id: 'location',
-      name: 'Location',
-      icon: MapPin,
-      currentValue: legacySelectedLocation || 'All Location',
-      category: 'Primary',
-    },
+    // {
+    //   id: 'location',
+    //   name: 'Location',
+    //   icon: MapPin,
+    //   currentValue: legacySelectedLocation || 'All Location',
+    //   category: 'Primary',
+    // },
     {
       id: 'duration',
       name: 'Duration',
@@ -315,13 +303,13 @@ export function AdvancedFilters({
       currentValue: `Top ${topExpenseCategories}`,
       category: 'Display',
     },
-    {
-      id: 'teams',
-      name: 'Teams',
-      icon: Users,
-      currentValue: `${selectedTeams.length} selected`,
-      category: 'Team',
-    },
+    // {
+    //   id: 'teams',
+    //   name: 'Teams',
+    //   icon: Users,
+    //   currentValue: `${selectedTeams.length} selected`,
+    //   category: 'Team',
+    // },
     {
       id: 'regions',
       name: 'Regions',
@@ -341,6 +329,27 @@ export function AdvancedFilters({
       name: 'Insurers',
       icon: Building2,
       currentValue: `${selectedInsurers.length} selected`,
+      category: 'Business',
+    },
+    {
+      id: 'lob',
+      name: 'LOB (Line of Business)',
+      icon: Target,
+      currentValue: `${selectedLobs.length} selected`,
+      category: 'Business',
+    },
+    {
+      id: 'policyType',
+      name: 'Policy Type',
+      icon: Building2,
+      currentValue: `${selectedPolicyTypes.length} selected`,
+      category: 'Business',
+    },
+    {
+      id: 'vertical',
+      name: 'Vertical Cross Cell Presentation',
+      icon: Monitor,
+      currentValue: `${selectedVerticals.length} selected`,
       category: 'Business',
     },
   ];
@@ -407,30 +416,33 @@ export function AdvancedFilters({
     }
   };
 
-  const resetFilters = () => {
-    setDateRange('FY 2022-23');
-    setSelectedRegions(['Mumbai', 'Delhi', 'Bangalore']);
-    setSelectedStates(['Maharashtra', 'Delhi', 'Karnataka']);
-    setSelectedCities(['Mumbai', 'Delhi', 'Bangalore']);
-    setSelectedTeams(['Sales Team A', 'Sales Team B']);
-    setSelectedMembers(['All Members']);
-    setPerformanceRange([0, 100]);
-    setSelectedProducts(['Health Insurance', 'Motor Insurance']);
-    setSelectedInsurers(['ICICI Lombard', 'HDFC ERGO']);
-    setPolicyTypes(['Individual', 'Group']);
-    setBusinessVerticals(['Corporate', 'Retail']);
-    setClientTypes(['New', 'Existing']);
-    setRevenueRange([0, 10000000]);
-    setChartType('donut');
-    setShowPercentages(true);
-    setShowLegend(true);
-    setAnimateCharts(true);
-    setColorScheme('professional');
-    setRefreshInterval('manual');
-    setEnableNotifications(true);
-    setAutoSave(false);
-    setExportFormat('xlsx');
-  };
+  // const resetFilters = () => {
+  //   setDateRange('FY 2022-23');
+  //   setSelectedRegions(['Mumbai', 'Delhi', 'Bangalore']);
+  //   setSelectedStates(['Maharashtra', 'Delhi', 'Karnataka']);
+  //   setSelectedCities(['Mumbai', 'Delhi', 'Bangalore']);
+  //   setSelectedTeams(['Sales Team A', 'Sales Team B']);
+  //   setSelectedMembers(['All Members']);
+  //   setPerformanceRange([0, 100]);
+  //   setSelectedProducts(['Health Insurance', 'Motor Insurance']);
+  //   setSelectedInsurers(['ICICI Lombard', 'HDFC ERGO']);
+  //   setPolicyTypes(['Individual', 'Group']);
+  //   setBusinessVerticals(['Corporate', 'Retail']);
+  //   setSelectedLobs(['General Insurance']);
+  //   setSelectedPolicyTypes(['Individual']);
+  //   setSelectedVerticals(['Corporate']);
+  //   setClientTypes(['New', 'Existing']);
+  //   setRevenueRange([0, 10000000]);
+  //   setChartType('donut');
+  //   setShowPercentages(true);
+  //   setShowLegend(true);
+  //   setAnimateCharts(true);
+  //   setColorScheme('professional');
+  //   setRefreshInterval('manual');
+  //   setEnableNotifications(true);
+  //   setAutoSave(false);
+  //   setExportFormat('xlsx');
+  // };
 
   const saveConfiguration = () => {
     // Save both filter settings and pinned items configuration
@@ -447,17 +459,11 @@ export function AdvancedFilters({
       selectedInsurers,
       policyTypes,
       businessVerticals,
+      selectedLobs,
+      selectedPolicyTypes,
+      selectedVerticals,
       clientTypes,
       revenueRange,
-      chartType,
-      showPercentages,
-      showLegend,
-      animateCharts,
-      colorScheme,
-      refreshInterval,
-      enableNotifications,
-      autoSave,
-      exportFormat,
     };
 
     console.log('Saving configuration...', configuration);
@@ -487,7 +493,13 @@ export function AdvancedFilters({
           setSelectedRegions(configuration.selectedRegions);
         if (configuration.selectedStates)
           setSelectedStates(configuration.selectedStates);
-        if (configuration.chartType) setChartType(configuration.chartType);
+        if (configuration.selectedLobs)
+          setSelectedLobs(configuration.selectedLobs);
+        if (configuration.selectedPolicyTypes)
+          setSelectedPolicyTypes(configuration.selectedPolicyTypes);
+        if (configuration.selectedVerticals)
+          setSelectedVerticals(configuration.selectedVerticals);
+        // if (configuration.chartType) setChartType(configuration.chartType);
         // ... load other settings as needed
       } catch (error) {
         console.error('Error loading saved configuration:', error);
@@ -495,17 +507,15 @@ export function AdvancedFilters({
     }
   }, [onPinnedItemsChange]);
 
-  // Group filter items by category, filtering out unavailable items
-  const filtersByCategory = allFilterItems
-    .filter(item => item.available !== false) // Only show available items
-    .reduce(
-      (acc, item) => {
-        if (!acc[item.category]) acc[item.category] = [];
-        acc[item.category].push(item);
-        return acc;
-      },
-      {} as Record<string, typeof allFilterItems>
-    );
+  // Group filter items by category
+  const filtersByCategory = allFilterItems.reduce(
+    (acc, item) => {
+      if (!acc[item.category]) acc[item.category] = [];
+      acc[item.category]!.push(item);
+      return acc;
+    },
+    {} as Record<string, typeof allFilterItems>
+  );
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -541,581 +551,446 @@ export function AdvancedFilters({
           </div>
         </SheetHeader>
 
-        <Tabs defaultValue="filters" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="filters" className="flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              Filters & Pinning
-            </TabsTrigger>
-            <TabsTrigger value="display" className="flex items-center gap-2">
-              <Monitor className="w-4 h-4" />
-              Display & Settings
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-6 p-4">
+          {/* Currently Applied Filters */}
+          <Card className="p-2 bg-blue-50 border-blue-200 gap-4">
+            <div className="flex items-center gap-1">
+              <Filter className="w-4 h-4 text-blue-600" />
+              <h3 className="font-medium text-sm text-blue-900">
+                Currently Applied Configuration
+              </h3>
+            </div>
 
-          {/* Filters & Pinning Tab */}
-          <TabsContent value="filters" className="space-y-6 p-4">
-            {/* Currently Applied Filters */}
-            <Card className="p-2 bg-blue-50 border-blue-200 gap-4">
-              <div className="flex items-center gap-1">
-                <Filter className="w-4 h-4 text-blue-600" />
-                <h3 className="font-medium text-sm text-blue-900">
-                  Currently Applied Configuration
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="default" className="bg-blue-600 text-white">
-                    Organisation:{' '}
-                    {legacySelectedEntity || 'ABC Broking Pvt Ltd'}
-                  </Badge>
-                  <Badge variant="default" className="bg-blue-600 text-white">
-                    Department: {selectedDepartment}
-                  </Badge>
-                  <Badge variant="default" className="bg-blue-600 text-white">
-                    Location: {legacySelectedLocation || 'All Location'}
-                  </Badge>
-                  <Badge variant="default" className="bg-blue-600 text-white">
-                    Report: {selectedReportType}
-                  </Badge>
-                  <Badge variant="default" className="bg-blue-600 text-white">
-                    Period: {selectedDuration}
-                  </Badge>
-                  <Badge variant="default" className="bg-green-600 text-white">
-                    Values: {valueUnit}
-                  </Badge>
-                  {selectedReportType === 'Revenue vs Expenses' && (
-                    <Badge
-                      variant="default"
-                      className="bg-purple-600 text-white"
-                    >
-                      Expenses: Top {topExpenseCategories}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* Pinned Items Management */}
-            <Card className="p-2 gap-4">
-              <div className="flex items-center gap-2">
-                <Pin className="w-4 h-4 text-gray-600" />
-                <h3 className="font-medium text-sm text-gray-900">
-                  Pin Filters to Main Dashboard
-                </h3>
-                <Badge
-                  variant="outline"
-                  className="ml-auto text-xs bg-blue-50 border-blue-200 text-gray-600"
-                >
-                  {pinnedItems.length} pinned
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="default" className="bg-blue-600 text-white">
+                  Organisation: {legacySelectedEntity || 'ABC Broking Pvt Ltd'}
                 </Badge>
+                <Badge variant="default" className="bg-blue-600 text-white">
+                  Department: {selectedDepartment}
+                </Badge>
+                <Badge variant="default" className="bg-blue-600 text-white">
+                  Location: {legacySelectedLocation || 'All Location'}
+                </Badge>
+                <Badge variant="default" className="bg-blue-600 text-white">
+                  Report: {selectedReportType}
+                </Badge>
+                <Badge variant="default" className="bg-blue-600 text-white">
+                  Period: {selectedDuration}
+                </Badge>
+                <Badge variant="default" className="bg-green-600 text-white">
+                  Values: {valueUnit}
+                </Badge>
+                {selectedReportType === 'Revenue vs Expenses' && (
+                  <Badge variant="default" className="bg-purple-600 text-white">
+                    Expenses: Top {topExpenseCategories}
+                  </Badge>
+                )}
               </div>
+            </div>
+          </Card>
 
-              <div className="bg-gray-100 border-gray-200 rounded-lg p-3">
-                <p className="text-xs text-gray-700 mb-2">
-                  <strong>Pinned filters</strong> appear on the main dashboard
-                  for quick access.
-                  <strong>Unpinned filters</strong> are available through More
-                  button.
-                </p>
-                <p className="text-xs text-gray-600">
-                  Click any filter below to pin/unpin it. Click individual
-                  options to preview available choices.
-                </p>
-              </div>
+          {/* Pinned Items Management */}
+          <Card className="p-2 gap-4">
+            <div className="flex items-center gap-2">
+              <Pin className="w-4 h-4 text-gray-600" />
+              <h3 className="font-medium text-sm text-gray-900">
+                Pin Filters to Main Dashboard
+              </h3>
+              <Badge
+                variant="outline"
+                className="ml-auto text-xs bg-blue-50 border-blue-200 text-gray-600"
+              >
+                {pinnedItems.length} pinned
+              </Badge>
+            </div>
 
-              <div className="space-y-4">
-                {Object.entries(filtersByCategory).map(([category, items]) => (
-                  <div key={category}>
-                    <h4 className="text-xs font-medium text-gray-700 mb-1 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      {category} Filters
-                    </h4>
-                    <div className="grid grid-cols-1 gap-4">
-                      {items.map(item => {
-                        const IconComponent = item.icon;
-                        const isPinned = pinnedItems.includes(item.id);
+            <div className="bg-gray-100 border-gray-200 rounded-lg p-3">
+              <p className="text-xs text-gray-700 mb-2">
+                <strong>Pinned filters</strong> appear on the main dashboard for
+                quick access.
+                <strong>Unpinned filters</strong> are available through More
+                button.
+              </p>
+              <p className="text-xs text-gray-600">
+                Click any filter below to pin/unpin it. Click individual options
+                to preview available choices.
+              </p>
+            </div>
 
-                        // Get available options for each filter type
-                        const getFilterOptions = (filterId: string) => {
-                          switch (filterId) {
-                            case 'organisation':
-                              return entities;
-                            case 'department':
-                              return businessTypes;
-                            case 'reportType':
-                              return reportTypes;
-                            case 'duration':
-                              return durations;
-                            case 'valueUnit':
-                              return valueUnits;
-                            case 'topExpenses':
-                              return topExpenseOptions;
-                            case 'teams':
-                              return teams;
-                            case 'regions':
-                              return regions;
-                            case 'products':
-                              return products;
-                            case 'insurers':
-                              return insurers;
-                            default:
-                              return [];
-                          }
-                        };
+            <div className="space-y-4">
+              {Object.entries(filtersByCategory).map(([category, items]) => (
+                <div key={category}>
+                  <h4 className="text-xs font-medium text-gray-700 mb-1 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    {category} Filters
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    {items.map(item => {
+                      const IconComponent = item.icon;
+                      const isPinned = pinnedItems.includes(item.id);
 
-                        const getCurrentSelection = (filterId: string) => {
-                          switch (filterId) {
-                            case 'organisation':
-                              return (
-                                legacySelectedEntity || 'ABC Broking Pvt Ltd'
-                              );
-                            case 'department':
-                              return selectedDepartment;
-                            case 'reportType':
-                              return selectedReportType;
-                            case 'duration':
-                              return selectedDuration;
-                            case 'valueUnit':
-                              return valueUnit;
-                            case 'topExpenses':
-                              return topExpenseCategories.toString();
-                            case 'teams':
-                              return selectedTeams;
-                            case 'regions':
-                              return selectedRegions;
-                            case 'products':
-                              return selectedProducts;
-                            case 'insurers':
-                              return selectedInsurers;
-                            default:
-                              return '';
-                          }
-                        };
+                      // Get available options for each filter type
+                      const getFilterOptions = (filterId: string) => {
+                        switch (filterId) {
+                          case 'organisation':
+                            return entities;
+                          case 'department':
+                            return businessTypes;
+                          case 'reportType':
+                            return reportTypes;
+                          case 'duration':
+                            return durations;
+                          case 'valueUnit':
+                            return valueUnits;
+                          case 'topExpenses':
+                            return topExpenseOptions;
+                          case 'teams':
+                            return teams;
+                          case 'regions':
+                            return regions;
+                          case 'products':
+                            return products;
+                          case 'insurers':
+                            return insurers;
+                          case 'lob':
+                            return lobs;
+                          case 'policyType':
+                            return policyTypeOptions;
+                          case 'vertical':
+                            return verticals;
+                          default:
+                            return [];
+                        }
+                      };
 
-                        const isMultiSelect = (filterId: string) => {
-                          return [
-                            'teams',
-                            'regions',
-                            'products',
-                            'insurers',
-                          ].includes(filterId);
-                        };
+                      const getCurrentSelection = (filterId: string) => {
+                        switch (filterId) {
+                          case 'organisation':
+                            return (
+                              legacySelectedEntity || 'ABC Broking Pvt Ltd'
+                            );
+                          case 'department':
+                            return selectedDepartment;
+                          case 'reportType':
+                            return selectedReportType;
+                          case 'duration':
+                            return selectedDuration;
+                          case 'valueUnit':
+                            return valueUnit;
+                          case 'topExpenses':
+                            return topExpenseCategories.toString();
+                          case 'teams':
+                            return selectedTeams;
+                          case 'regions':
+                            return selectedRegions;
+                          case 'products':
+                            return selectedProducts;
+                          case 'insurers':
+                            return selectedInsurers;
+                          case 'lob':
+                            return selectedLobs;
+                          case 'policyType':
+                            return selectedPolicyTypes;
+                          case 'vertical':
+                            return selectedVerticals;
+                          default:
+                            return '';
+                        }
+                      };
 
-                        const filterOptions = getFilterOptions(item.id);
-                        const currentSelection = getCurrentSelection(item.id);
+                      const isMultiSelect = (filterId: string) => {
+                        return [
+                          'teams',
+                          'regions',
+                          'products',
+                          'insurers',
+                          'lob',
+                          'policyType',
+                          'vertical',
+                        ].includes(filterId);
+                      };
 
-                        return (
+                      const filterOptions = getFilterOptions(item.id);
+                      const currentSelection = getCurrentSelection(item.id);
+
+                      return (
+                        <div
+                          key={item.id}
+                          className={`border rounded-lg transition-all ${
+                            isPinned
+                              ? 'bg-green-50 border-green-200'
+                              : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          {/* Filter Header */}
                           <div
-                            key={item.id}
-                            className={`border rounded-lg transition-all ${
+                            className={`flex items-center justify-between p-3 cursor-pointer hover:bg-opacity-80 ${
                               isPinned
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-gray-50 border-gray-200'
+                                ? 'hover:bg-green-100'
+                                : 'hover:bg-gray-100'
                             }`}
+                            onClick={() => togglePinItem(item.id)}
                           >
-                            {/* Filter Header */}
-                            <div
-                              className={`flex items-center justify-between p-3 cursor-pointer hover:bg-opacity-80 ${
-                                isPinned
-                                  ? 'hover:bg-green-100'
-                                  : 'hover:bg-gray-100'
-                              }`}
-                              onClick={() => togglePinItem(item.id)}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`p-2 rounded-lg ${
-                                    isPinned ? 'bg-green-100' : 'bg-gray-100'
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`p-2 rounded-lg ${
+                                  isPinned ? 'bg-green-100' : 'bg-gray-100'
+                                }`}
+                              >
+                                <IconComponent
+                                  className={`w-4 h-4 ${
+                                    isPinned
+                                      ? 'text-green-600'
+                                      : 'text-gray-600'
                                   }`}
-                                >
-                                  <IconComponent
-                                    className={`w-4 h-4 ${
-                                      isPinned
-                                        ? 'text-green-600'
-                                        : 'text-gray-600'
-                                    }`}
-                                  />
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-900">
-                                    {item.name}
-                                  </div>
-                                  <div className="text-sm text-gray-600">
-                                    {item.currentValue}
-                                  </div>
-                                </div>
+                                />
                               </div>
-                              <div className="flex items-center gap-2">
-                                {isPinned && (
-                                  <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                                    <Check className="w-3 h-3" />
-                                    Pinned
-                                  </div>
-                                )}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className={
-                                    isPinned
-                                      ? 'text-green-600 hover:text-green-700 hover:bg-green-100'
-                                      : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
-                                  }
-                                  title={
-                                    isPinned
-                                      ? 'Unpin from main dashboard'
-                                      : 'Pin to main dashboard'
-                                  }
-                                >
-                                  {isPinned ? (
-                                    <PinOff className="w-4 h-4" />
-                                  ) : (
-                                    <Pin className="w-4 h-4" />
-                                  )}
-                                </Button>
+                              <div>
+                                <div className="font-medium text-gray-900">
+                                  {item.name}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {item.currentValue}
+                                </div>
                               </div>
                             </div>
-
-                            {/* Available Options */}
-                            {filterOptions.length > 0 && (
-                              <div className="px-3 pb-3">
-                                <div className="border-t border-gray-200 pt-3">
-                                  <Label className="text-xs font-medium text-gray-600 mb-2 block">
-                                    Available Options ({filterOptions.length})
-                                    {isMultiSelect(item.id) &&
-                                      Array.isArray(currentSelection) && (
-                                        <span className="text-blue-600 ml-1">
-                                          • {currentSelection.length} selected
-                                        </span>
-                                      )}
-                                  </Label>
-                                  <div className="flex flex-wrap gap-1">
-                                    {filterOptions.map(option => {
-                                      const isSelected = isMultiSelect(item.id)
-                                        ? Array.isArray(currentSelection) &&
-                                          currentSelection.includes(option)
-                                        : option === currentSelection;
-
-                                      return (
-                                        <Badge
-                                          key={option}
-                                          variant={
-                                            isSelected ? 'default' : 'outline'
-                                          }
-                                          className={`text-xs cursor-pointer transition-all duration-200 ${
-                                            isSelected
-                                              ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                              : 'hover:bg-gray-100 hover:border-gray-300'
-                                          }`}
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            if (isMultiSelect(item.id)) {
-                                              // Handle multi-select for teams, regions, products, insurers
-                                              switch (item.id) {
-                                                case 'teams':
-                                                  toggleArrayItem(
-                                                    selectedTeams,
-                                                    setSelectedTeams,
-                                                    option
-                                                  );
-                                                  break;
-                                                case 'regions':
-                                                  toggleArrayItem(
-                                                    selectedRegions,
-                                                    setSelectedRegions,
-                                                    option
-                                                  );
-                                                  break;
-                                                case 'products':
-                                                  toggleArrayItem(
-                                                    selectedProducts,
-                                                    setSelectedProducts,
-                                                    option
-                                                  );
-                                                  break;
-                                                case 'insurers':
-                                                  toggleArrayItem(
-                                                    selectedInsurers,
-                                                    setSelectedInsurers,
-                                                    option
-                                                  );
-                                                  break;
-                                              }
-                                            } else {
-                                              // Handle single-select filters by dispatching Redux actions
-                                              switch (item.id) {
-                                                case 'department':
-                                                  handleDepartmentChange(
-                                                    option
-                                                  );
-                                                  break;
-                                                case 'reportType':
-                                                  handleReportTypeChange(
-                                                    option
-                                                  );
-                                                  break;
-                                                case 'duration':
-                                                  handleDurationChange(option);
-                                                  break;
-                                                case 'valueUnit':
-                                                  handleValueUnitChange(option);
-                                                  break;
-                                                case 'topExpenses':
-                                                  handleTopExpenseCategoriesChange(
-                                                    option
-                                                  );
-                                                  break;
-                                              }
-                                            }
-                                          }}
-                                        >
-                                          {isSelected &&
-                                            isMultiSelect(item.id) && (
-                                              <Check className="w-3 h-3 mr-1" />
-                                            )}
-                                          {option}
-                                        </Badge>
-                                      );
-                                    })}
-                                  </div>
-                                  {isMultiSelect(item.id) && (
-                                    <div className="mt-2 flex gap-2">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          switch (item.id) {
-                                            case 'teams':
-                                              setSelectedTeams([...teams]);
-                                              break;
-                                            case 'regions':
-                                              setSelectedRegions([...regions]);
-                                              break;
-                                            case 'products':
-                                              setSelectedProducts([
-                                                ...products,
-                                              ]);
-                                              break;
-                                            case 'insurers':
-                                              setSelectedInsurers([
-                                                ...insurers,
-                                              ]);
-                                              break;
-                                          }
-                                        }}
-                                      >
-                                        Select All
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-xs text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          switch (item.id) {
-                                            case 'teams':
-                                              setSelectedTeams([]);
-                                              break;
-                                            case 'regions':
-                                              setSelectedRegions([]);
-                                              break;
-                                            case 'products':
-                                              setSelectedProducts([]);
-                                              break;
-                                            case 'insurers':
-                                              setSelectedInsurers([]);
-                                              break;
-                                          }
-                                        }}
-                                      >
-                                        Clear All
-                                      </Button>
-                                    </div>
-                                  )}
+                            <div className="flex items-center gap-2">
+                              {isPinned && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                                  <Check className="w-3 h-3" />
+                                  Pinned
                                 </div>
-                              </div>
-                            )}
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={
+                                  isPinned
+                                    ? 'text-green-600 hover:text-green-700 hover:bg-green-100'
+                                    : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
+                                }
+                                title={
+                                  isPinned
+                                    ? 'Unpin from main dashboard'
+                                    : 'Pin to main dashboard'
+                                }
+                              >
+                                {isPinned ? (
+                                  <PinOff className="w-4 h-4" />
+                                ) : (
+                                  <Pin className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
 
-          {/* Display & Settings Tab */}
-          <TabsContent value="display" className="space-y-6">
-            {/* Chart Display Settings */}
-            <Card className="p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Eye className="w-4 h-4 text-gray-600" />
-                <h3 className="font-medium text-gray-900">
-                  Chart Display Settings
-                </h3>
-              </div>
+                          {/* Available Options */}
+                          {filterOptions.length > 0 && (
+                            <div className="px-3 pb-3">
+                              <div className="border-t border-gray-200 pt-3">
+                                <Label className="text-xs font-medium text-gray-600 mb-2 block">
+                                  Available Options ({filterOptions.length})
+                                  {isMultiSelect(item.id) &&
+                                    Array.isArray(currentSelection) &&
+                                    currentSelection && (
+                                      <span className="text-blue-600 ml-1">
+                                        • {currentSelection.length} selected
+                                      </span>
+                                    )}
+                                </Label>
+                                <div className="flex flex-wrap gap-1">
+                                  {filterOptions.map(option => {
+                                    const isSelected = isMultiSelect(item.id)
+                                      ? Array.isArray(currentSelection) &&
+                                        currentSelection.includes(option)
+                                      : option === currentSelection;
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">
-                      Chart Type
-                    </Label>
-                    <Select value={chartType} onValueChange={setChartType}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="donut">Donut Chart</SelectItem>
-                        <SelectItem value="pie">Pie Chart</SelectItem>
-                        <SelectItem value="bar">Bar Chart</SelectItem>
-                        <SelectItem value="line">Line Chart</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">
-                      Color Scheme
-                    </Label>
-                    <Select value={colorScheme} onValueChange={setColorScheme}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="professional">
-                          Professional
-                        </SelectItem>
-                        <SelectItem value="vibrant">Vibrant</SelectItem>
-                        <SelectItem value="pastel">Pastel</SelectItem>
-                        <SelectItem value="monochrome">Monochrome</SelectItem>
-                      </SelectContent>
-                    </Select>
+                                    return (
+                                      <Badge
+                                        key={option}
+                                        variant={
+                                          isSelected ? 'default' : 'outline'
+                                        }
+                                        className={`text-xs cursor-pointer transition-all duration-200 ${
+                                          isSelected
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                            : 'hover:bg-gray-100 hover:border-gray-300'
+                                        }`}
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          if (isMultiSelect(item.id)) {
+                                            // Handle multi-select for teams, regions, products, insurers
+                                            switch (item.id) {
+                                              case 'teams':
+                                                toggleArrayItem(
+                                                  selectedTeams,
+                                                  setSelectedTeams,
+                                                  option
+                                                );
+                                                break;
+                                              case 'regions':
+                                                toggleArrayItem(
+                                                  selectedRegions,
+                                                  setSelectedRegions,
+                                                  option
+                                                );
+                                                break;
+                                              case 'products':
+                                                toggleArrayItem(
+                                                  selectedProducts,
+                                                  setSelectedProducts,
+                                                  option
+                                                );
+                                                break;
+                                              case 'insurers':
+                                                toggleArrayItem(
+                                                  selectedInsurers,
+                                                  setSelectedInsurers,
+                                                  option
+                                                );
+                                                break;
+                                              case 'lob':
+                                                toggleArrayItem(
+                                                  selectedLobs,
+                                                  setSelectedLobs,
+                                                  option
+                                                );
+                                                break;
+                                              case 'policyType':
+                                                toggleArrayItem(
+                                                  selectedPolicyTypes,
+                                                  setSelectedPolicyTypes,
+                                                  option
+                                                );
+                                                break;
+                                              case 'vertical':
+                                                toggleArrayItem(
+                                                  selectedVerticals,
+                                                  setSelectedVerticals,
+                                                  option
+                                                );
+                                                break;
+                                            }
+                                          } else {
+                                            // Handle single-select filters by dispatching Redux actions
+                                            switch (item.id) {
+                                              case 'department':
+                                                handleDepartmentChange(option);
+                                                break;
+                                              case 'reportType':
+                                                handleReportTypeChange(option);
+                                                break;
+                                              case 'duration':
+                                                handleDurationChange(option);
+                                                break;
+                                              case 'valueUnit':
+                                                handleValueUnitChange(option);
+                                                break;
+                                              case 'topExpenses':
+                                                handleTopExpenseCategoriesChange(
+                                                  option
+                                                );
+                                                break;
+                                            }
+                                          }
+                                        }}
+                                      >
+                                        {isSelected &&
+                                          isMultiSelect(item.id) && (
+                                            <Check className="w-3 h-3 mr-1" />
+                                          )}
+                                        {option}
+                                      </Badge>
+                                    );
+                                  })}
+                                </div>
+                                {isMultiSelect(item.id) && (
+                                  <div className="mt-2 flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        switch (item.id) {
+                                          case 'teams':
+                                            setSelectedTeams([...teams]);
+                                            break;
+                                          case 'regions':
+                                            setSelectedRegions([...regions]);
+                                            break;
+                                          case 'products':
+                                            setSelectedProducts([...products]);
+                                            break;
+                                          case 'insurers':
+                                            setSelectedInsurers([...insurers]);
+                                            break;
+                                          case 'lob':
+                                            setSelectedLobs([...lobs]);
+                                            break;
+                                          case 'policyType':
+                                            setSelectedPolicyTypes([
+                                              ...policyTypeOptions,
+                                            ]);
+                                            break;
+                                          case 'vertical':
+                                            setSelectedVerticals([
+                                              ...verticals,
+                                            ]);
+                                            break;
+                                        }
+                                      }}
+                                    >
+                                      Select All
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        switch (item.id) {
+                                          case 'teams':
+                                            setSelectedTeams([]);
+                                            break;
+                                          case 'regions':
+                                            setSelectedRegions([]);
+                                            break;
+                                          case 'products':
+                                            setSelectedProducts([]);
+                                            break;
+                                          case 'insurers':
+                                            setSelectedInsurers([]);
+                                            break;
+                                          case 'lob':
+                                            setSelectedLobs([]);
+                                            break;
+                                          case 'policyType':
+                                            setSelectedPolicyTypes([]);
+                                            break;
+                                          case 'vertical':
+                                            setSelectedVerticals([]);
+                                            break;
+                                        }
+                                      }}
+                                    >
+                                      Clear All
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">
-                      Show Percentages
-                    </Label>
-                    <Switch
-                      checked={showPercentages}
-                      onCheckedChange={setShowPercentages}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Show Legend</Label>
-                    <Switch
-                      checked={showLegend}
-                      onCheckedChange={setShowLegend}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">
-                      Animate Charts
-                    </Label>
-                    <Switch
-                      checked={animateCharts}
-                      onCheckedChange={setAnimateCharts}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Performance Settings */}
-            <Card className="p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Settings className="w-4 h-4 text-gray-600" />
-                <h3 className="font-medium text-gray-900">
-                  Performance & Data Settings
-                </h3>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">
-                    Data Refresh Interval
-                  </Label>
-                  <Select
-                    value={refreshInterval}
-                    onValueChange={setRefreshInterval}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manual">Manual Refresh</SelectItem>
-                      <SelectItem value="30s">Every 30 seconds</SelectItem>
-                      <SelectItem value="1m">Every 1 minute</SelectItem>
-                      <SelectItem value="5m">Every 5 minutes</SelectItem>
-                      <SelectItem value="15m">Every 15 minutes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">
-                    Export Format
-                  </Label>
-                  <Select value={exportFormat} onValueChange={setExportFormat}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="xlsx">Excel (.xlsx)</SelectItem>
-                      <SelectItem value="csv">CSV (.csv)</SelectItem>
-                      <SelectItem value="pdf">PDF (.pdf)</SelectItem>
-                      <SelectItem value="png">Image (.png)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">
-                      Enable Notifications
-                    </Label>
-                    <Switch
-                      checked={enableNotifications}
-                      onCheckedChange={setEnableNotifications}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">
-                      Auto-save Configuration
-                    </Label>
-                    <Switch checked={autoSave} onCheckedChange={setAutoSave} />
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Reset and Save Actions */}
-            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-              <Button
-                variant="outline"
-                onClick={resetFilters}
-                className="text-sm"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset All Settings
-              </Button>
-              <Button onClick={saveConfiguration} className="text-sm">
-                <Save className="w-4 h-4 mr-2" />
-                Save Configuration
-              </Button>
+              ))}
             </div>
-          </TabsContent>
-        </Tabs>
+          </Card>
+        </div>
       </SheetContent>
     </Sheet>
   );

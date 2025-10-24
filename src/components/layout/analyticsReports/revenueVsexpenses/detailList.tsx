@@ -9,6 +9,7 @@ interface Product {
   value: number;
   color: string;
   percentage: number;
+  policies: number;
   description?: string;
 }
 
@@ -31,18 +32,6 @@ export function ProductsList({
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortState, setSortState] = useState<SortState>('none');
 
-  // Generate mock policy numbers for each product
-  const getPolicyCount = (index: number) => {
-    const baseCounts = [
-      33300, 27360, 23040, 16740, 12780, 8950, 7200, 6100, 5400, 4800, 4200,
-      3600, 3100, 2700, 2300,
-    ];
-    return (
-      baseCounts[index % baseCounts.length] ||
-      Math.floor(Math.random() * 10000) + 1000
-    );
-  };
-
   // Handle sort click
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -60,24 +49,15 @@ export function ProductsList({
     }
   };
 
-  // Add null check for data prop
-  if (!data || !Array.isArray(data)) {
-    return (
-      <Card className={productsListStyles.container}>
-        <div className="p-4 text-center text-gray-500">No data available</div>
-      </Card>
-    );
-  }
-
   // Local getFormattedValue function
   const getFormattedValue = (value: number) => {
     return utilGetFormattedValue(value, valueUnit);
   };
 
-  // Sort products based on current sort state
+  // Sort products based on current sort state - moved before early return
   const sortedProducts = useMemo(() => {
-    if (!sortColumn || sortState === 'none') {
-      return data;
+    if (!data || !Array.isArray(data) || !sortColumn || sortState === 'none') {
+      return data || [];
     }
 
     return [...data].sort((a, b) => {
@@ -86,8 +66,8 @@ export function ProductsList({
 
       switch (sortColumn) {
         case 'policies':
-          aValue = getPolicyCount(data.indexOf(a));
-          bValue = getPolicyCount(data.indexOf(b));
+          aValue = a.policies;
+          bValue = b.policies;
           break;
         case 'amount':
         case 'revenue':
@@ -105,6 +85,15 @@ export function ProductsList({
       }
     });
   }, [data, sortColumn, sortState]);
+
+  // Add null check for data prop - moved after hooks
+  if (!data || !Array.isArray(data)) {
+    return (
+      <Card className={productsListStyles.container}>
+        <div className="p-4 text-center text-gray-500">No data available</div>
+      </Card>
+    );
+  }
 
   // Get SVG color based on sort state
   const getSvgColor = (column: SortColumn) => {
@@ -127,7 +116,7 @@ export function ProductsList({
         {/* Table Header */}
         <div
           className={`${productsListStyles.table.headerRow} sticky top-0 z-20 bg-white`}
-          style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}
+          style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr' }}
         >
           <div
             className={`${productsListStyles.table.headerCell} sticky flex items-center justify-center`}
@@ -200,20 +189,23 @@ export function ProductsList({
               <path d="m19 12-7 7-7-7"></path>
             </svg>
           </div>
+
+          <div
+            className={`${productsListStyles.table.headerCellRight} flex items-center justify-center`}
+          >
+            Revenue%
+          </div>
         </div>
 
         {/* Table Body */}
         <div className={productsListStyles.table.body}>
           {sortedProducts.map(product => {
-            const originalIndex = data.findIndex(p => p.id === product.id);
-            const policyCount = getPolicyCount(originalIndex);
-
             return (
               <div
                 key={product.id}
                 onClick={() => onItemClick?.(product)}
                 className={productsListStyles.productRow.container}
-                style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}
+                style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr' }}
               >
                 {/* Product Column */}
                 <div
@@ -241,7 +233,7 @@ export function ProductsList({
                 {/* No. of Policies Column */}
                 <div className={productsListStyles.productRow.centerColumn}>
                   <div className={productsListStyles.productRow.cellValue}>
-                    {policyCount.toLocaleString()}
+                    {product.policies.toLocaleString()}
                   </div>
                 </div>
 
@@ -256,6 +248,13 @@ export function ProductsList({
                 <div className={productsListStyles.productRow.rightColumn}>
                   <div className={productsListStyles.productRow.cellValue}>
                     {getFormattedValue(product.value)}
+                  </div>
+                </div>
+
+                {/* Revenue% Column */}
+                <div className={productsListStyles.productRow.rightColumn}>
+                  <div className={productsListStyles.productRow.cellValue}>
+                    {product.percentage.toFixed(1)}%
                   </div>
                 </div>
               </div>

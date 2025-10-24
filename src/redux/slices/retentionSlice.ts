@@ -5,6 +5,10 @@ import type {
   InsurerRetentionRow,
   RetentionMetrics,
 } from '@/constants/interfaces/retention';
+import {
+  brokerRetentionAnalyticsData,
+  insurerRetentionAnalyticsData,
+} from '../../data';
 
 // Loss Reason Analysis dummy data (from analytics RetentionByBroker)
 export const lossReasonData: LossReasonData[] = [
@@ -109,135 +113,48 @@ export const lossReasonData: LossReasonData[] = [
   },
 ];
 
-// Broker Retention dummy data (from analytics RetentionByBroker)
-export const brokerRetentionData: BrokerRetentionData[] = [
-  {
-    id: 'marsh-mclennan',
-    name: 'Marsh & McLennan',
-    retentionRate: 94.2,
-    totalPolicies: 15420,
-    renewedPolicies: 14526,
-    lostPolicies: 894,
-    totalPremium: 125600000,
-    color: '#3B82F6',
-  },
-  {
-    id: 'aon-plc',
-    name: 'Aon plc',
-    retentionRate: 91.8,
-    totalPolicies: 12850,
-    renewedPolicies: 11796,
-    lostPolicies: 1054,
-    totalPremium: 98750000,
-    color: '#10B981',
-  },
-  {
-    id: 'willis-towers',
-    name: 'Willis Towers Watson',
-    retentionRate: 89.5,
-    totalPolicies: 10200,
-    renewedPolicies: 9129,
-    lostPolicies: 1071,
-    totalPremium: 87300000,
-    color: '#F59E0B',
-  },
-  {
-    id: 'arthur-gallagher',
-    name: 'Arthur J. Gallagher',
-    retentionRate: 87.3,
-    totalPolicies: 8950,
-    renewedPolicies: 7813,
-    lostPolicies: 1137,
-    totalPremium: 72400000,
-    color: '#EF4444',
-  },
-  {
-    id: 'brown-brown',
-    name: 'Brown & Brown',
-    retentionRate: 85.1,
-    totalPolicies: 7600,
-    renewedPolicies: 6468,
-    lostPolicies: 1132,
-    totalPremium: 61200000,
-    color: '#8B5CF6',
-  },
-];
+// Broker Retention data (using structured data from data files)
+export const brokerRetentionData: BrokerRetentionData[] =
+  brokerRetentionAnalyticsData.map((item, index) => {
+    const retentionRate = Math.random() * 30 + 70; // Generate random retention rate (70-100%)
+    const totalPolicies = item.policies;
+    const renewedPolicies = Math.floor(totalPolicies * (retentionRate / 100));
 
-// Insurer Retention dummy data (from analytics RetentionByInsurer)
-export const insurerRetentionData: InsurerRetentionRow[] = [
-  {
-    company: 'ICICI Lombard General Insurance',
-    totalPremium: 1200,
-    retainedPremium: 912,
-    lostPremium: 288,
-    retainedPolicies: 456,
-    lostPolicies: 144,
-    avgTicketSizeRetained: 2.0,
-    avgTicketSizeLost: 2.0,
-    retentionPercentage: 76.0,
-    lostPercentage: 24.0,
-  },
-  {
-    company: 'HDFC ERGO General Insurance',
-    totalPremium: 980,
-    retainedPremium: 725,
-    lostPremium: 255,
-    retainedPolicies: 362,
-    lostPolicies: 98,
-    avgTicketSizeRetained: 2.0,
-    avgTicketSizeLost: 2.6,
-    retentionPercentage: 74.0,
-    lostPercentage: 26.0,
-  },
-  {
-    company: 'Bajaj Allianz General Insurance',
-    totalPremium: 750,
-    retainedPremium: 540,
-    lostPremium: 210,
-    retainedPolicies: 270,
-    lostPolicies: 105,
-    avgTicketSizeRetained: 2.0,
-    avgTicketSizeLost: 2.0,
-    retentionPercentage: 72.0,
-    lostPercentage: 28.0,
-  },
-  {
-    company: 'Tata AIG General Insurance',
-    totalPremium: 650,
-    retainedPremium: 468,
-    lostPremium: 182,
-    retainedPolicies: 234,
-    lostPolicies: 91,
-    avgTicketSizeRetained: 2.0,
-    avgTicketSizeLost: 2.0,
-    retentionPercentage: 72.0,
-    lostPercentage: 28.0,
-  },
-  {
-    company: 'New India Assurance',
-    totalPremium: 520,
-    retainedPremium: 364,
-    lostPremium: 156,
-    retainedPolicies: 182,
-    lostPolicies: 78,
-    avgTicketSizeRetained: 2.0,
-    avgTicketSizeLost: 2.0,
-    retentionPercentage: 70.0,
-    lostPercentage: 30.0,
-  },
-  {
-    company: 'Oriental Insurance Company',
-    totalPremium: 480,
-    retainedPremium: 326,
-    lostPremium: 154,
-    retainedPolicies: 163,
-    lostPolicies: 77,
-    avgTicketSizeRetained: 2.0,
-    avgTicketSizeLost: 2.0,
-    retentionPercentage: 68.0,
-    lostPercentage: 32.0,
-  },
-];
+    return {
+      id: `broker-${index}`, // Generate ID since not available in data
+      name: item.name, // Use name property
+      retentionRate: retentionRate,
+      totalPolicies: totalPolicies,
+      renewedPolicies: renewedPolicies,
+      lostPolicies: totalPolicies - renewedPolicies,
+      totalPremium: item.premiumRevenue, // Use premiumRevenue as totalPremium
+      color: item.color,
+    };
+  });
+
+// Insurer Retention data (using structured data from data files)
+export const insurerRetentionData: InsurerRetentionRow[] =
+  insurerRetentionAnalyticsData.map(item => {
+    const retentionRate = Math.random() * 30 + 70; // Generate random retention rate (70-100%)
+    const totalPremium = item.premiumRevenue;
+    const retainedPremium = (totalPremium * retentionRate) / 100;
+    const lostPremium = totalPremium - retainedPremium;
+    const totalPolicies = item.policies;
+    const retainedPolicies = Math.floor(totalPolicies * (retentionRate / 100));
+
+    return {
+      company: item.name, // Use name property
+      totalPremium: totalPremium / 1000000, // Convert to millions for display
+      retainedPremium: retainedPremium / 1000000,
+      lostPremium: lostPremium / 1000000,
+      retainedPolicies: retainedPolicies,
+      lostPolicies: totalPolicies - retainedPolicies,
+      avgTicketSizeRetained: 2.0,
+      avgTicketSizeLost: 2.0,
+      retentionPercentage: retentionRate,
+      lostPercentage: 100 - retentionRate,
+    };
+  });
 
 export const retentionMetrics: RetentionMetrics = {
   retentionRate: 73.2,

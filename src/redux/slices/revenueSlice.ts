@@ -11,10 +11,9 @@ import {
 import { DEFAULT_REPORT_TYPE } from '../../constants/enums';
 import {
   productAnalyticsData,
-  insurerAnalyticsData,
   verticalAnalyticsData,
   lobAnalyticsData,
-  revenueExpensesAnalyticsData,
+  insurerRetentionAnalyticsData,
 } from '../../data';
 
 // Professional color palette
@@ -696,7 +695,7 @@ const getRevenueData = () => {
   ];
 
   return {
-    revenueByInsurers: insurerAnalyticsData.map((insurer, index) => ({
+    revenueByInsurers: insurerRetentionAnalyticsData.map(insurer => ({
       id: insurer.name
         .toLowerCase()
         .replace(/\s+/g, '-')
@@ -705,6 +704,8 @@ const getRevenueData = () => {
       value: insurer.premiumRevenue,
       color: insurer.color,
       percentage: insurer.revenuePercentage,
+      revenuePercentage: insurer.revenuePercentage,
+      policies: insurer.policies,
     })),
     revenueByPolicyType: policyTypeData.map((policy, index) => ({
       id: policy.name
@@ -720,7 +721,7 @@ const getRevenueData = () => {
       percentage: policy.percentage,
       description: `${policy.name} policies and coverage`,
     })),
-    revenueByVertical: verticalAnalyticsData.map((vertical, index) => ({
+    revenueByVertical: verticalAnalyticsData.map(vertical => ({
       id: vertical.name
         .toLowerCase()
         .replace(/\s+/g, '-')
@@ -730,7 +731,7 @@ const getRevenueData = () => {
       color: vertical.color,
       percentage: vertical.revenuePercentage,
     })),
-    revenueByLOB: lobAnalyticsData.map((lob, index) => ({
+    revenueByLOB: lobAnalyticsData.map(lob => ({
       id: lob.name
         .toLowerCase()
         .replace(/\s+/g, '-')
@@ -740,7 +741,7 @@ const getRevenueData = () => {
       color: lob.color,
       percentage: lob.revenuePercentage,
     })),
-    revenueByProducts: productAnalyticsData.map((product, index) => ({
+    revenueByProducts: productAnalyticsData.map(product => ({
       id: product.name
         .toLowerCase()
         .replace(/\s+/g, '-')
