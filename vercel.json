@@ -5,10 +5,5 @@
   "outputDirectory": ".next",
   "installCommand": "npm ci",
   "devCommand": "next dev --port $PORT",
-  "regions": ["iad1"],
-  "functions": {
-    "app/**/*.{js,ts,jsx,tsx}": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "regions": ["iad1"]
 }
