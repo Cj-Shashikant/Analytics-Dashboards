@@ -3,9 +3,14 @@ import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../../../hooks/hooks';
 import { RootState } from '../../../../redux/store';
 import {
-  selectRevenueByProducts,
+  selectNumberOfProducts,
   selectBaseMetrics,
-} from '../../../../redux/slices/revenueSlice';
+} from '../../../../redux/slices/analyticsDataSlice';
+import {
+  selectIsDataImported,
+  selectImportedBaseMetrics,
+  selectAllImportedData,
+} from '../../../../redux/slices/importedDataSlice';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -155,12 +160,16 @@ export function ChartsSection({
     }
   }, [topFilter, chartTypeState]);
 
-  // Client types filter for Revenue by Products
-  const [selectedClientTypes] = useState<string[]>([
-    'Corporate',
-    'Retail',
-    'Affinity',
-  ]);
+  // Client types filter for Number of Products Analysis - using Redux state
+  const selectedClientTypes = filterState.selectedClientTypes;
+  
+  // Products filter for Number of Products Analysis - using Redux state
+  const selectedProducts = filterState.selectedProducts;
+
+  // Force re-render when filter state changes
+  useEffect(() => {
+    // This effect ensures the component re-renders when filter state changes
+  }, [selectedProducts, selectedClientTypes]);
 
   // Item details panel state
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -181,16 +190,36 @@ export function ChartsSection({
     return getFormattedValue(value, valueUnit);
   };
 
-  // Get metrics data from Redux or fallback
-  const baseMetricsFromSelector = useSelector(selectBaseMetrics);
+  // Get imported data status and selectors
+  const isDataImported = useSelector(selectIsDataImported);
+  const importedData = useSelector(selectAllImportedData);
+  const importedBaseMetrics = useSelector(selectImportedBaseMetrics);
+  const defaultProductData = useSelector(selectNumberOfProducts);
+  const defaultBaseMetrics = useSelector(selectBaseMetrics);
+
+  // Transform imported numberOfProductData to match expected format
+  const transformImportedData = (numberOfProductData: any[]) => {
+    if (!numberOfProductData || numberOfProductData.length === 0) {
+      return [];
+    }
+    
+    return numberOfProductData.map((item, index) => ({
+      id: item.name.toLowerCase().replace(/\s+/g, '-'),
+      name: item.name,
+      value: item.revenue || 0, // Map revenue to value
+      percentage: item.percentage || item.revenuePercentage || 0, // Use percentage or revenuePercentage
+      avgPremium: item.premium || 0,
+      color: item.color || `hsl(${(index * 137.5) % 360}, 70%, 50%)`, // Use provided color or generate one
+    }));
+  };
 
   const getMetricsData = () => {
     if (baseMetricsData) {
       return baseMetricsData;
     }
 
-    // Use Redux base metrics (now includes imported data support)
-    const baseMetrics = baseMetricsFromSelector;
+    // Use imported data if available, otherwise use default data
+    const baseMetrics = isDataImported ? importedBaseMetrics : defaultBaseMetrics;
 
     // Adjust values slightly based on report type
     const adjustmentFactor =
@@ -215,18 +244,28 @@ export function ChartsSection({
 
   const metricsData = getMetricsData();
 
-  // Get data - Product folder specifically uses revenueByProducts data
-  const productData = useSelector(selectRevenueByProducts);
+  // Get data - Use imported data if available, otherwise use default data
+  const productData = isDataImported && importedData?.numberOfProductData 
+    ? transformImportedData(importedData.numberOfProductData)
+    : defaultProductData;
 
   const getReportData = () => {
     return productData || [];
   };
 
-  // Filter data based on selected client types (only for Revenue by Products)
+  // Filter data based on selected client types and products (only for Revenue by Products)
   const getFilteredData = () => {
-    const data = getReportData();
+    let data = getReportData();
 
     if (selectedReportType === 'Revenue by Products') {
+      // First filter by selected products (if any are selected)
+      if (selectedProducts.length > 0) {
+        data = data.filter((item: any) => 
+          selectedProducts.includes(item.name)
+        );
+      }
+
+      // Then apply client type filtering
       return data.map((item: any) => {
         if (!item?.clientTypes) return item;
 

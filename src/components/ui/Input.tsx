@@ -8,9 +8,9 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
       type={type}
       data-slot="input"
       className={cn(
-        'flex h-9 w-full rounded-md border border-gray-200 bg-white px-3 py-1 text-sm transition-colors',
+        'flex h-9 w-full rounded-md border border-gray-400 bg-gray-200 px-3 py-1 text-sm transition-colors',
         // Darker text color for better visibility
-        'text-gray-900 font-medium',
+        'text-gray-900 font-normal',
         'file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-900',
         // Darker placeholder
         'placeholder:text-gray-400 placeholder:font-normal',

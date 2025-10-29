@@ -41,14 +41,27 @@ interface SaveToPlaylistButtonProps {
   currentChartData?: any[];
   currentChartType?: 'revenue' | 'expenses';
   topExpenseCategories?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function SaveToPlaylist({
   currentFilters,
   currentChartType,
+  isOpen,
+  onClose,
 }: SaveToPlaylistButtonProps) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+
+  // Use external modal control if provided, otherwise use internal state
+  const modalOpen = isOpen !== undefined ? isOpen : isSaveModalOpen;
+  const setModalOpen =
+    onClose !== undefined
+      ? (open: boolean) => {
+          if (!open) onClose();
+        }
+      : setIsSaveModalOpen;
   const [saveItemName, setSaveItemName] = useState('');
   const [saveItemNotes, setSaveItemNotes] = useState('');
   const [saveItemDuration, setSaveItemDuration] = useState(20);
@@ -78,7 +91,14 @@ export function SaveToPlaylist({
         console.error('Error loading playlists:', error);
       }
     }
-  }, [isSaveModalOpen]); // Reload when modal opens
+  }, [modalOpen]); // Reload when modal opens
+
+  // Initialize form when modal is opened externally
+  useEffect(() => {
+    if (isOpen && modalOpen) {
+      handleOpenSaveModal();
+    }
+  }, [isOpen]);
 
   // Create new playlist and save chart to it
   const handleCreatePlaylistAndSave = () => {
@@ -118,17 +138,24 @@ export function SaveToPlaylist({
     newPlaylist.totalDuration = saveItemDuration;
 
     const updatedPlaylists = [newPlaylist, ...playlists];
+    console.log('SaveToPlaylist: Creating new playlist:', newPlaylist);
+    console.log('SaveToPlaylist: Updated playlists array:', updatedPlaylists);
     setPlaylists(updatedPlaylists);
 
     // Save to localStorage
+    console.log('SaveToPlaylist: Saving updated playlists to localStorage:', updatedPlaylists);
     localStorage.setItem(
       'dashboardPlaylists',
       JSON.stringify(updatedPlaylists)
     );
+    console.log('SaveToPlaylist: Data saved to localStorage');
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('playlistsUpdated'));
 
     // Reset form
     resetForm();
-    setIsSaveModalOpen(false);
+    setModalOpen(false);
 
     toast.success(
       `New playlist "${newPlaylist.name}" created with chart "${newItem.name}"`
@@ -177,10 +204,13 @@ export function SaveToPlaylist({
       'dashboardPlaylists',
       JSON.stringify(updatedPlaylists)
     );
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('playlistsUpdated'));
 
     // Reset form
     resetForm();
-    setIsSaveModalOpen(false);
+    setModalOpen(false);
 
     const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
     toast.success(
@@ -210,24 +240,34 @@ export function SaveToPlaylist({
     setNewPlaylistDescription('');
     // Set active tab based on whether playlists exist
     setActiveTab(playlists.length > 0 ? 'existing' : 'new');
-    setIsSaveModalOpen(true);
+
+    // Only set internal state if not using external control
+    if (isOpen === undefined) {
+      setIsSaveModalOpen(true);
+    }
   };
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-9 w-9 p-0 rounded-lg transition-all duration-200 hover:bg-green-50 text-green-600"
-        onClick={handleOpenSaveModal}
-        title="Save to Playlist"
-      >
-        <Save className="w-4 h-4" />
-      </Button>
+      {/* Only render the button if not using external modal control */}
+      {isOpen === undefined && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 w-9 p-0 rounded-lg transition-all duration-200 hover:bg-green-50 text-green-600"
+          onClick={handleOpenSaveModal}
+          title="Save to Playlist"
+        >
+          <Save className="w-4 h-4" />
+        </Button>
+      )}
 
       {/* Save to Playlist Modal */}
-      <Dialog open={isSaveModalOpen} onOpenChange={setIsSaveModalOpen}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent
+          className="max-w-2xl overflow-hidden overflow-x-auto overflow-y-auto"
+          style={{ height: '94vh' }}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Save className="w-5 h-5 text-green-600" />
@@ -309,13 +349,13 @@ export function SaveToPlaylist({
               </div>
             </div>
 
-            <TabsContent value="existing" className="space-y-4">
+            <TabsContent value="existing" className="space-y-2">
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader>
                   <CardTitle className="text-base">
                     Select Existing Playlist
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs">
                     Choose a playlist to add this chart to
                   </CardDescription>
                 </CardHeader>
@@ -356,11 +396,11 @@ export function SaveToPlaylist({
 
             <TabsContent value="new" className="space-y-4">
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader>
                   <CardTitle className="text-base">
                     Create New Playlist
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs">
                     Create a new playlist and add this chart to it
                   </CardDescription>
                 </CardHeader>
@@ -421,7 +461,7 @@ export function SaveToPlaylist({
           </Tabs>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsSaveModalOpen(false)}>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
             {activeTab === 'existing' ? (

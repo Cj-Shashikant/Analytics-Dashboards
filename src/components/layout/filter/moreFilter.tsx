@@ -17,7 +17,6 @@ import {
   MapPin,
   Target,
   Save,
-  DollarSign,
   Pin,
   PinOff,
   Check,
@@ -31,8 +30,16 @@ import {
   setSelectedDepartment,
   setSelectedReportType,
   setSelectedDuration,
-  setValueUnit,
-  setTopExpenseCategories,
+  setPinnedItems,
+  setSelectedProducts,
+  setSelectedInsurers,
+  setSelectedLobs,
+  setSelectedPolicyTypes,
+  setSelectedVerticals,
+  setSelectedClientTypes,
+  setSelectedRegions,
+  setSelectedStates,
+  setSelectedTeams,
 } from '@/redux/slices/filterSlice';
 
 // Constants imports
@@ -42,22 +49,22 @@ import {
   getReportTypesForDepartment,
   ReportType,
 } from '@/constants/enums/reportTypes';
-import { VALUE_UNITS, ValueUnitType } from '@/constants/enums/valueUnits';
+import { CLIENT_TYPES } from '@/constants/enums/revenue';
 
 // Data imports
 import { productAnalyticsData } from '@/data/productData';
 import { lobAnalyticsData } from '@/data/lobData';
 import { verticalAnalyticsData } from '@/data/verticalData';
+import { insurerAnalyticsData } from '@/data/insurerData';
+import { policyTypeAnalyticsData } from '@/data/policyTypeData';
+import { insurerRetentionAnalyticsData } from '@/data/retentionByInsurerData';
+import { brokerRetentionAnalyticsData } from '@/data/retentionByBrokerData';
 import { Label } from '@/components/ui';
 
 interface AdvancedFiltersProps {
   isOpen: boolean;
   onClose: () => void;
   // Optional props with default values - keeping for backward compatibility
-  valueUnit?: string;
-  onValueUnitChange?: (unit: string) => void;
-  topExpenseCategories?: string;
-  onTopExpenseCategoriesChange?: (value: string) => void;
   selectedEntity?: string;
   selectedBusinessType?: string;
   selectedLocation?: string;
@@ -71,8 +78,6 @@ export function AdvancedFilters({
   isOpen,
   onClose,
   // Legacy props - keeping for backward compatibility but using Redux state instead
-  onValueUnitChange,
-  onTopExpenseCategoriesChange,
   selectedEntity: legacySelectedEntity,
   selectedLocation: legacySelectedLocation,
   onPinnedItemsChange,
@@ -84,63 +89,32 @@ export function AdvancedFilters({
     selectedDepartment,
     selectedReportType,
     selectedDuration,
-    valueUnit,
-    topExpenseCategories,
     pinnedItems,
+    selectedProducts,
+    selectedInsurers,
+    selectedLobs,
+    selectedPolicyTypes,
+    selectedVerticals,
+    selectedClientTypes,
+    selectedRegions,
+    selectedStates,
+    selectedCities,
+    selectedTeams,
   } = useAppSelector(state => state.filter);
+
+  // Get imported data state from Redux
+  const importedData = useAppSelector(state => state.importedData);
 
   // Date Range Filters
   const [dateRange, setDateRange] = useState('FY 2022-23');
 
-  // Regional Filters
-  const [selectedRegions, setSelectedRegions] = useState<string[]>([
-    'Mumbai',
-    'Delhi',
-    'Bangalore',
-  ]);
-  const [selectedStates, setSelectedStates] = useState<string[]>([
-    'Maharashtra',
-    'Delhi',
-    'Karnataka',
-  ]);
-  const [selectedCities] = useState<string[]>(['Mumbai', 'Delhi', 'Bangalore']);
-
-  // Team Filters
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([
-    'Sales Team A',
-    'Sales Team B',
-  ]);
+  // Local state for non-Redux managed filters
   const [selectedMembers] = useState<string[]>(['All Members']);
   const [performanceRange] = useState([0, 100]);
-
-  // Product Filters
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([
-    'Health Insurance',
-    'Motor Insurance',
-  ]);
-  const [selectedInsurers, setSelectedInsurers] = useState<string[]>([
-    'ICICI Lombard',
-    'HDFC ERGO',
-  ]);
-
-  // New Business Filters
-  const [selectedLobs, setSelectedLobs] = useState<string[]>([
-    'General Insurance',
-    'Life Insurance',
-  ]);
-  const [selectedPolicyTypes, setSelectedPolicyTypes] = useState<string[]>([
-    'Individual',
-    'Group',
-  ]);
-  const [selectedVerticals, setSelectedVerticals] = useState<string[]>([
-    'Corporate',
-    'Retail',
-  ]);
 
   // Legacy Business Filters (keeping for compatibility)
   const [policyTypes] = useState<string[]>(['Individual', 'Group']);
   const [businessVerticals] = useState<string[]>(['Corporate', 'Retail']);
-  const [clientTypes] = useState<string[]>(['New', 'Existing']);
   const [revenueRange] = useState([0, 10000000]);
 
   // Primary filter options data
@@ -170,8 +144,6 @@ export function AdvancedFilters({
   // ];
 
   const durations = DURATIONS;
-  const valueUnits = VALUE_UNITS;
-  const topExpenseOptions = ['5', '10', '15', '20', 'All'];
 
   // Regional filters
   const regions = [
@@ -195,172 +167,240 @@ export function AdvancedFilters({
     'Support Team',
   ];
 
-  // Product filters - Dynamic from data
-  const products = productAnalyticsData.map(product => product.name);
+  // Dynamic data functions - prioritize imported data, fallback to default data, and filter by department
+  const getDynamicProducts = () => {
+    // Products are only available for Business department
+    if (selectedDepartment !== 'Business') {
+      return [];
+    }
 
-  // LOB filters - Dynamic from data
-  const lobs = lobAnalyticsData.map(lob => lob.name);
+    if (importedData.isDataImported && importedData.productData.length > 0) {
+      return importedData.productData.map(product => product.name);
+    }
+    return productAnalyticsData.map(product => product.name);
+  };
 
-  // Policy Type filters
-  const policyTypeOptions = [
-    'Individual',
-    'Group',
-    'Family Floater',
-    'Corporate',
-    'Retail',
-    'SME',
-    'Enterprise',
-  ];
+  const getDynamicInsurers = () => {
+    // For Retention department, prioritize retention-specific data over imported data
+    if (selectedDepartment === 'Retention') {
+      if (selectedReportType === 'Retention - By Insurer') {
+        // Return actual insurer retention data names
+        return insurerRetentionAnalyticsData.map(insurer => insurer.name);
+      } else if (selectedReportType === 'Retention - Broker') {
+        // Return actual broker retention data names
+        return brokerRetentionAnalyticsData.map(broker => broker.name);
+      }
+      // Default fallback for retention department
+      return insurerRetentionAnalyticsData.map(insurer => insurer.name);
+    }
 
-  // Vertical Cross Cell Presentation filters - Dynamic from data
-  const verticals = verticalAnalyticsData.map(vertical => vertical.name);
-  const insurers = [
-    'ICICI Lombard',
-    'HDFC ERGO',
-    'Bajaj Allianz',
-    'Tata AIG',
-    'Reliance General',
-    'New India Assurance',
-    'National Insurance',
-    'Oriental Insurance',
-    'United India Insurance',
-    'IFFCO-Tokio',
-    'Future Generali',
-    'Cholamandalam MS',
-    'Go Digit',
-    'Liberty General',
-    'SBI General',
-    'Royal Sundaram',
-    'Shriram General',
-    'Raheja QBE',
-    'Kotak Mahindra',
-    'Acko General',
-    'DHFL General',
-    'Magma HDI',
-    'Universal Sompo',
-    'Bharti AXA',
-    'Edelweiss General',
-    'L&T General',
-    'Navi General',
-    'Zuno General',
-    'Care Health',
-    'Star Health',
-    'Manipal Cigna',
-    'Max Bupa',
-    'Apollo Munich',
-    'Religare Health',
-    'Aditya Birla Health',
-  ];
+    // For other departments, use imported data if available
+    if (importedData.isDataImported && importedData.insurerData.length > 0) {
+      return importedData.insurerData.map(insurer => insurer.name);
+    }
 
-  // All available filter items with metadata
-  const allFilterItems = [
-    // {
-    //   id: 'organisation',
-    //   name: 'Organisation',
-    //   icon: Building2,
-    //   currentValue: legacySelectedEntity || 'ABC Broking Pvt Ltd',
-    //   category: 'Primary',
-    // },
-    {
-      id: 'department',
-      name: 'Department',
-      icon: Users,
-      currentValue: selectedDepartment,
-      category: 'Primary',
-    },
-    {
-      id: 'reportType',
-      name: 'Report Type',
-      icon: Target,
-      currentValue: selectedReportType,
-      category: 'Primary',
-    },
-    // {
-    //   id: 'location',
-    //   name: 'Location',
-    //   icon: MapPin,
-    //   currentValue: legacySelectedLocation || 'All Location',
-    //   category: 'Primary',
-    // },
-    {
-      id: 'duration',
-      name: 'Duration',
-      icon: Calendar,
-      currentValue: selectedDuration,
-      category: 'Primary',
-    },
-    {
-      id: 'valueUnit',
-      name: 'Value Unit',
-      icon: DollarSign,
-      currentValue: valueUnit,
-      category: 'Display',
-    },
-    {
-      id: 'topExpenses',
-      name: 'Expense Categories',
-      icon: Target,
-      currentValue: `Top ${topExpenseCategories}`,
-      category: 'Display',
-    },
-    // {
-    //   id: 'teams',
-    //   name: 'Teams',
-    //   icon: Users,
-    //   currentValue: `${selectedTeams.length} selected`,
-    //   category: 'Team',
-    // },
-    {
-      id: 'regions',
-      name: 'Regions',
-      icon: MapPin,
-      currentValue: `${selectedRegions.length} selected`,
-      category: 'Regional',
-    },
-    {
-      id: 'products',
-      name: 'Products',
-      icon: Building2,
-      currentValue: `${selectedProducts.length} selected`,
-      category: 'Business',
-    },
-    {
-      id: 'insurers',
-      name: 'Insurers',
-      icon: Building2,
-      currentValue: `${selectedInsurers.length} selected`,
-      category: 'Business',
-    },
-    {
-      id: 'lob',
-      name: 'LOB (Line of Business)',
-      icon: Target,
-      currentValue: `${selectedLobs.length} selected`,
-      category: 'Business',
-    },
-    {
-      id: 'policyType',
-      name: 'Policy Type',
-      icon: Building2,
-      currentValue: `${selectedPolicyTypes.length} selected`,
-      category: 'Business',
-    },
-    {
-      id: 'vertical',
-      name: 'Vertical Cross Cell Presentation',
-      icon: Monitor,
-      currentValue: `${selectedVerticals.length} selected`,
-      category: 'Business',
-    },
-  ];
+    // For Business department, show business insurers
+    return insurerAnalyticsData.map(insurer => insurer.name);
+  };
+
+  const getDynamicLobs = () => {
+    // LOB data is only available for Business department
+    if (selectedDepartment !== 'Business') {
+      return [];
+    }
+    return lobAnalyticsData.map(lob => lob.name);
+  };
+
+  const getDynamicPolicyTypes = () => {
+    // Policy types are only available for Business department
+    if (selectedDepartment !== 'Business') {
+      return [];
+    }
+    return policyTypeAnalyticsData.map(policyType => policyType.name);
+  };
+
+  const getDynamicVerticals = () => {
+    // Vertical data is only available for Business department
+    if (selectedDepartment !== 'Business') {
+      return [];
+    }
+    return verticalAnalyticsData.map(vertical => vertical.name);
+  };
+
+  // Get dynamic filter values
+  const products = getDynamicProducts();
+  const insurers = getDynamicInsurers();
+  const lobs = getDynamicLobs();
+  const policyTypeOptions = getDynamicPolicyTypes();
+  const verticals = getDynamicVerticals();
+
+  // Dynamic function to get filter options based on report type
+  // const getDynamicFilterOptionsForReportType = (reportType: string) => {
+  //   switch (reportType) {
+  //     case 'Revenue by Products':
+  //       return {
+  //         label: 'Products',
+  //         options: products,
+  //         description: 'Select products to analyze revenue performance',
+  //       };
+  //     case 'Revenue by Insurers':
+  //       return {
+  //         label: 'Insurers',
+  //         options: insurers,
+  //         description: 'Select insurers to analyze revenue performance',
+  //       };
+  //     case 'Revenue by Policy Type':
+  //       return {
+  //         label: 'Policy Types',
+  //         options: policyTypeOptions,
+  //         description: 'Select policy types to analyze revenue performance',
+  //       };
+  //     case 'Revenue by Vertical':
+  //       return {
+  //         label: 'Business Verticals',
+  //         options: verticals,
+  //         description:
+  //           'Select business verticals to analyze revenue performance',
+  //       };
+  //     case 'Revenue by LOB':
+  //       return {
+  //         label: 'Lines of Business',
+  //         options: lobs,
+  //         description: 'Select LOBs to analyze revenue performance',
+  //       };
+  //     case 'Retention - By Insurer':
+  //       return {
+  //         label: 'Insurers',
+  //         options: insurers,
+  //         description: 'Select insurers to analyze retention rates',
+  //       };
+  //     default:
+  //       return {
+  //         label: 'Options',
+  //         options: [],
+  //         description: 'No specific options available for this report type',
+  //       };
+  //   }
+  // };
+
+  // Get department-aware filter items
+  const getDepartmentAwareFilterItems = () => {
+    const baseFilterItems = [
+      {
+        id: 'department',
+        name: 'Department',
+        icon: Users,
+        currentValue: selectedDepartment,
+        category: 'Primary',
+      },
+      {
+        id: 'reportType',
+        name: 'Report Type',
+        icon: Target,
+        currentValue: selectedReportType,
+        category: 'Primary',
+      },
+      {
+        id: 'duration',
+        name: 'Duration',
+        icon: Calendar,
+        currentValue: selectedDuration,
+        category: 'Primary',
+      },
+
+      {
+        id: 'regions',
+        name: 'Regions',
+        icon: MapPin,
+        currentValue: `${selectedRegions.length} selected`,
+        category: 'Regional',
+      },
+    ];
+
+    // Add department-specific filters
+    if (selectedDepartment === 'Business') {
+      baseFilterItems.push(
+        {
+          id: 'products',
+          name: 'Products',
+          icon: Building2,
+          currentValue: `${selectedProducts.length} selected`,
+          category: 'Business',
+        },
+        {
+          id: 'insurers',
+          name: 'Insurers',
+          icon: Building2,
+          currentValue: `${selectedInsurers.length} selected`,
+          category: 'Business',
+        },
+        {
+          id: 'lob',
+          name: 'LOB (Line of Business)',
+          icon: Target,
+          currentValue: `${selectedLobs.length} selected`,
+          category: 'Business',
+        },
+        {
+          id: 'policyType',
+          name: 'Policy Type',
+          icon: Building2,
+          currentValue: `${selectedPolicyTypes.length} selected`,
+          category: 'Business',
+        },
+        {
+          id: 'vertical',
+          name: 'Vertical Cross Cell Presentation',
+          icon: Monitor,
+          currentValue: `${selectedVerticals.length} selected`,
+          category: 'Business',
+        },
+        {
+          id: 'clientTypes',
+          name: 'Client Types',
+          icon: Users,
+          currentValue: `${selectedClientTypes.length} selected`,
+          category: 'Business',
+        }
+      );
+    } else if (selectedDepartment === 'Retention') {
+      // For Retention department, show different options based on report type
+      if (selectedReportType === 'Retention - By Insurer') {
+        baseFilterItems.push({
+          id: 'insurers',
+          name: 'Insurers',
+          icon: Building2,
+          currentValue: `${selectedInsurers.length} selected`,
+          category: 'Retention',
+        });
+      } else if (selectedReportType === 'Retention - Broker') {
+        baseFilterItems.push({
+          id: 'brokers',
+          name: 'Brokers',
+          icon: Building2,
+          currentValue: `${selectedInsurers.length} selected`,
+          category: 'Retention',
+        });
+      }
+    }
+
+    return baseFilterItems;
+  };
+
+  // All available filter items with metadata (department-aware)
+  const allFilterItems = getDepartmentAwareFilterItems();
 
   // Filter change handlers that dispatch Redux actions
   const handleDepartmentChange = (value: string) => {
     dispatch(setSelectedDepartment(value as DepartmentType));
-    // Also call legacy callback if provided
-    if (onValueUnitChange) {
-      onValueUnitChange(value);
+
+    // Automatically update report type to the first available option for the new department
+    const newReportTypes = getReportTypesForDepartment(value as DepartmentType);
+    if (newReportTypes.length > 0) {
+      dispatch(setSelectedReportType(newReportTypes[0] as ReportType));
     }
+
+    // Legacy callback removed - now using Redux state management
   };
 
   const handleReportTypeChange = (value: string) => {
@@ -371,44 +411,25 @@ export function AdvancedFilters({
     dispatch(setSelectedDuration(value as DurationType));
   };
 
-  const handleValueUnitChange = (value: string) => {
-    dispatch(setValueUnit(value as ValueUnitType));
-    // Also call legacy callback if provided
-    if (onValueUnitChange) {
-      onValueUnitChange(value);
-    }
-  };
-
-  const handleTopExpenseCategoriesChange = (value: string) => {
-    const numericValue = value === 'All' ? 999 : parseInt(value);
-    dispatch(setTopExpenseCategories(numericValue));
-    // Also call legacy callback if provided
-    if (onTopExpenseCategoriesChange) {
-      onTopExpenseCategoriesChange(value);
-    }
-  };
-
-  const toggleArrayItem = (
-    array: string[],
-    setArray: (arr: string[]) => void,
-    item: string
-  ) => {
-    if (array.includes(item)) {
-      setArray(array.filter(i => i !== item));
-    } else {
-      setArray([...array, item]);
-    }
-  };
-
   const togglePinItem = (itemId: string) => {
-    // For now, we'll handle pinning locally
-    // In a full implementation, this would also dispatch to Redux
     let newPinnedItems;
     if (pinnedItems.includes(itemId)) {
+      // Unpinning - always allowed
       newPinnedItems = pinnedItems.filter(id => id !== itemId);
     } else {
+      // Pinning - check if we're at the 5-item limit
+      if (pinnedItems.length >= 5) {
+        // Show error message or toast
+        alert(
+          'Maximum 5 filters can be pinned at a time. Please unpin a filter first.'
+        );
+        return;
+      }
       newPinnedItems = [...pinnedItems, itemId];
     }
+
+    // Update Redux state
+    dispatch(setPinnedItems(newPinnedItems));
 
     // Call legacy callback if provided
     if (onPinnedItemsChange) {
@@ -462,7 +483,7 @@ export function AdvancedFilters({
       selectedLobs,
       selectedPolicyTypes,
       selectedVerticals,
-      clientTypes,
+      clientTypes: CLIENT_TYPES,
       revenueRange,
     };
 
@@ -490,15 +511,15 @@ export function AdvancedFilters({
         // Load other settings
         if (configuration.dateRange) setDateRange(configuration.dateRange);
         if (configuration.selectedRegions)
-          setSelectedRegions(configuration.selectedRegions);
+          dispatch(setSelectedRegions(configuration.selectedRegions));
         if (configuration.selectedStates)
-          setSelectedStates(configuration.selectedStates);
+          dispatch(setSelectedStates(configuration.selectedStates));
         if (configuration.selectedLobs)
-          setSelectedLobs(configuration.selectedLobs);
+          dispatch(setSelectedLobs(configuration.selectedLobs));
         if (configuration.selectedPolicyTypes)
-          setSelectedPolicyTypes(configuration.selectedPolicyTypes);
+          dispatch(setSelectedPolicyTypes(configuration.selectedPolicyTypes));
         if (configuration.selectedVerticals)
-          setSelectedVerticals(configuration.selectedVerticals);
+          dispatch(setSelectedVerticals(configuration.selectedVerticals));
         // if (configuration.chartType) setChartType(configuration.chartType);
         // ... load other settings as needed
       } catch (error) {
@@ -506,6 +527,88 @@ export function AdvancedFilters({
       }
     }
   }, [onPinnedItemsChange]);
+
+  // Auto-select all available items when department or report type changes
+  useEffect(() => {
+    // Handle Business department filters
+    if (selectedDepartment === 'Business') {
+      // Auto-select all products when Business department is selected and products are available
+      if (products.length > 0) {
+        dispatch(setSelectedProducts([...products]));
+      }
+
+      // Auto-select all LOBs when Business department is selected and LOBs are available
+      if (lobs.length > 0) {
+        dispatch(setSelectedLobs([...lobs]));
+      }
+
+      // Auto-select all policy types when Business department is selected and policy types are available
+      if (policyTypeOptions.length > 0) {
+        dispatch(setSelectedPolicyTypes([...policyTypeOptions]));
+      }
+
+      // Auto-select all verticals when Business department is selected and verticals are available
+      if (verticals.length > 0) {
+        dispatch(setSelectedVerticals([...verticals]));
+      }
+
+      // Auto-select all client types for Business department
+      if (CLIENT_TYPES.length > 0) {
+        dispatch(setSelectedClientTypes([...CLIENT_TYPES]));
+      }
+    } else {
+      // Clear Business-specific filters when not in Business department
+      dispatch(setSelectedProducts([]));
+      dispatch(setSelectedLobs([]));
+      dispatch(setSelectedPolicyTypes([]));
+      dispatch(setSelectedVerticals([]));
+    }
+
+    // Handle Retention department filters
+    if (selectedDepartment === 'Retention') {
+      // Auto-select all client types for Retention department
+      if (CLIENT_TYPES.length > 0) {
+        dispatch(setSelectedClientTypes([...CLIENT_TYPES]));
+      }
+    } else if (selectedDepartment !== 'Business') {
+      // Clear client types for departments other than Business and Retention
+      dispatch(setSelectedClientTypes([]));
+    }
+
+    // Auto-select all insurers for departments that support them (Business and Retention)
+    if (
+      (selectedDepartment === 'Business' ||
+        selectedDepartment === 'Retention') &&
+      insurers.length > 0
+    ) {
+      dispatch(setSelectedInsurers([...insurers]));
+    } else {
+      dispatch(setSelectedInsurers([]));
+    }
+
+    // Auto-select all regions (available for all departments)
+    if (regions.length > 0) {
+      dispatch(setSelectedRegions([...regions]));
+    }
+
+    // Auto-select all states (using regions data as they appear to be the same)
+    const statesData = [
+      'Maharashtra',
+      'Delhi',
+      'Karnataka',
+      'Tamil Nadu',
+      'Telangana',
+      'Maharashtra',
+      'West Bengal',
+      'Gujarat',
+    ];
+    dispatch(setSelectedStates([...statesData]));
+
+    // Auto-select all teams (available for all departments)
+    if (teams.length > 0) {
+      dispatch(setSelectedTeams([...teams]));
+    }
+  }, [selectedDepartment, selectedReportType]);
 
   // Group filter items by category
   const filtersByCategory = allFilterItems.reduce(
@@ -578,12 +681,12 @@ export function AdvancedFilters({
                 <Badge variant="default" className="bg-blue-600 text-white">
                   Period: {selectedDuration}
                 </Badge>
-                <Badge variant="default" className="bg-green-600 text-white">
+                {/* <Badge variant="default" className="bg-green-600 text-white">
                   Values: {valueUnit}
-                </Badge>
+                </Badge> */}
                 {selectedReportType === 'Revenue vs Expenses' && (
                   <Badge variant="default" className="bg-purple-600 text-white">
-                    Expenses: Top {topExpenseCategories}
+                    Expenses: Top {}
                   </Badge>
                 )}
               </div>
@@ -630,7 +733,7 @@ export function AdvancedFilters({
                       const IconComponent = item.icon;
                       const isPinned = pinnedItems.includes(item.id);
 
-                      // Get available options for each filter type
+                      // Get available options for each filter type - now using dynamic data
                       const getFilterOptions = (filterId: string) => {
                         switch (filterId) {
                           case 'organisation':
@@ -641,24 +744,32 @@ export function AdvancedFilters({
                             return reportTypes;
                           case 'duration':
                             return durations;
-                          case 'valueUnit':
-                            return valueUnits;
-                          case 'topExpenses':
-                            return topExpenseOptions;
+
                           case 'teams':
                             return teams;
                           case 'regions':
                             return regions;
                           case 'products':
-                            return products;
+                            // Dynamic products based on imported data or default data
+                            return getDynamicProducts();
                           case 'insurers':
-                            return insurers;
+                            // Dynamic insurers based on imported data or default data
+                            return getDynamicInsurers();
+                          case 'brokers':
+                            // Dynamic brokers for retention data
+                            return getDynamicInsurers();
                           case 'lob':
-                            return lobs;
+                            // Dynamic LOBs
+                            return getDynamicLobs();
                           case 'policyType':
-                            return policyTypeOptions;
+                            // Dynamic policy types
+                            return getDynamicPolicyTypes();
                           case 'vertical':
-                            return verticals;
+                            // Dynamic verticals
+                            return getDynamicVerticals();
+                          case 'clientTypes':
+                            // Client types for Business and Retention departments
+                            return ['Corporate', 'Retail', 'Affinity'];
                           default:
                             return [];
                         }
@@ -676,10 +787,7 @@ export function AdvancedFilters({
                             return selectedReportType;
                           case 'duration':
                             return selectedDuration;
-                          case 'valueUnit':
-                            return valueUnit;
-                          case 'topExpenses':
-                            return topExpenseCategories.toString();
+
                           case 'teams':
                             return selectedTeams;
                           case 'regions':
@@ -688,12 +796,16 @@ export function AdvancedFilters({
                             return selectedProducts;
                           case 'insurers':
                             return selectedInsurers;
+                          case 'brokers':
+                            return selectedInsurers;
                           case 'lob':
                             return selectedLobs;
                           case 'policyType':
                             return selectedPolicyTypes;
                           case 'vertical':
                             return selectedVerticals;
+                          case 'clientTypes':
+                            return selectedClientTypes;
                           default:
                             return '';
                         }
@@ -708,6 +820,7 @@ export function AdvancedFilters({
                           'lob',
                           'policyType',
                           'vertical',
+                          'clientTypes',
                         ].includes(filterId);
                       };
 
@@ -823,52 +936,147 @@ export function AdvancedFilters({
                                             // Handle multi-select for teams, regions, products, insurers
                                             switch (item.id) {
                                               case 'teams':
-                                                toggleArrayItem(
-                                                  selectedTeams,
-                                                  setSelectedTeams,
-                                                  option
+                                                dispatch(
+                                                  setSelectedTeams(
+                                                    selectedTeams.includes(
+                                                      option
+                                                    )
+                                                      ? selectedTeams.filter(
+                                                          t => t !== option
+                                                        )
+                                                      : [
+                                                          ...selectedTeams,
+                                                          option,
+                                                        ]
+                                                  )
                                                 );
                                                 break;
                                               case 'regions':
-                                                toggleArrayItem(
-                                                  selectedRegions,
-                                                  setSelectedRegions,
-                                                  option
+                                                dispatch(
+                                                  setSelectedRegions(
+                                                    selectedRegions.includes(
+                                                      option
+                                                    )
+                                                      ? selectedRegions.filter(
+                                                          r => r !== option
+                                                        )
+                                                      : [
+                                                          ...selectedRegions,
+                                                          option,
+                                                        ]
+                                                  )
                                                 );
                                                 break;
                                               case 'products':
-                                                toggleArrayItem(
-                                                  selectedProducts,
-                                                  setSelectedProducts,
-                                                  option
+                                                dispatch(
+                                                  setSelectedProducts(
+                                                    selectedProducts.includes(
+                                                      option
+                                                    )
+                                                      ? selectedProducts.filter(
+                                                          p => p !== option
+                                                        )
+                                                      : [
+                                                          ...selectedProducts,
+                                                          option,
+                                                        ]
+                                                  )
                                                 );
                                                 break;
                                               case 'insurers':
-                                                toggleArrayItem(
-                                                  selectedInsurers,
-                                                  setSelectedInsurers,
-                                                  option
+                                                dispatch(
+                                                  setSelectedInsurers(
+                                                    selectedInsurers.includes(
+                                                      option
+                                                    )
+                                                      ? selectedInsurers.filter(
+                                                          i => i !== option
+                                                        )
+                                                      : [
+                                                          ...selectedInsurers,
+                                                          option,
+                                                        ]
+                                                  )
+                                                );
+                                                break;
+                                              case 'brokers':
+                                                dispatch(
+                                                  setSelectedInsurers(
+                                                    selectedInsurers.includes(
+                                                      option
+                                                    )
+                                                      ? selectedInsurers.filter(
+                                                          i => i !== option
+                                                        )
+                                                      : [
+                                                          ...selectedInsurers,
+                                                          option,
+                                                        ]
+                                                  )
                                                 );
                                                 break;
                                               case 'lob':
-                                                toggleArrayItem(
-                                                  selectedLobs,
-                                                  setSelectedLobs,
-                                                  option
+                                                dispatch(
+                                                  setSelectedLobs(
+                                                    selectedLobs.includes(
+                                                      option
+                                                    )
+                                                      ? selectedLobs.filter(
+                                                          l => l !== option
+                                                        )
+                                                      : [
+                                                          ...selectedLobs,
+                                                          option,
+                                                        ]
+                                                  )
                                                 );
                                                 break;
                                               case 'policyType':
-                                                toggleArrayItem(
-                                                  selectedPolicyTypes,
-                                                  setSelectedPolicyTypes,
-                                                  option
+                                                dispatch(
+                                                  setSelectedPolicyTypes(
+                                                    selectedPolicyTypes.includes(
+                                                      option
+                                                    )
+                                                      ? selectedPolicyTypes.filter(
+                                                          p => p !== option
+                                                        )
+                                                      : [
+                                                          ...selectedPolicyTypes,
+                                                          option,
+                                                        ]
+                                                  )
                                                 );
                                                 break;
                                               case 'vertical':
-                                                toggleArrayItem(
-                                                  selectedVerticals,
-                                                  setSelectedVerticals,
-                                                  option
+                                                dispatch(
+                                                  setSelectedVerticals(
+                                                    selectedVerticals.includes(
+                                                      option
+                                                    )
+                                                      ? selectedVerticals.filter(
+                                                          v => v !== option
+                                                        )
+                                                      : [
+                                                          ...selectedVerticals,
+                                                          option,
+                                                        ]
+                                                  )
+                                                );
+                                                break;
+                                              case 'clientTypes':
+                                                dispatch(
+                                                  setSelectedClientTypes(
+                                                    selectedClientTypes.includes(
+                                                      option
+                                                    )
+                                                      ? selectedClientTypes.filter(
+                                                          c => c !== option
+                                                        )
+                                                      : [
+                                                          ...selectedClientTypes,
+                                                          option,
+                                                        ]
+                                                  )
                                                 );
                                                 break;
                                             }
@@ -883,14 +1091,6 @@ export function AdvancedFilters({
                                                 break;
                                               case 'duration':
                                                 handleDurationChange(option);
-                                                break;
-                                              case 'valueUnit':
-                                                handleValueUnitChange(option);
-                                                break;
-                                              case 'topExpenses':
-                                                handleTopExpenseCategoriesChange(
-                                                  option
-                                                );
                                                 break;
                                             }
                                           }
@@ -915,29 +1115,57 @@ export function AdvancedFilters({
                                         e.stopPropagation();
                                         switch (item.id) {
                                           case 'teams':
-                                            setSelectedTeams([...teams]);
+                                            dispatch(
+                                              setSelectedTeams([...teams])
+                                            );
                                             break;
                                           case 'regions':
-                                            setSelectedRegions([...regions]);
+                                            dispatch(
+                                              setSelectedRegions([...regions])
+                                            );
                                             break;
                                           case 'products':
-                                            setSelectedProducts([...products]);
+                                            dispatch(
+                                              setSelectedProducts([...products])
+                                            );
                                             break;
                                           case 'insurers':
-                                            setSelectedInsurers([...insurers]);
+                                            dispatch(
+                                              setSelectedInsurers([...insurers])
+                                            );
+                                            break;
+                                          case 'brokers':
+                                            dispatch(
+                                              setSelectedInsurers([...insurers])
+                                            );
                                             break;
                                           case 'lob':
-                                            setSelectedLobs([...lobs]);
+                                            dispatch(
+                                              setSelectedLobs([...lobs])
+                                            );
                                             break;
                                           case 'policyType':
-                                            setSelectedPolicyTypes([
-                                              ...policyTypeOptions,
-                                            ]);
+                                            dispatch(
+                                              setSelectedPolicyTypes([
+                                                ...policyTypeOptions,
+                                              ])
+                                            );
                                             break;
                                           case 'vertical':
-                                            setSelectedVerticals([
-                                              ...verticals,
-                                            ]);
+                                            dispatch(
+                                              setSelectedVerticals([
+                                                ...verticals,
+                                              ])
+                                            );
+                                            break;
+                                          case 'clientTypes':
+                                            dispatch(
+                                              setSelectedClientTypes([
+                                                'Corporate',
+                                                'Retail',
+                                                'Affinity',
+                                              ])
+                                            );
                                             break;
                                         }
                                       }}
@@ -952,25 +1180,35 @@ export function AdvancedFilters({
                                         e.stopPropagation();
                                         switch (item.id) {
                                           case 'teams':
-                                            setSelectedTeams([]);
+                                            dispatch(setSelectedTeams([]));
                                             break;
                                           case 'regions':
-                                            setSelectedRegions([]);
+                                            dispatch(setSelectedRegions([]));
                                             break;
                                           case 'products':
-                                            setSelectedProducts([]);
+                                            dispatch(setSelectedProducts([]));
                                             break;
                                           case 'insurers':
-                                            setSelectedInsurers([]);
+                                            dispatch(setSelectedInsurers([]));
+                                            break;
+                                          case 'brokers':
+                                            dispatch(setSelectedInsurers([]));
                                             break;
                                           case 'lob':
-                                            setSelectedLobs([]);
+                                            dispatch(setSelectedLobs([]));
                                             break;
                                           case 'policyType':
-                                            setSelectedPolicyTypes([]);
+                                            dispatch(
+                                              setSelectedPolicyTypes([])
+                                            );
                                             break;
                                           case 'vertical':
-                                            setSelectedVerticals([]);
+                                            dispatch(setSelectedVerticals([]));
+                                            break;
+                                          case 'clientTypes':
+                                            dispatch(
+                                              setSelectedClientTypes([])
+                                            );
                                             break;
                                         }
                                       }}

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../../../hooks/hooks';
 import { RootState } from '@/redux/store';
-import { selectBaseMetrics } from '../../../../redux/slices/revenueSlice';
+import { selectBaseMetrics } from '../../../../redux/slices/analyticsDataSlice';
+import { setTopExpenseCategories } from '@/redux/slices/filterSlice';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -82,7 +83,9 @@ export function ChartsSection({
 
   // Separate state for Expenses container (right)
   const [expenseChartType, setExpenseChartType] = useState<ChartType>('donut');
-  const [expenseTopFilter, setExpenseTopFilter] = useState<string>('Top 10');
+
+  // Use Redux topExpenseCategories instead of local state
+  const expenseTopFilter = `Top ${filterState.topExpenseCategories}`;
 
   // Automatic chart switching for Revenue container
   useEffect(() => {
@@ -100,12 +103,16 @@ export function ChartsSection({
     }
   }, [expenseTopFilter, expenseChartType]);
 
-  // Client types filter for Revenue by Products
-  const [selectedClientTypes] = useState<string[]>([
-    'Corporate',
-    'Retail',
-    'Affinity',
-  ]);
+  // Client types filter for Revenue by Products - using Redux state
+  const selectedClientTypes = filterState.selectedClientTypes;
+  
+  // Products filter for Revenue by Products - using Redux state
+  const selectedProducts = filterState.selectedProducts;
+
+  // Force re-render when filter state changes
+  useEffect(() => {
+    // This effect ensures the component re-renders when filter state changes
+  }, [selectedProducts, selectedClientTypes]);
 
   // Item details panel state
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -115,6 +122,13 @@ export function ChartsSection({
   const handleClosePanel = () => {
     setIsItemDetailsOpen(false);
     setSelectedItem(null);
+  };
+
+  // Handle expense top filter change
+  const handleExpenseTopFilterChange = (value: string) => {
+    const numericValue =
+      value === 'Top All' ? 999 : parseInt(value.replace('Top ', ''));
+    dispatch(setTopExpenseCategories(numericValue));
   };
 
   // Local value formatting functions using the utility
@@ -251,12 +265,17 @@ export function ChartsSection({
     }));
   };
 
-  // Filter revenue data based on selected client types and top filter
+  // Filter revenue data based on selected products and client types and top filter
   const getFilteredRevenueData = () => {
-    const data = getRevenueData();
+    let data = getRevenueData();
     const topCount = parseInt(revenueTopFilter.replace('Top ', ''));
 
     if (selectedReportType === 'Revenue by Products') {
+      // First filter by selected products if any are selected
+      if (selectedProducts && selectedProducts.length > 0) {
+        data = data.filter(item => selectedProducts.includes(item.name));
+      }
+
       const filteredData = data.map(item => {
         // Check if item has clientTypes property (some data sources don't have it)
         if (!item.clientTypes || typeof item.clientTypes !== 'object') {
@@ -586,7 +605,7 @@ export function ChartsSection({
                 <div className="flex items-center gap-2">
                   <Select
                     value={expenseTopFilter}
-                    onValueChange={setExpenseTopFilter}
+                    onValueChange={handleExpenseTopFilterChange}
                   >
                     <SelectTrigger className={commonStyles.selectTrigger}>
                       <SelectValue />

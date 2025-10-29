@@ -3,6 +3,7 @@
 import FilterPage from '../components/layout/filter/FilterPage';
 import { TopNavigation } from '@/components/layout/header/page';
 import ReportRouter from '@/components/layout/analyticsReports/ReportRouter';
+import DashboardSlideshow from '@/components/layout/slideshow/DashboardSlideshow';
 
 export default function Home() {
   return (
@@ -22,6 +23,9 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* Dashboard Slideshow Controls */}
+      <DashboardSlideshow />
     </div>
   );
 }

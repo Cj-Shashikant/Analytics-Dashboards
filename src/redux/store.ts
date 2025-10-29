@@ -1,13 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import filterReducer from './slices/filterSlice';
-import revenueReducer from './slices/revenueSlice';
+import analyticsDataReducer from './slices/analyticsDataSlice';
 import relationReducer from './slices/relationSlice';
 import importedDataReducer from './slices/importedDataSlice';
 
 export const store = configureStore({
   reducer: {
     filter: filterReducer,
-    revenue: revenueReducer,
+    analyticsData: analyticsDataReducer,
     relation: relationReducer,
     importedData: importedDataReducer,
   },

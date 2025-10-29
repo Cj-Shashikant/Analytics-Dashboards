@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import {
-  selectRetentionByInsurer,
+  selectInsurerRetention,
   selectBaseMetrics,
-} from '../../../../redux/slices/revenueSlice';
-import {
   selectRetentionMetrics,
   selectLossReasons,
-} from '@/redux/slices/retentionSlice';
+} from '../../../../redux/slices/analyticsDataSlice';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -88,7 +86,7 @@ export function ChartsSection({
   onTotalElementsChange,
 }: ChartsSectionProps) {
   // Redux hooks
-  const retentionData = useSelector(selectRetentionByInsurer);
+  const retentionData = useSelector(selectInsurerRetention);
   const baseMetrics = useSelector(selectBaseMetrics);
   const filterState = useSelector((state: RootState) => state.filter);
   const retentionMetrics = useSelector(selectRetentionMetrics);
@@ -111,12 +109,16 @@ export function ChartsSection({
     }
   }, [topFilter, chartTypeState]);
 
-  // Client types filter for Revenue by Products
-  const [selectedClientTypes] = useState<string[]>([
-    'Corporate',
-    'Retail',
-    'Affinity',
-  ]);
+  // Client types filter for Retention by Insurer - using Redux state
+  const selectedClientTypes = filterState.selectedClientTypes;
+  
+  // Products filter for Retention by Insurer - using Redux state
+  const selectedProducts = filterState.selectedProducts;
+
+  // Force re-render when filter state changes
+  useEffect(() => {
+    // This effect ensures the component re-renders when filter state changes
+  }, [selectedProducts, selectedClientTypes]);
 
   // Item details panel state
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -174,33 +176,51 @@ export function ChartsSection({
     return retentionData || [];
   };
 
-  // Filter data based on selected client types (only for Revenue by Products)
+  // Filter data based on selected products and client types (only for Revenue by Products)
   const getFilteredData = () => {
-    const data = getReportData();
+    let data = getReportData();
 
     if (selectedReportType === 'Revenue by Products') {
-      return data.map((item: RetentionDataItem) => {
-        if (!item?.clientTypes) return item;
+      // First filter by selected products if any are selected
+      if (selectedProducts && selectedProducts.length > 0) {
+        data = data.filter((item: RetentionDataItem) => 
+          selectedProducts.includes(item.name)
+        );
+      }
 
-        const filteredValue = selectedClientTypes.reduce((sum, clientType) => {
-          const clientTypeValue =
-            item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
-            0;
-          return sum + clientTypeValue;
-        }, 0);
+      return data.map((item: RetentionDataItem) => {
+        // If item has clientTypes, use filtered value, otherwise use premiumRevenue
+        let finalValue = (item as any).premiumRevenue || item.value;
+        
+        if (item?.clientTypes) {
+          const filteredValue = selectedClientTypes.reduce((sum, clientType) => {
+            const clientTypeValue =
+              item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
+              0;
+            return sum + clientTypeValue;
+          }, 0);
+          finalValue = filteredValue;
+        }
 
         return {
           ...item,
-          value: filteredValue,
-          percentage: (filteredValue / metricsData.totalRevenue) * 100,
+          value: finalValue,
+          percentage: (finalValue / metricsData.totalRevenue) * 100,
           policies: item.policies,
-          premium: item.premium,
+          premium: (item as any).premiumRevenue, // Map premiumRevenue to premium field
+          retention: (item as any).premiumRevenue, // Map premiumRevenue to retention field
           revenuePercentage: item.revenuePercentage,
         };
       });
     }
 
-    return data;
+    // Map data for default case to ensure premium and retention fields are available
+    return data.map((item: RetentionDataItem) => ({
+      ...item,
+      value: (item as any).premiumRevenue || item.value, // Set value to premiumRevenue for charts
+      premium: (item as any).premiumRevenue, // Map premiumRevenue to premium field
+      retention: (item as any).premiumRevenue, // Map premiumRevenue to retention field
+    }));
   };
 
   const reportData = getFilteredData();

@@ -122,4 +122,43 @@ const importedDataSlice = createSlice({
 });
 
 export const { setImportedData, clearImportedData } = importedDataSlice.actions;
+
+// Selectors for accessing imported data
+export const selectIsDataImported = (state: { importedData: ImportedDataState }) =>
+  state.importedData.isDataImported;
+
+export const selectImportedFileName = (state: { importedData: ImportedDataState }) =>
+  state.importedData.fileName;
+
+export const selectImportedAt = (state: { importedData: ImportedDataState }) =>
+  state.importedData.importedAt;
+
+// Base metrics selectors
+export const selectImportedBaseMetrics = (state: { importedData: ImportedDataState }) => ({
+  totalRevenue: state.importedData.totalRevenue,
+  expenses: state.importedData.expenses,
+  grossProfit: state.importedData.grossProfit,
+  netProfit: state.importedData.netProfit,
+  revenueGrowth: state.importedData.revenueGrowth,
+  expenseGrowth: state.importedData.expenseGrowth,
+  profitMargin: state.importedData.profitMargin,
+});
+
+// Data selectors
+export const selectImportedProductData = (state: { importedData: ImportedDataState }) =>
+  state.importedData.productData;
+
+export const selectImportedInsurerData = (state: { importedData: ImportedDataState }) =>
+  state.importedData.insurerData;
+
+export const selectImportedLocationPerformance = (state: { importedData: ImportedDataState }) =>
+  state.importedData.locationPerformance;
+
+export const selectImportedMonthlyTrends = (state: { importedData: ImportedDataState }) =>
+  state.importedData.monthlyTrends;
+
+// Convenience selector for all imported data
+export const selectAllImportedData = (state: { importedData: ImportedDataState }) =>
+  state.importedData;
+
 export default importedDataSlice.reducer;

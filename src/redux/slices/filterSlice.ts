@@ -34,6 +34,18 @@ export interface FilterState {
   selectedDuration: DurationType;
   valueUnit: ValueUnitType;
 
+  // Detailed filter selections
+  selectedProducts: string[];
+  selectedInsurers: string[];
+  selectedLobs: string[];
+  selectedPolicyTypes: string[];
+  selectedVerticals: string[];
+  selectedClientTypes: string[];
+  selectedRegions: string[];
+  selectedStates: string[];
+  selectedCities: string[];
+  selectedTeams: string[];
+
   // Custom period handling
   customStartDate: Date | null;
   customEndDate: Date | null;
@@ -187,6 +199,18 @@ const initialState: FilterState = {
   selectedDuration: DEFAULT_DURATION,
   valueUnit: DEFAULT_VALUE_UNIT,
 
+  // Detailed filter selections - initialized with all items selected
+  selectedProducts: [],
+  selectedInsurers: [],
+  selectedLobs: [],
+  selectedPolicyTypes: [],
+  selectedVerticals: [],
+  selectedClientTypes: ['Corporate', 'Retail', 'Affinity'],
+  selectedRegions: ['Mumbai', 'Delhi', 'Bangalore'],
+  selectedStates: ['Maharashtra', 'Delhi', 'Karnataka'],
+  selectedCities: ['Mumbai', 'Delhi', 'Bangalore'],
+  selectedTeams: [],
+
   // Custom period handling
   customStartDate: null,
   customEndDate: null,
@@ -207,10 +231,8 @@ const initialState: FilterState = {
 
   // Advanced filter settings
   pinnedItems: [
-    'organisation',
     'department',
     'reportType',
-    'location',
     'duration',
   ],
   topExpenseCategories: 10,
@@ -467,6 +489,47 @@ const filterSlice = createSlice({
       state.valueUnit = units[nextIndex] as ValueUnitType;
     },
 
+    // Detailed filter selection actions
+    setSelectedProducts: (state, action: PayloadAction<string[]>) => {
+      state.selectedProducts = action.payload;
+    },
+
+    setSelectedInsurers: (state, action: PayloadAction<string[]>) => {
+      state.selectedInsurers = action.payload;
+    },
+
+    setSelectedLobs: (state, action: PayloadAction<string[]>) => {
+      state.selectedLobs = action.payload;
+    },
+
+    setSelectedPolicyTypes: (state, action: PayloadAction<string[]>) => {
+      state.selectedPolicyTypes = action.payload;
+    },
+
+    setSelectedVerticals: (state, action: PayloadAction<string[]>) => {
+      state.selectedVerticals = action.payload;
+    },
+
+    setSelectedClientTypes: (state, action: PayloadAction<string[]>) => {
+      state.selectedClientTypes = action.payload;
+    },
+
+    setSelectedRegions: (state, action: PayloadAction<string[]>) => {
+      state.selectedRegions = action.payload;
+    },
+
+    setSelectedStates: (state, action: PayloadAction<string[]>) => {
+      state.selectedStates = action.payload;
+    },
+
+    setSelectedCities: (state, action: PayloadAction<string[]>) => {
+      state.selectedCities = action.payload;
+    },
+
+    setSelectedTeams: (state, action: PayloadAction<string[]>) => {
+      state.selectedTeams = action.payload;
+    },
+
     // Custom period actions
     setCustomDates: (
       state,
@@ -596,6 +659,18 @@ export const {
   setSelectedDuration,
   setValueUnit,
   cycleValueUnit,
+
+  // Detailed filter selection actions
+  setSelectedProducts,
+  setSelectedInsurers,
+  setSelectedLobs,
+  setSelectedPolicyTypes,
+  setSelectedVerticals,
+  setSelectedClientTypes,
+  setSelectedRegions,
+  setSelectedStates,
+  setSelectedCities,
+  setSelectedTeams,
 
   // Custom period actions
   setCustomDates,

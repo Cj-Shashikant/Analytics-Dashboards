@@ -1,6 +1,8 @@
 // Broker Retention Analytics Data
 export interface BrokerRetentionAnalyticsData {
+  id: string;
   name: string;
+  value: number;
   policies: number;
   premiumRevenue: number;
   revenuePercentage: number;
@@ -9,73 +11,102 @@ export interface BrokerRetentionAnalyticsData {
 
 export const brokerRetentionAnalyticsData: BrokerRetentionAnalyticsData[] = [
   {
-    name: 'Marsh & McLennan',
-    policies: 15420,
-    premiumRevenue: 89500000, // ₹8.95 crores
-    revenuePercentage: 24.8,
+    id: 'pricing-issues',
+    name: 'Pricing Issues',
+    value: 2850000,
+    premiumRevenue: 2850000,
+    policies: 1250,
     color: '#3B82F6',
+    revenuePercentage: 23.0,
   },
   {
-    name: 'Aon Corporation',
-    policies: 12850,
-    premiumRevenue: 76200000, // ₹7.62 crores
-    revenuePercentage: 21.1,
+    id: 'price-competitiveness',
+    name: 'Price Competitiveness',
+    value: 2850000,
+    premiumRevenue: 2850000,
+    policies: 1250,
+    color: '#6B7280',
+    revenuePercentage: 35.2,
+  },
+  {
+    id: 'poor-service',
+    name: 'Poor Service',
+    value: 2356000,
+    premiumRevenue: 2356000,
+    policies: 980,
     color: '#10B981',
+    revenuePercentage: 19.0,
   },
   {
-    name: 'Willis Towers Watson',
-    policies: 9680,
-    premiumRevenue: 58400000, // ₹5.84 crores
-    revenuePercentage: 16.2,
+    id: 'better-offers',
+    name: 'Better Offers Elsewhere',
+    value: 1982000,
+    premiumRevenue: 1982000,
+    policies: 820,
     color: '#F59E0B',
+    revenuePercentage: 16.0,
   },
   {
-    name: 'Arthur J. Gallagher',
-    policies: 8250,
-    premiumRevenue: 45600000, // ₹4.56 crores
-    revenuePercentage: 12.6,
+    id: 'claims-experience',
+    name: 'Claims Experience',
+    value: 1368000,
+    premiumRevenue: 1368000,
+    policies: 650,
     color: '#EF4444',
+    revenuePercentage: 11.0,
   },
   {
-    name: 'Brown & Brown',
-    policies: 6420,
-    premiumRevenue: 38200000, // ₹3.82 crores
-    revenuePercentage: 10.6,
+    id: 'policy-cancelled',
+    name: 'Policy Cancelled',
+    value: 1116000,
+    premiumRevenue: 1116000,
+    policies: 520,
     color: '#8B5CF6',
+    revenuePercentage: 9.0,
   },
   {
-    name: 'Hub International',
-    policies: 5850,
-    premiumRevenue: 32800000, // ₹3.28 crores
-    revenuePercentage: 9.1,
+    id: 'coverage-gaps',
+    name: 'Coverage Gaps',
+    value: 868000,
+    premiumRevenue: 868000,
+    policies: 410,
     color: '#06B6D4',
+    revenuePercentage: 7.0,
   },
   {
-    name: 'Lockton Companies',
-    policies: 4680,
-    premiumRevenue: 28500000, // ₹2.85 crores
-    revenuePercentage: 7.9,
+    id: 'communication-issues',
+    name: 'Communication Issues',
+    value: 620000,
+    premiumRevenue: 620000,
+    policies: 290,
     color: '#84CC16',
+    revenuePercentage: 5.0,
   },
   {
-    name: 'USI Insurance Services',
-    policies: 3920,
-    premiumRevenue: 24200000, // ₹2.42 crores
-    revenuePercentage: 6.7,
-    color: '#EC4899',
-  },
-  {
-    name: 'Alliant Insurance',
-    policies: 3250,
-    premiumRevenue: 19800000, // ₹1.98 crores
-    revenuePercentage: 5.5,
-    color: '#14B8A6',
-  },
-  {
-    name: 'AssuredPartners',
-    policies: 2850,
-    premiumRevenue: 16400000, // ₹1.64 crores
-    revenuePercentage: 4.5,
+    id: 'regulatory-changes',
+    name: 'Regulatory Changes',
+    value: 620000,
+    premiumRevenue: 620000,
+    policies: 290,
     color: '#F97316',
+    revenuePercentage: 5.0,
+  },
+  {
+    id: 'business-closure',
+    name: 'Business Closure',
+    value: 372000,
+    premiumRevenue: 372000,
+    policies: 175,
+    color: '#EC4899',
+    revenuePercentage: 3.0,
+  },
+  {
+    id: 'other-reasons',
+    name: 'Other Reasons',
+    value: 248000,
+    premiumRevenue: 248000,
+    policies: 115,
+    color: '#6B7280',
+    revenuePercentage: 2.0,
   },
 ];

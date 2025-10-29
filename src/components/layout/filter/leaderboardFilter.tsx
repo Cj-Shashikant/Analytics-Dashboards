@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   ArrowUpDown,
 } from 'lucide-react';
+
 import { ReporteeInfoModal } from './reportInfoModal';
 
 interface LeaderboardModalProps {
@@ -472,14 +473,14 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent
           side="right"
-          className="w-[1000px] h-full max-w-none flex flex-col p-0 border-l border-gray-200"
+          className="w-[700px] sm:w-[800px] overflow-y-auto"
         >
           {/* Header - Compact */}
           <SheetHeader className="p-6 pb-4 border-b border-gray-100 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <Trophy className="w-5 h-5 text-gray-600" />
+                <div className="p-2 bg-yellow-50 rounded-lg">
+                  <Trophy className="w-5 h-5 text-yellow-600" />
                 </div>
                 <div>
                   <SheetTitle className="text-xl font-medium text-gray-800">
@@ -492,23 +493,23 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
               </div>
 
               {/* Header Actions */}
-              <div className="flex items-center gap-3">
-                {/* Back to Dashboard button */}
-                <Button
+              {/* <div className="flex items-center gap-3"> */}
+              {/* Back to Dashboard button */}
+              {/* <Button
                   variant="outline"
                   onClick={onClose}
                   className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to Dashboard
-                </Button>
-              </div>
+                </Button> */}
+              {/* </div> */}
             </div>
           </SheetHeader>
 
           {/* Content */}
-          <div className="flex-1 p-6 overflow-hidden">
-            <div className="h-full flex flex-col space-y-5">
+          <div className="flex-1 p-6 overflow-hidden flex flex-col">
+            <div className="h-full flex flex-col space-y-5 min-h-0">
               {/* View Type Controls - Compact */}
               <div className="flex items-center justify-start flex-shrink-0">
                 <div className="flex items-center space-x-2">
@@ -518,8 +519,8 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                     onClick={() => setViewType('team')}
                     className={`flex items-center space-x-2 px-4 py-2 text-sm transition-all duration-200 ${
                       viewType === 'team'
-                        ? 'bg-gray-900 text-white'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        ? 'bg-blue-50 text-black border border-blue-200 hover:bg-blue-200 hover:border-blue-400'
+                        : 'border-blue-200 text-gray-600 hover:bg-blue-200'
                     }`}
                   >
                     <Users className="w-3.5 h-3.5" />
@@ -531,7 +532,7 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                     onClick={() => setViewType('region')}
                     className={`flex items-center space-x-2 px-4 py-2 text-sm transition-all duration-200 ${
                       viewType === 'region'
-                        ? 'bg-gray-900 text-white'
+                        ? 'bg-blue-50 text-black border border-blue-200 hover:bg-blue-200 hover:border-blue-400'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                   >
@@ -544,7 +545,7 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                     onClick={() => setViewType('member')}
                     className={`flex items-center space-x-2 px-4 py-2 text-sm transition-all duration-200 ${
                       viewType === 'member'
-                        ? 'bg-gray-900 text-white'
+                        ? 'bg-blue-50 text-black border border-blue-200 hover:bg-blue-200 hover:border-blue-400'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                   >
@@ -556,7 +557,7 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
 
               {/* Top 3 Performers - Much More Compact */}
               {sortedData.length >= 3 && (
-                <div className="bg-gray-50 rounded-lg p-5 flex-shrink-0">
+                <div className="bg-gray-50 rounded-lg p-5 flex-shrink-0 border border-gray-200">
                   <h3 className="text-lg font-medium text-gray-800 mb-4 text-center">
                     🏆 Top 3 Performers
                   </h3>
@@ -613,9 +614,8 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
 
               {/* Complete Rankings with Sort Options - Right Aligned Sort Info */}
               <div className="flex-1 overflow-hidden flex flex-col">
-                {/* Header Row with Sort Information on Right */}
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-medium text-gray-800">
+                  <h3 className="text-lg font-medium text-gray-800 ">
                     Complete Rankings
                   </h3>
 
@@ -630,101 +630,91 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                         isAnimating ? 'rotate-180' : ''
                       }`}
                     />
-                    <span className="text-sm text-blue-800 font-medium">
+                    <span className="text-xs text-blue-800 font-medium">
                       Sorted by: {getSortLabel()}
                     </span>
                   </div>
                 </div>
 
-                {/* Table Header with Sort Options - Aligned with columns */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-t-lg border border-gray-200 flex-shrink-0">
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className="w-8"></div> {/* Rank column */}
-                    <div className="w-10"></div> {/* Avatar column */}
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-600">
-                        Name & Role
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-6">
-                    {/* Revenue Sort */}
-                    <div className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSortChange('revenue')}
-                        className={`px-2 py-1 text-xs transition-all duration-200 ${
-                          sortBy === 'revenue'
-                            ? 'text-gray-900 font-medium bg-gray-200 scale-105'
-                            : 'text-gray-500 hover:bg-gray-100'
-                        }`}
-                      >
-                        Revenue
-                      </Button>
-                    </div>
-
-                    {/* Target Sort */}
-                    <div className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSortChange('target')}
-                        className={`px-2 py-1 text-xs transition-all duration-200 ${
-                          sortBy === 'target'
-                            ? 'text-gray-900 font-medium bg-gray-200 scale-105'
-                            : 'text-gray-500 hover:bg-gray-100'
-                        }`}
-                      >
-                        Target
-                      </Button>
-                    </div>
-
-                    {/* Achieved Sort */}
-                    <div className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSortChange('achieved')}
-                        className={`px-2 py-1 text-xs transition-all duration-200 ${
-                          sortBy === 'achieved'
-                            ? 'text-gray-900 font-medium bg-gray-200 scale-105'
-                            : 'text-gray-500 hover:bg-gray-100'
-                        }`}
-                      >
-                        Achieved
-                      </Button>
-                    </div>
-
-                    <div className="w-16 text-center">
-                      <span className="text-xs text-gray-500">Progress</span>
-                    </div>
-
-                    {/* Plus button header space */}
-                    {viewType === 'team' && <div className="w-8"></div>}
-                  </div>
-                </div>
-
-                {/* Scrollable Rankings List with Animation */}
-                <div className="flex-1 overflow-y-auto border-l border-r border-b border-gray-200 rounded-b-lg">
-                  <div className="space-y-0">
-                    {sortedData.map((member, index) => (
-                      <div
-                        key={member.id}
-                        className={`flex items-center justify-between p-4 transition-all duration-300 hover:shadow-sm border-b border-gray-100 last:border-b-0 ${
-                          index < 3 ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
-                        } ${member.achieved >= 150 ? 'ring-2 ring-purple-200 bg-purple-50' : ''} ${
-                          isAnimating
-                            ? 'transform translate-x-1 opacity-90'
-                            : 'transform translate-x-0 opacity-100'
-                        }`}
-                        style={{
-                          transitionDelay: `${index * 20}ms`,
-                        }}
-                      >
-                        <div className="flex items-center space-x-4 flex-1">
-                          <div className="flex items-center justify-center w-8">
+                {/* Data Table */}
+                <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto overflow-y-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="text-left p-3 border-b text-sm font-medium text-gray-900">
+                          Rank
+                        </th>
+                        <th className="text-left p-3 border-b text-sm font-medium text-gray-900">
+                          Name & Role
+                        </th>
+                        <th className="text-right p-3 border-b text-sm font-medium text-gray-900">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSortChange('revenue')}
+                            className={`px-2 py-1 text-xs transition-all duration-200 ${
+                              sortBy === 'revenue'
+                                ? 'text-gray-900 font-medium scale-105'
+                                : 'text-gray-500 hover:bg-gray-100'
+                            }`}
+                          >
+                            Revenue
+                          </Button>
+                        </th>
+                        <th className="text-right p-3 border-b text-sm font-medium text-gray-900">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSortChange('target')}
+                            className={`px-2 py-1 text-xs transition-all duration-200 ${
+                              sortBy === 'target'
+                                ? 'text-gray-900 font-medium bg-gray-200 scale-105'
+                                : 'text-gray-500 hover:bg-gray-100'
+                            }`}
+                          >
+                            Target
+                          </Button>
+                        </th>
+                        <th className="text-right p-3 border-b text-sm font-medium text-gray-900">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSortChange('achieved')}
+                            className={`px-2 py-1 text-xs transition-all duration-200 ${
+                              sortBy === 'achieved'
+                                ? 'text-gray-900 font-medium bg-gray-200 scale-105'
+                                : 'text-gray-500 hover:bg-gray-100'
+                            }`}
+                          >
+                            Achieved
+                          </Button>
+                        </th>
+                        <th className="text-center p-3 border-b text-sm font-medium text-gray-900">
+                          Progress
+                        </th>
+                        {viewType === 'team' && (
+                          <th className="text-center p-3 border-b text-sm font-medium text-gray-900">
+                            Action
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedData.map((member, index) => (
+                        <tr
+                          key={member.id}
+                          className={`cursor-pointer transition-all duration-500 hover:bg-gray-50 ${
+                            index < 3 ? 'bg-gray-50' : 'bg-white'
+                          } ${member.achieved >= 150 ? 'ring-2 ring-purple-200 bg-purple-50' : ''} ${
+                            isAnimating
+                              ? 'transform translate-x-1 opacity-90'
+                              : 'transform translate-x-0 opacity-100'
+                          }`}
+                          style={{
+                            transitionDelay: `${index * 20}ms`,
+                          }}
+                        >
+                          <td className="p-3 border-b border-gray-100">
                             {index < 3 ? (
                               getRankIcon(index)
                             ) : (
@@ -732,57 +722,49 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                                 #{index + 1}
                               </span>
                             )}
-                          </div>
-
-                          <Avatar className="w-10 h-10">
-                            <AvatarImage
-                              src={member.avatar}
-                              alt={member.name}
-                            />
-                            <AvatarFallback className="bg-gray-100 text-gray-700 text-xs font-medium">
-                              {member.name
-                                .split(' ')
-                                .map(n => n[0])
-                                .join('')}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-medium text-gray-900">
-                                {member.name}
-                              </h4>
-                              {member.achieved >= 150 && (
-                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
-                                  Exceptional
-                                </span>
-                              )}
+                          </td>
+                          <td className="p-3 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-10 h-10">
+                                <AvatarImage
+                                  src={member.avatar}
+                                  alt={member.name}
+                                />
+                                <AvatarFallback className="bg-gray-100 text-gray-700 text-xs font-medium">
+                                  {member.name
+                                    .split(' ')
+                                    .map(n => n[0])
+                                    .join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-sm font-medium text-gray-900">
+                                    {member.name}
+                                  </h4>
+                                  {member.achieved >= 150 && (
+                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                                      Exceptional
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                  {member.role}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-xs text-gray-500">
-                              {member.role}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-6">
-                          {/* Revenue */}
-                          <div className="text-center">
+                          </td>
+                          <td className="text-right p-3 border-b border-gray-100">
                             <div className="text-sm font-medium text-gray-900">
                               {formatCurrency(member.revenue)}
                             </div>
-                            <div className="text-xs text-gray-500">Revenue</div>
-                          </div>
-
-                          {/* Target */}
-                          <div className="text-center">
+                          </td>
+                          <td className="text-right p-3 border-b border-gray-100">
                             <div className="text-sm font-medium text-gray-900">
                               {formatCurrency(member.target)}
                             </div>
-                            <div className="text-xs text-gray-500">Target</div>
-                          </div>
-
-                          {/* Achieved */}
-                          <div className="text-center">
+                          </td>
+                          <td className="text-right p-3 border-b border-gray-100">
                             <div
                               className={`text-sm font-medium ${getAchievedColor(member.achieved)}`}
                             >
@@ -791,13 +773,8 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                                 <span className="ml-1">🚀</span>
                               )}
                             </div>
-                            <div className="text-xs text-gray-500">
-                              Achieved
-                            </div>
-                          </div>
-
-                          {/* Progress Bar */}
-                          <div className="w-16">
+                          </td>
+                          <td className="text-center p-3 border-b border-gray-100">
                             <div className="w-full bg-gray-200 rounded-full h-2">
                               <div
                                 className="h-2 rounded-full transition-all duration-500"
@@ -809,31 +786,28 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                                 }}
                               ></div>
                             </div>
-                          </div>
-
-                          {/* Plus Button */}
-                          {viewType === 'team' &&
-                            member.reportees &&
-                            member.reportees.length > 0 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleReporteeClick(member)}
-                                className="p-2 text-gray-600 hover:bg-gray-100 rounded-md transition-all duration-200"
-                                title={`View ${member.name}'s team members`}
-                              >
-                                <Plus className="w-4 h-4" />
-                              </Button>
-                            )}
-                          {viewType === 'team' &&
-                            (!member.reportees ||
-                              member.reportees.length === 0) && (
-                              <div className="w-8"></div>
-                            )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                          </td>
+                          {viewType === 'team' && (
+                            <td className="text-center p-3 border-b border-gray-100">
+                              {member.reportees && member.reportees.length > 0 ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleReporteeClick(member)}
+                                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-md transition-all duration-200"
+                                  title={`View ${member.name}'s team members`}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <div className="w-8"></div>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

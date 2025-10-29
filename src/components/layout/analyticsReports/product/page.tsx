@@ -3,9 +3,14 @@ import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../../../hooks/hooks';
 import { RootState } from '../../../../redux/store';
 import {
-  selectRevenueByProducts,
+  selectProducts,
   selectBaseMetrics,
-} from '../../../../redux/slices/revenueSlice';
+} from '../../../../redux/slices/analyticsDataSlice';
+import {
+  selectIsDataImported,
+  selectImportedBaseMetrics,
+  selectAllImportedData,
+} from '../../../../redux/slices/importedDataSlice';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -155,12 +160,16 @@ export function ChartsSection({
     }
   }, [topFilter, chartTypeState]);
 
-  // Client types filter for Revenue by Products
-  const [selectedClientTypes] = useState<string[]>([
-    'Corporate',
-    'Retail',
-    'Affinity',
-  ]);
+  // Client types filter for Revenue by Products - using Redux state
+  const selectedClientTypes = filterState.selectedClientTypes;
+  
+  // Products filter for Revenue by Products - using Redux state
+  const selectedProducts = filterState.selectedProducts;
+
+  // Force re-render when filter state changes
+  useEffect(() => {
+    // This effect ensures the component re-renders when filter state changes
+  }, [selectedProducts, selectedClientTypes]);
 
   // Item details panel state
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -215,43 +224,93 @@ export function ChartsSection({
 
   const metricsData = getMetricsData();
 
-  // Get data - Product folder specifically uses revenueByProducts data
-  const productData = useSelector(selectRevenueByProducts);
+  // Get data based on whether imported data is available
+  const isDataImported = useSelector(selectIsDataImported);
+  const importedData = useSelector(selectAllImportedData);
+  const importedBaseMetrics = useSelector(selectImportedBaseMetrics);
+
+  const defaultProductData = useSelector(selectProducts);
+  const defaultBaseMetrics = useSelector(selectBaseMetrics);
+
+  // Transform imported productData to match expected format
+  const transformImportedProductData = (productData: any[]) => {
+    if (!productData || productData.length === 0) {
+      return [];
+    }
+
+    return productData.map((item, index) => ({
+      id: item.name.toLowerCase().replace(/\s+/g, '-'),
+      name: item.name,
+      value: item.revenue || 0,
+      premiumRevenue: item.revenue || 0,
+      percentage: item.percentage || item.revenuePercentage || 0,
+      policies: item.policies || 0,
+      premium: item.premium || 0,
+      color: item.color || `hsl(${(index * 137.5) % 360}, 70%, 50%)`,
+      revenuePercentage: item.revenuePercentage || item.percentage || 0,
+    }));
+  };
+
+  // Use imported data if available, otherwise use default data
+  const productData =
+    isDataImported && importedData?.productData
+      ? transformImportedProductData(importedData.productData)
+      : defaultProductData;
 
   const getReportData = () => {
     return productData || [];
   };
 
-  // Filter data based on selected client types (only for Revenue by Products)
+  // Filter data based on selected products and client types
   const getFilteredData = () => {
     const data = getReportData();
 
     if (selectedReportType === 'Revenue by Products') {
-      return data.map((item: any) => {
-        if (!item?.clientTypes) return item;
-
-        const filteredValue = selectedClientTypes.reduce(
-          (sum: number, clientType: string) => {
-            const clientTypeValue =
-              item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
-              0;
-            return sum + clientTypeValue;
-          },
-          0
+      // First filter by selected products (if any are selected)
+      let filteredData = data;
+      if (selectedProducts.length > 0) {
+        filteredData = data.filter((item: any) => 
+          selectedProducts.includes(item.name)
         );
+      }
+
+      return filteredData.map((item: any) => {
+        // If item has clientTypes, use filtered value, otherwise use premiumRevenue
+        let finalValue = item.premiumRevenue;
+
+        if (item?.clientTypes) {
+          const filteredValue = selectedClientTypes.reduce(
+            (sum: number, clientType: string) => {
+              const clientTypeValue =
+                item.clientTypes?.[
+                  clientType as keyof typeof item.clientTypes
+                ] || 0;
+              return sum + clientTypeValue;
+            },
+            0
+          );
+          finalValue = filteredValue;
+        }
 
         return {
           ...item,
-          value: filteredValue,
-          percentage: (filteredValue / metricsData.totalRevenue) * 100,
-          policies: item.policies, // Preserve policies data from imported Excel
-          premium: item.premium, // Preserve premium data from imported Excel
-          revenuePercentage: item.revenuePercentage, // Preserve revenue percentage from imported Excel
+          value: finalValue,
+          percentage: (finalValue / metricsData.totalRevenue) * 100,
+          policies: item.policies, // Preserve policies data
+          premium: item.premiumRevenue, // Map premiumRevenue to premium field
+          revenue: item.premiumRevenue, // Map premiumRevenue to revenue field
+          revenuePercentage: item.revenuePercentage, // Preserve revenue percentage
         };
       });
     }
 
-    return data;
+    // Map data for default case to ensure premium and revenue fields are available
+    return data.map((item: any) => ({
+      ...item,
+      value: item.premiumRevenue, // Set value to premiumRevenue for charts
+      premium: item.premiumRevenue, // Map premiumRevenue to premium field
+      revenue: item.premiumRevenue, // Map premiumRevenue to revenue field
+    }));
   };
 
   const reportData = getFilteredData();

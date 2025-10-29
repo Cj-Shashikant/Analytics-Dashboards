@@ -93,6 +93,7 @@ export function PlaylistManager({
   currentFilters,
   onPlayPlaylist,
 }: PlaylistManagerProps) {
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   // Default playlists - 4 executive-ready presentations
   const getDefaultPlaylists = (): Playlist[] => [
     {
@@ -403,12 +404,17 @@ export function PlaylistManager({
     itemName?: string;
   } | null>(null);
 
-  // Load playlists from localStorage
-  useEffect(() => {
+  // Function to load playlists from localStorage
+  const loadPlaylistsFromStorage = () => {
     const saved = localStorage.getItem('dashboardPlaylists');
+    console.log('PlaylistManager: Raw localStorage data:', saved);
+
     if (saved) {
       try {
-        const savedPlaylists = JSON.parse(saved).map((playlist: any) => ({
+        const parsedData = JSON.parse(saved);
+        console.log('PlaylistManager: Parsed localStorage data:', parsedData);
+
+        const savedPlaylists = parsedData.map((playlist: any) => ({
           ...playlist,
           createdAt: new Date(playlist.createdAt),
           updatedAt: new Date(playlist.updatedAt),
@@ -418,31 +424,67 @@ export function PlaylistManager({
           })),
         }));
 
-        // Merge with default playlists, keeping saved versions if they exist
-        const defaultPlaylists = getDefaultPlaylists();
-        const mergedPlaylists = defaultPlaylists.map(defaultPlaylist => {
-          const savedVersion = savedPlaylists.find(
-            (p: Playlist) => p.id === defaultPlaylist.id
-          );
-          return savedVersion || defaultPlaylist;
-        });
-
-        // Add any custom playlists
-        const customPlaylists = savedPlaylists.filter(
-          (p: Playlist) => !p.isDefault
+        console.log(
+          'PlaylistManager: Processed saved playlists:',
+          savedPlaylists
         );
-        setPlaylists([...mergedPlaylists, ...customPlaylists]);
+
+        // If there are saved playlists, use them directly
+        if (savedPlaylists.length > 0) {
+          console.log('PlaylistManager: Using saved playlists');
+          setPlaylists(savedPlaylists);
+        } else {
+          console.log('PlaylistManager: No saved playlists, using defaults');
+          setPlaylists(getDefaultPlaylists());
+        }
       } catch (error) {
-        console.error('Error loading playlists:', error);
+        console.error('PlaylistManager: Error loading playlists:', error);
         setPlaylists(getDefaultPlaylists());
       }
+    } else {
+      console.log('PlaylistManager: No saved data, using default playlists');
+      setPlaylists(getDefaultPlaylists());
     }
+  };
+
+  // Load playlists from localStorage on mount
+  useEffect(() => {
+    loadPlaylistsFromStorage();
+
+    // Mark initial load as complete
+    setIsInitialLoad(false);
   }, []);
 
-  // Save playlists to localStorage
+  // Listen for localStorage changes to auto-refresh playlists
   useEffect(() => {
-    localStorage.setItem('dashboardPlaylists', JSON.stringify(playlists));
-  }, [playlists]);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'dashboardPlaylists') {
+        loadPlaylistsFromStorage();
+      }
+    };
+
+    // Listen for storage events (from other tabs/components)
+    window.addEventListener('storage', handleStorageChange);
+
+    // Custom event for same-tab updates
+    const handleCustomStorageChange = () => {
+      loadPlaylistsFromStorage();
+    };
+
+    window.addEventListener('playlistsUpdated', handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('playlistsUpdated', handleCustomStorageChange);
+    };
+  }, []);
+
+  // Save playlists to localStorage (but not during initial load)
+  useEffect(() => {
+    if (!isInitialLoad) {
+      localStorage.setItem('dashboardPlaylists', JSON.stringify(playlists));
+    }
+  }, [playlists, isInitialLoad]);
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 

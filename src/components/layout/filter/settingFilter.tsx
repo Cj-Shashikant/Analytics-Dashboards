@@ -106,7 +106,7 @@ export default function SettingFilters({
         side="right"
         className="w-[700px] sm:w-[800px] overflow-y-auto"
       >
-        <SheetHeader className="pb-6">
+        <SheetHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-50 rounded-lg">
@@ -134,10 +134,10 @@ export default function SettingFilters({
           </div>
         </SheetHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 p-4">
           {/* Chart Display Settings */}
           <Card className="p-4">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-gray-600" />
               <h3 className="font-medium text-gray-900">
                 Chart Display Settings
@@ -213,7 +213,7 @@ export default function SettingFilters({
 
           {/* Performance Settings */}
           <Card className="p-4">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2">
               <Settings className="w-4 h-4 text-gray-600" />
               <h3 className="font-medium text-gray-900">
                 Performance & Data Settings
