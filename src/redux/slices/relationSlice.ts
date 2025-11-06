@@ -5,11 +5,7 @@ import type {
   RelationSummaryMetrics,
   InsightCategory,
 } from '@/constants/interfaces/relation';
-import {
-  DurationCategory,
-  ColorTheme,
-  InsightCategoryType,
-} from '@/constants/enums/relation';
+import { DurationCategory, ColorTheme } from '@/constants/enums/relation';
 
 // Dummy data for duration of relationship
 const durationData: DurationData[] = [
@@ -156,7 +152,7 @@ const relationSlice = createSlice({
     updateInsights: (state, action: PayloadAction<InsightCategory[]>) => {
       state.insights = action.payload;
     },
-    resetRelationState: state => {
+    resetRelationState: () => {
       return initialState;
     },
   },

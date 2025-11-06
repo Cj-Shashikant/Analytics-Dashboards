@@ -149,7 +149,7 @@ export function ProductsList({
           <div
             className={`${productsListStyles.table.headerCell} sticky flex items-center justify-center`}
           >
-            Product
+            LOB
           </div>
 
           {/* Sortable Headers */}
@@ -232,6 +232,7 @@ export function ProductsList({
               fill="none"
               stroke={getSvgColor('revenuePercentage')}
               strokeWidth="2"
+              np
               strokeLinecap="round"
               strokeLinejoin="round"
               className={`transition-all duration-200 ${getSvgRotation('revenuePercentage')}`}

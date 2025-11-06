@@ -226,11 +226,11 @@ export function ChartsSection({
     return productData || [];
   };
 
-  // Filter data based on selected client types and products (only for Revenue by Products)
+  // Filter data based on selected client types and products (only for Cross-Sell Penetration)
   const getFilteredData = () => {
     let data = getReportData();
 
-    if (selectedReportType === 'Revenue by Products') {
+    if (selectedReportType === 'Cross-Sell Penetration') {
       // First filter by selected products (if any are selected)
       if (selectedProducts.length > 0) {
         data = data.filter((item: any) => selectedProducts.includes(item.name));
@@ -274,7 +274,7 @@ export function ChartsSection({
   // Apply top filter
   const getTopFilteredData = () => {
     const topCount = parseInt(topFilter.replace('Top ', ''));
-    return reportData
+    return [...reportData]
       .sort((a: any, b: any) => b.value - a.value)
       .slice(0, topCount)
       .map((item: any, index: number) => ({

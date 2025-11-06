@@ -16,7 +16,6 @@ import {
   Medal,
   Award,
   Trophy,
-  ArrowLeft,
   ArrowUpDown,
 } from 'lucide-react';
 
@@ -789,7 +788,8 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                           </td>
                           {viewType === 'team' && (
                             <td className="text-center p-3 border-b border-gray-100">
-                              {member.reportees && member.reportees.length > 0 ? (
+                              {member.reportees &&
+                              member.reportees.length > 0 ? (
                                 <Button
                                   variant="ghost"
                                   size="sm"

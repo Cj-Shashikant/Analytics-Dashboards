@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -20,8 +20,11 @@ import {
   Pin,
   PinOff,
   Check,
-  Monitor,
   Settings,
+  Package,
+  BarChart3,
+  FileText,
+  Layers,
 } from 'lucide-react';
 
 // Redux imports
@@ -33,13 +36,18 @@ import {
   setPinnedItems,
   setSelectedProducts,
   setSelectedInsurers,
-  setSelectedLobs,
-  setSelectedPolicyTypes,
-  setSelectedVerticals,
+  setSelectedPolicy,
+  setSelectedLob,
+  setSelectedVertical,
   setSelectedClientTypes,
   setSelectedRegions,
   setSelectedStates,
   setSelectedTeams,
+  updateBusinessDataFilter,
+  clearBusinessDataFilters,
+  selectBusinessDataFilters,
+  selectIsBusinessDataFilterActive,
+  toggleBusinessDataFilter,
 } from '@/redux/slices/filterSlice';
 
 // Constants imports
@@ -52,13 +60,11 @@ import {
 import { CLIENT_TYPES } from '@/constants/enums/revenue';
 
 // Data imports
-import { productAnalyticsData } from '@/data/productData';
-import { lobAnalyticsData } from '@/data/lobData';
-import { verticalAnalyticsData } from '@/data/verticalData';
-import { insurerAnalyticsData } from '@/data/insurerData';
-import { policyTypeAnalyticsData } from '@/data/policyTypeData';
 import { insurerRetentionAnalyticsData } from '@/data/retentionByInsurerData';
 import { brokerRetentionAnalyticsData } from '@/data/retentionByBrokerData';
+import { businessData } from '@/redux/slices/businessData';
+import { extractFilterOptions } from '@/utils/businessDataFilter';
+import { selectFilteredBusinessData } from '@/redux/slices/filterSlice';
 import { Label } from '@/components/ui';
 
 interface AdvancedFiltersProps {
@@ -82,6 +88,8 @@ export function AdvancedFilters({
   selectedLocation: legacySelectedLocation,
   onPinnedItemsChange,
 }: AdvancedFiltersProps) {
+  console.log('🔍 AdvancedFilters component rendered, isOpen:', isOpen);
+
   const dispatch = useAppDispatch();
 
   // Get current filter state from Redux
@@ -92,9 +100,9 @@ export function AdvancedFilters({
     pinnedItems,
     selectedProducts,
     selectedInsurers,
-    selectedLobs,
-    selectedPolicyTypes,
-    selectedVerticals,
+    selectedPolicy,
+    selectedLob,
+    selectedVertical,
     selectedClientTypes,
     selectedRegions,
     selectedStates,
@@ -102,20 +110,39 @@ export function AdvancedFilters({
     selectedTeams,
   } = useAppSelector(state => state.filter);
 
+  // Get business data filtering state
+  const businessDataFilters = useAppSelector(selectBusinessDataFilters);
+  const isBusinessDataFilterActive = useAppSelector(
+    selectIsBusinessDataFilterActive
+  );
+
   // Get imported data state from Redux
   const importedData = useAppSelector(state => state.importedData);
+  const filteredBusinessData = useAppSelector(selectFilteredBusinessData);
 
-  // Date Range Filters
-  const [dateRange, setDateRange] = useState('FY 2022-23');
+  // Extract filter options from business data
+  const businessFilterOptions = useMemo(() => {
+    // Base dataset: imported raw Excel or static business data
+    const baseData =
+      importedData.rawExcelData && importedData.rawExcelData.length > 0
+        ? importedData.rawExcelData
+        : businessData;
 
-  // Local state for non-Redux managed filters
-  const [selectedMembers] = useState<string[]>(['All Members']);
-  const [performanceRange] = useState([0, 100]);
+    // When filters are active, derive options from the currently filtered subset
+    const currentData =
+      isBusinessDataFilterActive && filteredBusinessData?.length > 0
+        ? filteredBusinessData
+        : baseData;
 
-  // Legacy Business Filters (keeping for compatibility)
-  const [policyTypes] = useState<string[]>(['Individual', 'Group']);
-  const [businessVerticals] = useState<string[]>(['Corporate', 'Retail']);
-  const [revenueRange] = useState([0, 10000000]);
+    return extractFilterOptions(currentData);
+  }, [
+    importedData.rawExcelData,
+    isBusinessDataFilterActive,
+    filteredBusinessData,
+    businessDataFilters,
+  ]);
+
+  // Removed unused state variables: dateRange, selectedMembers, performanceRange, policyTypes, businessVerticals, revenueRange
 
   // Primary filter options data
   const entities = [
@@ -130,18 +157,7 @@ export function AdvancedFilters({
   // Get report types based on selected department
   const reportTypes = getReportTypesForDepartment(selectedDepartment);
 
-  // Get locations based on department (simplified for now)
-  // const locations = [
-  //   'All Location',
-  //   'Mumbai',
-  //   'Delhi',
-  //   'Bangalore',
-  //   'Chennai',
-  //   'Hyderabad',
-  //   'Pune',
-  //   'Kolkata',
-  //   'Ahmedabad',
-  // ];
+  // Removed commented-out locations array
 
   const durations = DURATIONS;
 
@@ -167,17 +183,64 @@ export function AdvancedFilters({
     'Support Team',
   ];
 
-  // Dynamic data functions - prioritize imported data, fallback to default data, and filter by department
+  // Dynamic data functions - prioritize JSON data, then imported data, fallback to default data, and filter by department
   const getDynamicProducts = () => {
     // Products are only available for Business department
     if (selectedDepartment !== 'Business') {
       return [];
     }
 
-    if (importedData.isDataImported && importedData.productData.length > 0) {
-      return importedData.productData.map(product => product.name);
+    // First check if there's imported data with proper safety checks
+    if (
+      importedData &&
+      importedData.isDataImported &&
+      importedData.productData &&
+      Array.isArray(importedData.productData) &&
+      importedData.productData.length > 0
+    ) {
+      return importedData.productData
+        .map(product => product?.name || '')
+        .filter(name => name.trim() !== '');
     }
-    return productAnalyticsData.map(product => product.name);
+
+    // Fallback to business data slice - extract only Product name values
+    if (
+      businessData &&
+      Array.isArray(businessData) &&
+      businessData.length > 0
+    ) {
+      const productNames: string[] = [];
+
+      try {
+        // Extract only Product name values with null/undefined checks
+        businessData.forEach(item => {
+          if (item && typeof item === 'object') {
+            if (
+              item['Product name'] &&
+              typeof item['Product name'] === 'string'
+            ) {
+              productNames.push(item['Product name']);
+            }
+          }
+        });
+
+        // Get unique values and filter out empty ones
+        const uniqueProducts = Array.from(new Set(productNames));
+        return uniqueProducts.filter(
+          product =>
+            product && typeof product === 'string' && product.trim() !== ''
+        );
+      } catch (error) {
+        console.error(
+          'Error processing business data in getDynamicProducts:',
+          error
+        );
+        return [];
+      }
+    }
+
+    // Final fallback to empty array
+    return [];
   };
 
   const getDynamicInsurers = () => {
@@ -194,94 +257,255 @@ export function AdvancedFilters({
       return insurerRetentionAnalyticsData.map(insurer => insurer.name);
     }
 
-    // For other departments, use imported data if available
+    // For Business department, use business data
+    if (selectedDepartment === 'Business') {
+      // First check if there's imported data with proper safety checks
+      if (
+        importedData &&
+        importedData.isDataImported &&
+        importedData.insurerData &&
+        Array.isArray(importedData.insurerData) &&
+        importedData.insurerData.length > 0
+      ) {
+        return importedData.insurerData
+          .map(insurer => insurer?.name || '')
+          .filter(name => name.trim() !== '');
+      }
+
+      // Fallback to business data slice - extract only Insurer name values
+      if (
+        businessData &&
+        Array.isArray(businessData) &&
+        businessData.length > 0
+      ) {
+        const insurerNames: string[] = [];
+
+        try {
+          // Extract only Insurer name values with null/undefined checks
+          businessData.forEach(item => {
+            if (item && typeof item === 'object') {
+              if (
+                item['Insurer name'] &&
+                typeof item['Insurer name'] === 'string'
+              ) {
+                insurerNames.push(item['Insurer name']);
+              }
+            }
+          });
+
+          // Get unique values and filter out empty ones
+          const uniqueInsurers = Array.from(new Set(insurerNames));
+          return uniqueInsurers.filter(
+            insurer =>
+              insurer && typeof insurer === 'string' && insurer.trim() !== ''
+          );
+        } catch (error) {
+          console.error(
+            'Error processing business data in getDynamicInsurers:',
+            error
+          );
+          return [];
+        }
+      }
+    }
+
+    // Skip JSON data check since hasImportedData is not available
+
+    // Fallback to Redux imported data for other departments
     if (importedData.isDataImported && importedData.insurerData.length > 0) {
       return importedData.insurerData.map(insurer => insurer.name);
     }
 
-    // For Business department, show business insurers
-    return insurerAnalyticsData.map(insurer => insurer.name);
-  };
-
-  const getDynamicLobs = () => {
-    // LOB data is only available for Business department
-    if (selectedDepartment !== 'Business') {
-      return [];
-    }
-    return lobAnalyticsData.map(lob => lob.name);
+    // Final fallback to empty array (no default data)
+    return [];
   };
 
   const getDynamicPolicyTypes = () => {
-    // Policy types are only available for Business department
+    // Policy Types are only available for Business department
     if (selectedDepartment !== 'Business') {
       return [];
     }
-    return policyTypeAnalyticsData.map(policyType => policyType.name);
+
+    // Use business data slice - extract only Policy Type values
+    if (
+      businessData &&
+      Array.isArray(businessData) &&
+      businessData.length > 0
+    ) {
+      const policyTypes: string[] = [];
+
+      try {
+        // Extract only Policy Type values with null/undefined checks
+        businessData.forEach(item => {
+          if (item && typeof item === 'object') {
+            if (
+              item['Policy Type'] &&
+              typeof item['Policy Type'] === 'string'
+            ) {
+              policyTypes.push(item['Policy Type']);
+            }
+          }
+        });
+
+        // Get unique values and filter out empty ones
+        const uniquePolicyTypes = Array.from(new Set(policyTypes));
+        return uniquePolicyTypes.filter(
+          policyType =>
+            policyType &&
+            typeof policyType === 'string' &&
+            policyType.trim() !== ''
+        );
+      } catch (error) {
+        console.error(
+          'Error processing business data in getDynamicPolicyTypes:',
+          error
+        );
+        return [];
+      }
+    }
+
+    // Final fallback to empty array
+    return [];
+  };
+
+  const getDynamicLobs = () => {
+    console.log(
+      '🔍 getDynamicLobs called - selectedDepartment:',
+      selectedDepartment
+    );
+
+    // LOBs are only available for Business department
+    if (selectedDepartment !== 'Business') {
+      console.log('🔍 Not Business department, returning empty array');
+      return [];
+    }
+
+    // Use business data slice - extract only LOB name values
+    if (
+      businessData &&
+      Array.isArray(businessData) &&
+      businessData.length > 0
+    ) {
+      console.log('🔍 businessData length:', businessData.length);
+      const lobNames: string[] = [];
+
+      try {
+        // Extract only LOB name values with null/undefined checks
+        businessData.forEach(item => {
+          if (item && typeof item === 'object') {
+            if (item['LOB name'] && typeof item['LOB name'] === 'string') {
+              lobNames.push(item['LOB name']);
+            }
+          }
+        });
+
+        console.log('🔍 Extracted LOB names:', lobNames);
+
+        // Get unique values and filter out empty ones
+        const uniqueLobs = Array.from(new Set(lobNames));
+        console.log('🔍 Unique LOBs:', uniqueLobs);
+
+        const filteredLobs = uniqueLobs.filter(
+          lob => lob && typeof lob === 'string' && lob.trim() !== ''
+        );
+
+        console.log('🔍 Final filtered LOBs:', filteredLobs);
+        return filteredLobs;
+      } catch (error) {
+        console.error(
+          'Error processing business data in getDynamicLobs:',
+          error
+        );
+        return [];
+      }
+    }
+
+    console.log('🔍 No businessData available, returning empty array');
+    // Final fallback to empty array
+    return [];
   };
 
   const getDynamicVerticals = () => {
-    // Vertical data is only available for Business department
+    // Business Verticals are only available for Business department
     if (selectedDepartment !== 'Business') {
       return [];
     }
-    return verticalAnalyticsData.map(vertical => vertical.name);
+
+    // Use business data slice - extract only Business Vertical values
+    if (
+      businessData &&
+      Array.isArray(businessData) &&
+      businessData.length > 0
+    ) {
+      const businessVerticals: string[] = [];
+
+      try {
+        // Extract only Business Vertical values with null/undefined checks
+        businessData.forEach(item => {
+          if (item && typeof item === 'object') {
+            if (
+              item['Bussiness Vertical'] &&
+              typeof item['Bussiness Vertical'] === 'string'
+            ) {
+              businessVerticals.push(item['Bussiness Vertical']);
+            }
+          }
+        });
+
+        // Get unique values and filter out empty ones
+        const uniqueVerticals = Array.from(new Set(businessVerticals));
+        return uniqueVerticals.filter(
+          vertical =>
+            vertical && typeof vertical === 'string' && vertical.trim() !== ''
+        );
+      } catch (error) {
+        console.error(
+          'Error processing business data in getDynamicVerticals:',
+          error
+        );
+        return [];
+      }
+    }
+
+    // Final fallback to empty array
+    return [];
   };
 
-  // Get dynamic filter values
-  const products = getDynamicProducts();
-  const insurers = getDynamicInsurers();
-  const lobs = getDynamicLobs();
-  const policyTypeOptions = getDynamicPolicyTypes();
-  const verticals = getDynamicVerticals();
+  const getDynamicDurations = () => {
+    return durations;
+  };
 
-  // Dynamic function to get filter options based on report type
-  // const getDynamicFilterOptionsForReportType = (reportType: string) => {
-  //   switch (reportType) {
-  //     case 'Revenue by Products':
-  //       return {
-  //         label: 'Products',
-  //         options: products,
-  //         description: 'Select products to analyze revenue performance',
-  //       };
-  //     case 'Revenue by Insurers':
-  //       return {
-  //         label: 'Insurers',
-  //         options: insurers,
-  //         description: 'Select insurers to analyze revenue performance',
-  //       };
-  //     case 'Revenue by Policy Type':
-  //       return {
-  //         label: 'Policy Types',
-  //         options: policyTypeOptions,
-  //         description: 'Select policy types to analyze revenue performance',
-  //       };
-  //     case 'Revenue by Vertical':
-  //       return {
-  //         label: 'Business Verticals',
-  //         options: verticals,
-  //         description:
-  //           'Select business verticals to analyze revenue performance',
-  //       };
-  //     case 'Revenue by LOB':
-  //       return {
-  //         label: 'Lines of Business',
-  //         options: lobs,
-  //         description: 'Select LOBs to analyze revenue performance',
-  //       };
-  //     case 'Retention - By Insurer':
-  //       return {
-  //         label: 'Insurers',
-  //         options: insurers,
-  //         description: 'Select insurers to analyze retention rates',
-  //       };
-  //     default:
-  //       return {
-  //         label: 'Options',
-  //         options: [],
-  //         description: 'No specific options available for this report type',
-  //       };
-  //   }
-  // };
+  const getDynamicRegions = () => {
+    return regions;
+  };
+
+  const getDynamicClientTypes = () => {
+    return ['Corporate', 'Retail', 'Affinity'];
+  };
+
+  // Get dynamic filter values using useMemo to prevent infinite re-renders
+  const products = useMemo(() => getDynamicProducts(), [importedData]);
+  const insurers = useMemo(() => getDynamicInsurers(), [importedData]);
+  const dynamicLobs = useMemo(() => {
+    console.log('🔍 dynamicLobs useMemo triggered');
+    console.log('🔍 businessData in useMemo:', businessData?.length);
+    const result = getDynamicLobs();
+    console.log('🔍 dynamicLobs useMemo result:', result);
+    return result;
+  }, [businessData]);
+  const dynamicPolicyTypes = useMemo(
+    () => getDynamicPolicyTypes(),
+    [businessData]
+  );
+  const dynamicVerticals = useMemo(() => getDynamicVerticals(), [businessData]);
+  const dynamicDurations = useMemo(() => getDynamicDurations(), [importedData]);
+  const dynamicRegions = useMemo(() => getDynamicRegions(), [importedData]);
+  const dynamicClientTypes = useMemo(
+    () => getDynamicClientTypes(),
+    [importedData]
+  );
+
+  // Removed commented-out getDynamicFilterOptionsForReportType function
 
   // Get department-aware filter items
   const getDepartmentAwareFilterItems = () => {
@@ -315,6 +539,13 @@ export function AdvancedFilters({
         currentValue: `${selectedRegions.length} selected`,
         category: 'Regional',
       },
+      {
+        id: 'clientTypes',
+        name: 'Client Types',
+        icon: Users,
+        currentValue: `${selectedClientTypes.length} selected`,
+        category: 'Business',
+      },
     ];
 
     // Add department-specific filters
@@ -323,43 +554,61 @@ export function AdvancedFilters({
         {
           id: 'products',
           name: 'Products',
-          icon: Building2,
-          currentValue: `${selectedProducts.length} selected`,
+          icon: Package,
+          currentValue:
+            selectedProducts.length > 0
+              ? selectedProducts.length <= 3
+                ? selectedProducts.join(', ')
+                : `${selectedProducts.slice(0, 2).join(', ')}, +${selectedProducts.length - 2} more`
+              : 'None selected',
           category: 'Business',
         },
         {
           id: 'insurers',
           name: 'Insurers',
           icon: Building2,
-          currentValue: `${selectedInsurers.length} selected`,
+          currentValue:
+            selectedInsurers.length > 0
+              ? selectedInsurers.length <= 3
+                ? selectedInsurers.join(', ')
+                : `${selectedInsurers.slice(0, 2).join(', ')}, +${selectedInsurers.length - 2} more`
+              : 'None selected',
+          category: 'Business',
+        },
+        {
+          id: 'policy',
+          name: 'Policy Type',
+          icon: FileText,
+          currentValue:
+            selectedPolicy.length > 0
+              ? selectedPolicy.length <= 3
+                ? selectedPolicy.join(', ')
+                : `${selectedPolicy.slice(0, 2).join(', ')}, +${selectedPolicy.length - 2} more`
+              : 'None selected',
           category: 'Business',
         },
         {
           id: 'lob',
-          name: 'LOB (Line of Business)',
-          icon: Target,
-          currentValue: `${selectedLobs.length} selected`,
-          category: 'Business',
-        },
-        {
-          id: 'policyType',
-          name: 'Policy Type',
-          icon: Building2,
-          currentValue: `${selectedPolicyTypes.length} selected`,
+          name: 'Line of Business',
+          icon: BarChart3,
+          currentValue:
+            selectedLob.length > 0
+              ? selectedLob.length <= 3
+                ? selectedLob.join(', ')
+                : `${selectedLob.slice(0, 2).join(', ')}, +${selectedLob.length - 2} more`
+              : 'None selected',
           category: 'Business',
         },
         {
           id: 'vertical',
-          name: 'Vertical Cross Cell Presentation',
-          icon: Monitor,
-          currentValue: `${selectedVerticals.length} selected`,
-          category: 'Business',
-        },
-        {
-          id: 'clientTypes',
-          name: 'Client Types',
-          icon: Users,
-          currentValue: `${selectedClientTypes.length} selected`,
+          name: 'Vertical',
+          icon: Layers,
+          currentValue:
+            selectedVertical.length > 0
+              ? selectedVertical.length <= 3
+                ? selectedVertical.join(', ')
+                : `${selectedVertical.slice(0, 2).join(', ')}, +${selectedVertical.length - 2} more`
+              : 'None selected',
           category: 'Business',
         }
       );
@@ -368,7 +617,7 @@ export function AdvancedFilters({
       if (selectedReportType === 'Retention - By Insurer') {
         baseFilterItems.push({
           id: 'insurers',
-          name: 'Insurers',
+          name: 'Retention By Insurers',
           icon: Building2,
           currentValue: `${selectedInsurers.length} selected`,
           category: 'Retention',
@@ -376,7 +625,7 @@ export function AdvancedFilters({
       } else if (selectedReportType === 'Retention - Broker') {
         baseFilterItems.push({
           id: 'brokers',
-          name: 'Brokers',
+          name: 'Retention By Brokers',
           icon: Building2,
           currentValue: `${selectedInsurers.length} selected`,
           category: 'Retention',
@@ -400,15 +649,37 @@ export function AdvancedFilters({
       dispatch(setSelectedReportType(newReportTypes[0] as ReportType));
     }
 
-    // Legacy callback removed - now using Redux state management
+    // Clear department-specific filters when department changes
+    dispatch(setSelectedProducts([]));
+    dispatch(setSelectedInsurers([]));
+    dispatch(setSelectedClientTypes([]));
   };
 
   const handleReportTypeChange = (value: string) => {
     dispatch(setSelectedReportType(value as ReportType));
+
+    // Clear specific filters when report type changes to ensure clean state
+    dispatch(setSelectedProducts([]));
+    dispatch(setSelectedInsurers([]));
   };
 
+  // Enhanced duration handler to support multi-select
   const handleDurationChange = (value: string) => {
-    dispatch(setSelectedDuration(value as DurationType));
+    const currentDurations = selectedDuration || [];
+
+    if (currentDurations.includes(value as DurationType)) {
+      // Remove if already selected (multi-select behavior)
+      const newDurations = currentDurations.filter(d => d !== value);
+      dispatch(
+        setSelectedDuration(
+          newDurations.length > 0 ? newDurations : [value as DurationType]
+        )
+      );
+    } else {
+      // Add to selection (multi-select behavior)
+      const newDurations = [...currentDurations, value as DurationType];
+      dispatch(setSelectedDuration(newDurations));
+    }
   };
 
   const togglePinItem = (itemId: string) => {
@@ -437,57 +708,21 @@ export function AdvancedFilters({
     }
   };
 
-  // const resetFilters = () => {
-  //   setDateRange('FY 2022-23');
-  //   setSelectedRegions(['Mumbai', 'Delhi', 'Bangalore']);
-  //   setSelectedStates(['Maharashtra', 'Delhi', 'Karnataka']);
-  //   setSelectedCities(['Mumbai', 'Delhi', 'Bangalore']);
-  //   setSelectedTeams(['Sales Team A', 'Sales Team B']);
-  //   setSelectedMembers(['All Members']);
-  //   setPerformanceRange([0, 100]);
-  //   setSelectedProducts(['Health Insurance', 'Motor Insurance']);
-  //   setSelectedInsurers(['ICICI Lombard', 'HDFC ERGO']);
-  //   setPolicyTypes(['Individual', 'Group']);
-  //   setBusinessVerticals(['Corporate', 'Retail']);
-  //   setSelectedLobs(['General Insurance']);
-  //   setSelectedPolicyTypes(['Individual']);
-  //   setSelectedVerticals(['Corporate']);
-  //   setClientTypes(['New', 'Existing']);
-  //   setRevenueRange([0, 10000000]);
-  //   setChartType('donut');
-  //   setShowPercentages(true);
-  //   setShowLegend(true);
-  //   setAnimateCharts(true);
-  //   setColorScheme('professional');
-  //   setRefreshInterval('manual');
-  //   setEnableNotifications(true);
-  //   setAutoSave(false);
-  //   setExportFormat('xlsx');
-  // };
+  // Removed commented-out resetFilters function
 
   const saveConfiguration = () => {
     // Save both filter settings and pinned items configuration
     const configuration = {
       pinnedItems,
-      dateRange,
       selectedRegions,
       selectedStates,
       selectedCities,
       selectedTeams,
-      selectedMembers,
-      performanceRange,
       selectedProducts,
       selectedInsurers,
-      policyTypes,
-      businessVerticals,
-      selectedLobs,
-      selectedPolicyTypes,
-      selectedVerticals,
       clientTypes: CLIENT_TYPES,
-      revenueRange,
     };
 
-    console.log('Saving configuration...', configuration);
     // Implementation for saving configuration to localStorage or API
     localStorage.setItem(
       'dashboardConfiguration',
@@ -496,6 +731,70 @@ export function AdvancedFilters({
 
     // Show success message
     alert('Dashboard configuration saved successfully!');
+  };
+
+  // Business Data Filtering Handlers
+  const handleBusinessDataFilterChange = (
+    filterType: keyof typeof businessDataFilters,
+    value: string
+  ) => {
+    const currentValues = businessDataFilters[filterType] || [];
+    let newValues: string[];
+
+    if (currentValues.includes(value)) {
+      // Remove if already selected
+      newValues = currentValues.filter(v => v !== value);
+    } else {
+      // Add to selection
+      newValues = [...currentValues, value];
+    }
+
+    dispatch(updateBusinessDataFilter({ filterType, values: newValues }));
+  };
+
+  const handleBusinessDataFilterSelectAll = (
+    filterType: keyof typeof businessDataFilters
+  ) => {
+    let allOptions: string[] = [];
+
+    switch (filterType) {
+      case 'durations':
+        allOptions = businessFilterOptions.durations;
+        break;
+      case 'regions':
+        allOptions = businessFilterOptions.regions;
+        break;
+      case 'clientTypes':
+        allOptions = businessFilterOptions.clientTypes;
+        break;
+      case 'products':
+        allOptions = businessFilterOptions.products;
+        break;
+      case 'insurers':
+        allOptions = businessFilterOptions.insurers;
+        break;
+      case 'policyTypes':
+        allOptions = businessFilterOptions.policyTypes;
+        break;
+      case 'lobs':
+        allOptions = businessFilterOptions.lobs;
+        break;
+      case 'businessVerticals':
+        allOptions = businessFilterOptions.businessVerticals;
+        break;
+    }
+
+    dispatch(updateBusinessDataFilter({ filterType, values: allOptions }));
+  };
+
+  const handleBusinessDataFilterClearAll = (
+    filterType: keyof typeof businessDataFilters
+  ) => {
+    dispatch(updateBusinessDataFilter({ filterType, values: [] }));
+  };
+
+  const clearAllBusinessDataFilters = () => {
+    dispatch(clearBusinessDataFilters());
   };
 
   // Load configuration on mount
@@ -509,17 +808,11 @@ export function AdvancedFilters({
           onPinnedItemsChange(configuration.pinnedItems);
         }
         // Load other settings
-        if (configuration.dateRange) setDateRange(configuration.dateRange);
+        // if (configuration.dateRange) setDateRange(configuration.dateRange); // dateRange state was removed
         if (configuration.selectedRegions)
           dispatch(setSelectedRegions(configuration.selectedRegions));
         if (configuration.selectedStates)
           dispatch(setSelectedStates(configuration.selectedStates));
-        if (configuration.selectedLobs)
-          dispatch(setSelectedLobs(configuration.selectedLobs));
-        if (configuration.selectedPolicyTypes)
-          dispatch(setSelectedPolicyTypes(configuration.selectedPolicyTypes));
-        if (configuration.selectedVerticals)
-          dispatch(setSelectedVerticals(configuration.selectedVerticals));
         // if (configuration.chartType) setChartType(configuration.chartType);
         // ... load other settings as needed
       } catch (error) {
@@ -530,45 +823,50 @@ export function AdvancedFilters({
 
   // Auto-select all available items when department or report type changes
   useEffect(() => {
+    console.log(
+      '🔍 useEffect triggered - selectedDepartment:',
+      selectedDepartment
+    );
+    console.log('🔍 dynamicLobs length:', dynamicLobs.length);
+    console.log('🔍 dynamicLobs values:', dynamicLobs);
+    console.log('🔍 current selectedLob:', selectedLob);
+
     // Handle Business department filters
     if (selectedDepartment === 'Business') {
       // Auto-select all products when Business department is selected and products are available
       if (products.length > 0) {
         dispatch(setSelectedProducts([...products]));
       }
-
-      // Auto-select all LOBs when Business department is selected and LOBs are available
-      if (lobs.length > 0) {
-        dispatch(setSelectedLobs([...lobs]));
+      // Auto-select all LOBs for Business department
+      if (dynamicLobs.length > 0) {
+        console.log('🚀 Setting selectedLob to all dynamicLobs:', dynamicLobs);
+        dispatch(setSelectedLob([...dynamicLobs]));
       }
-
-      // Auto-select all policy types when Business department is selected and policy types are available
-      if (policyTypeOptions.length > 0) {
-        dispatch(setSelectedPolicyTypes([...policyTypeOptions]));
+      // Auto-select all policy types for Business department
+      if (dynamicPolicyTypes.length > 0) {
+        dispatch(setSelectedPolicy([...dynamicPolicyTypes]));
       }
-
-      // Auto-select all verticals when Business department is selected and verticals are available
-      if (verticals.length > 0) {
-        dispatch(setSelectedVerticals([...verticals]));
+      // Auto-select all verticals for Business department
+      if (dynamicVerticals.length > 0) {
+        dispatch(setSelectedVertical([...dynamicVerticals]));
       }
-
       // Auto-select all client types for Business department
-      if (CLIENT_TYPES.length > 0) {
-        dispatch(setSelectedClientTypes([...CLIENT_TYPES]));
+      if (dynamicClientTypes.length > 0) {
+        dispatch(setSelectedClientTypes([...dynamicClientTypes]));
       }
     } else {
       // Clear Business-specific filters when not in Business department
       dispatch(setSelectedProducts([]));
-      dispatch(setSelectedLobs([]));
-      dispatch(setSelectedPolicyTypes([]));
-      dispatch(setSelectedVerticals([]));
+      dispatch(setSelectedLob([]));
+      dispatch(setSelectedPolicy([]));
+      dispatch(setSelectedVertical([]));
     }
 
     // Handle Retention department filters
     if (selectedDepartment === 'Retention') {
       // Auto-select all client types for Retention department
-      if (CLIENT_TYPES.length > 0) {
-        dispatch(setSelectedClientTypes([...CLIENT_TYPES]));
+      if (dynamicClientTypes.length > 0) {
+        dispatch(setSelectedClientTypes([...dynamicClientTypes]));
       }
     } else if (selectedDepartment !== 'Business') {
       // Clear client types for departments other than Business and Retention
@@ -587,8 +885,8 @@ export function AdvancedFilters({
     }
 
     // Auto-select all regions (available for all departments)
-    if (regions.length > 0) {
-      dispatch(setSelectedRegions([...regions]));
+    if (dynamicRegions.length > 0) {
+      dispatch(setSelectedRegions([...dynamicRegions]));
     }
 
     // Auto-select all states (using regions data as they appear to be the same)
@@ -608,7 +906,18 @@ export function AdvancedFilters({
     if (teams.length > 0) {
       dispatch(setSelectedTeams([...teams]));
     }
-  }, [selectedDepartment, selectedReportType]);
+  }, [
+    selectedDepartment,
+    selectedReportType,
+    products,
+    insurers,
+    dynamicLobs,
+    dynamicPolicyTypes,
+    dynamicVerticals,
+    dynamicDurations,
+    dynamicRegions,
+    dynamicClientTypes,
+  ]);
 
   // Group filter items by category
   const filtersByCategory = allFilterItems.reduce(
@@ -649,6 +958,15 @@ export function AdvancedFilters({
               >
                 <Save className="w-4 h-4 text-green-600" />
                 Save
+              </Button>
+
+              <Button
+                variant={isBusinessDataFilterActive ? 'default' : 'outline'}
+                onClick={() => dispatch(toggleBusinessDataFilter())}
+                className="text-xs"
+              >
+                <Filter className="w-4 h-4" />
+                Excel Filters
               </Button>
             </div>
           </div>
@@ -743,12 +1061,14 @@ export function AdvancedFilters({
                           case 'reportType':
                             return reportTypes;
                           case 'duration':
-                            return durations;
+                            // Dynamic durations based on imported data or default data
+                            return getDynamicDurations();
 
                           case 'teams':
                             return teams;
                           case 'regions':
-                            return regions;
+                            // Dynamic regions based on imported data or default data
+                            return getDynamicRegions();
                           case 'products':
                             // Dynamic products based on imported data or default data
                             return getDynamicProducts();
@@ -758,18 +1078,18 @@ export function AdvancedFilters({
                           case 'brokers':
                             // Dynamic brokers for retention data
                             return getDynamicInsurers();
-                          case 'lob':
-                            // Dynamic LOBs
-                            return getDynamicLobs();
-                          case 'policyType':
-                            // Dynamic policy types
-                            return getDynamicPolicyTypes();
-                          case 'vertical':
-                            // Dynamic verticals
-                            return getDynamicVerticals();
                           case 'clientTypes':
-                            // Client types for Business and Retention departments
-                            return ['Corporate', 'Retail', 'Affinity'];
+                            // Dynamic client types based on imported data or default data
+                            return getDynamicClientTypes();
+                          case 'policy':
+                            // Dynamic policy types based on business data
+                            return getDynamicPolicyTypes();
+                          case 'lob':
+                            // Dynamic LOBs based on business data
+                            return getDynamicLobs();
+                          case 'vertical':
+                            // Dynamic verticals based on business data
+                            return getDynamicVerticals();
                           default:
                             return [];
                         }
@@ -798,14 +1118,14 @@ export function AdvancedFilters({
                             return selectedInsurers;
                           case 'brokers':
                             return selectedInsurers;
-                          case 'lob':
-                            return selectedLobs;
-                          case 'policyType':
-                            return selectedPolicyTypes;
-                          case 'vertical':
-                            return selectedVerticals;
                           case 'clientTypes':
                             return selectedClientTypes;
+                          case 'policy':
+                            return selectedPolicy;
+                          case 'lob':
+                            return selectedLob;
+                          case 'vertical':
+                            return selectedVertical;
                           default:
                             return '';
                         }
@@ -813,19 +1133,29 @@ export function AdvancedFilters({
 
                       const isMultiSelect = (filterId: string) => {
                         return [
+                          'duration', // Now supporting multi-select for duration
                           'teams',
                           'regions',
                           'products',
                           'insurers',
-                          'lob',
-                          'policyType',
-                          'vertical',
                           'clientTypes',
+                          'policy',
+                          'lob',
+                          'vertical',
                         ].includes(filterId);
                       };
 
                       const filterOptions = getFilterOptions(item.id);
                       const currentSelection = getCurrentSelection(item.id);
+
+                      // Add debugging for LOB specifically
+                      if (item.id === 'lob') {
+                        console.log('🔍 LOB filter rendering:');
+                        console.log('🔍 filterOptions:', filterOptions);
+                        console.log('🔍 currentSelection:', currentSelection);
+                        console.log('🔍 selectedLob from Redux:', selectedLob);
+                        console.log('🔍 dynamicLobs:', dynamicLobs);
+                      }
 
                       return (
                         <div
@@ -1015,54 +1345,6 @@ export function AdvancedFilters({
                                                   )
                                                 );
                                                 break;
-                                              case 'lob':
-                                                dispatch(
-                                                  setSelectedLobs(
-                                                    selectedLobs.includes(
-                                                      option
-                                                    )
-                                                      ? selectedLobs.filter(
-                                                          l => l !== option
-                                                        )
-                                                      : [
-                                                          ...selectedLobs,
-                                                          option,
-                                                        ]
-                                                  )
-                                                );
-                                                break;
-                                              case 'policyType':
-                                                dispatch(
-                                                  setSelectedPolicyTypes(
-                                                    selectedPolicyTypes.includes(
-                                                      option
-                                                    )
-                                                      ? selectedPolicyTypes.filter(
-                                                          p => p !== option
-                                                        )
-                                                      : [
-                                                          ...selectedPolicyTypes,
-                                                          option,
-                                                        ]
-                                                  )
-                                                );
-                                                break;
-                                              case 'vertical':
-                                                dispatch(
-                                                  setSelectedVerticals(
-                                                    selectedVerticals.includes(
-                                                      option
-                                                    )
-                                                      ? selectedVerticals.filter(
-                                                          v => v !== option
-                                                        )
-                                                      : [
-                                                          ...selectedVerticals,
-                                                          option,
-                                                        ]
-                                                  )
-                                                );
-                                                break;
                                               case 'clientTypes':
                                                 dispatch(
                                                   setSelectedClientTypes(
@@ -1079,6 +1361,49 @@ export function AdvancedFilters({
                                                   )
                                                 );
                                                 break;
+                                              case 'policy':
+                                                dispatch(
+                                                  setSelectedPolicy(
+                                                    selectedPolicy.includes(
+                                                      option
+                                                    )
+                                                      ? selectedPolicy.filter(
+                                                          p => p !== option
+                                                        )
+                                                      : [
+                                                          ...selectedPolicy,
+                                                          option,
+                                                        ]
+                                                  )
+                                                );
+                                                break;
+                                              case 'lob':
+                                                dispatch(
+                                                  setSelectedLob(
+                                                    selectedLob.includes(option)
+                                                      ? selectedLob.filter(
+                                                          l => l !== option
+                                                        )
+                                                      : [...selectedLob, option]
+                                                  )
+                                                );
+                                                break;
+                                              case 'vertical':
+                                                dispatch(
+                                                  setSelectedVertical(
+                                                    selectedVertical.includes(
+                                                      option
+                                                    )
+                                                      ? selectedVertical.filter(
+                                                          v => v !== option
+                                                        )
+                                                      : [
+                                                          ...selectedVertical,
+                                                          option,
+                                                        ]
+                                                  )
+                                                );
+                                                break;
                                             }
                                           } else {
                                             // Handle single-select filters by dispatching Redux actions
@@ -1090,6 +1415,7 @@ export function AdvancedFilters({
                                                 handleReportTypeChange(option);
                                                 break;
                                               case 'duration':
+                                                // Duration now supports multi-select
                                                 handleDurationChange(option);
                                                 break;
                                             }
@@ -1139,31 +1465,33 @@ export function AdvancedFilters({
                                               setSelectedInsurers([...insurers])
                                             );
                                             break;
-                                          case 'lob':
-                                            dispatch(
-                                              setSelectedLobs([...lobs])
-                                            );
-                                            break;
-                                          case 'policyType':
-                                            dispatch(
-                                              setSelectedPolicyTypes([
-                                                ...policyTypeOptions,
-                                              ])
-                                            );
-                                            break;
-                                          case 'vertical':
-                                            dispatch(
-                                              setSelectedVerticals([
-                                                ...verticals,
-                                              ])
-                                            );
-                                            break;
                                           case 'clientTypes':
                                             dispatch(
                                               setSelectedClientTypes([
                                                 'Corporate',
                                                 'Retail',
                                                 'Affinity',
+                                              ])
+                                            );
+                                            break;
+                                          case 'policy':
+                                            dispatch(
+                                              setSelectedPolicy([
+                                                ...getDynamicPolicyTypes(),
+                                              ])
+                                            );
+                                            break;
+                                          case 'lob':
+                                            dispatch(
+                                              setSelectedLob([
+                                                ...getDynamicLobs(),
+                                              ])
+                                            );
+                                            break;
+                                          case 'vertical':
+                                            dispatch(
+                                              setSelectedVertical([
+                                                ...getDynamicVerticals(),
                                               ])
                                             );
                                             break;
@@ -1194,21 +1522,19 @@ export function AdvancedFilters({
                                           case 'brokers':
                                             dispatch(setSelectedInsurers([]));
                                             break;
-                                          case 'lob':
-                                            dispatch(setSelectedLobs([]));
-                                            break;
-                                          case 'policyType':
-                                            dispatch(
-                                              setSelectedPolicyTypes([])
-                                            );
-                                            break;
-                                          case 'vertical':
-                                            dispatch(setSelectedVerticals([]));
-                                            break;
                                           case 'clientTypes':
                                             dispatch(
                                               setSelectedClientTypes([])
                                             );
+                                            break;
+                                          case 'policy':
+                                            dispatch(setSelectedPolicy([]));
+                                            break;
+                                          case 'lob':
+                                            dispatch(setSelectedLob([]));
+                                            break;
+                                          case 'vertical':
+                                            dispatch(setSelectedVertical([]));
                                             break;
                                         }
                                       }}
@@ -1227,6 +1553,151 @@ export function AdvancedFilters({
                 </div>
               ))}
             </div>
+
+            {/* Business Data Filters Section */}
+            {isBusinessDataFilterActive && (
+              <Card className="p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-blue-600" />
+                    Excel-Style Business Data Filters
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearAllBusinessDataFilters}
+                    className="text-xs"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {Object.entries(businessFilterOptions).map(
+                    ([filterType, options]) => {
+                      if (!options || options.length === 0) return null;
+
+                      const currentSelection =
+                        businessDataFilters[
+                          filterType as keyof typeof businessDataFilters
+                        ] || [];
+                      const isExpanded = true; // You can add state to control expansion
+
+                      return (
+                        <div
+                          key={filterType}
+                          className="border border-gray-100 rounded-lg"
+                        >
+                          <div className="p-3 bg-gray-50 border-b border-gray-100">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-medium text-gray-700 capitalize flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                {filterType.replace(/([A-Z])/g, ' $1').trim()}
+                                <span className="text-gray-500">
+                                  ({currentSelection.length}/{options.length})
+                                </span>
+                              </h4>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  onClick={() =>
+                                    handleBusinessDataFilterSelectAll(
+                                      filterType as keyof typeof businessDataFilters
+                                    )
+                                  }
+                                >
+                                  Select All
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                  onClick={() =>
+                                    handleBusinessDataFilterClearAll(
+                                      filterType as keyof typeof businessDataFilters
+                                    )
+                                  }
+                                >
+                                  Clear All
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="p-3">
+                              <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+                                {options.map(option => (
+                                  <label
+                                    key={option}
+                                    className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={currentSelection.includes(
+                                        option
+                                      )}
+                                      onChange={() =>
+                                        handleBusinessDataFilterChange(
+                                          filterType as keyof typeof businessDataFilters,
+                                          option
+                                        )
+                                      }
+                                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-700 flex-1">
+                                      {option}
+                                    </span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+
+                {Object.keys(businessDataFilters).some(
+                  key =>
+                    businessDataFilters[key as keyof typeof businessDataFilters]
+                      ?.length > 0
+                ) && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h5 className="text-xs font-medium text-blue-800 mb-2">
+                      Active Filters:
+                    </h5>
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(businessDataFilters).map(
+                        ([filterType, values]) =>
+                          values?.map(value => (
+                            <span
+                              key={`${filterType}-${value}`}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                            >
+                              {filterType}: {value}
+                              <button
+                                onClick={() =>
+                                  handleBusinessDataFilterChange(
+                                    filterType as keyof typeof businessDataFilters,
+                                    value
+                                  )
+                                }
+                                className="ml-1 text-blue-600 hover:text-blue-800"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
           </Card>
         </div>
       </SheetContent>

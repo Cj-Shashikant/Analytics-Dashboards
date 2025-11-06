@@ -106,7 +106,7 @@ export function ChartsSection({
 
   // Client types filter for Retention by Broker - using Redux state
   const selectedClientTypes = filterState.selectedClientTypes;
-  
+
   // Products filter for Retention by Broker - using Redux state
   const selectedProducts = filterState.selectedProducts;
 
@@ -178,9 +178,7 @@ export function ChartsSection({
     if (selectedReportType === 'Revenue by Products') {
       // First filter by selected products (if any are selected)
       if (selectedProducts.length > 0) {
-        data = data.filter((item: any) => 
-          selectedProducts.includes(item.name)
-        );
+        data = data.filter((item: any) => selectedProducts.includes(item.name));
       }
 
       // Then apply client type filtering

@@ -111,7 +111,7 @@ export function ChartsSection({
 
   // Client types filter for Retention by Insurer - using Redux state
   const selectedClientTypes = filterState.selectedClientTypes;
-  
+
   // Products filter for Retention by Insurer - using Redux state
   const selectedProducts = filterState.selectedProducts;
 
@@ -183,7 +183,7 @@ export function ChartsSection({
     if (selectedReportType === 'Revenue by Products') {
       // First filter by selected products if any are selected
       if (selectedProducts && selectedProducts.length > 0) {
-        data = data.filter((item: RetentionDataItem) => 
+        data = data.filter((item: RetentionDataItem) =>
           selectedProducts.includes(item.name)
         );
       }
@@ -191,14 +191,18 @@ export function ChartsSection({
       return data.map((item: RetentionDataItem) => {
         // If item has clientTypes, use filtered value, otherwise use premiumRevenue
         let finalValue = (item as any).premiumRevenue || item.value;
-        
+
         if (item?.clientTypes) {
-          const filteredValue = selectedClientTypes.reduce((sum, clientType) => {
-            const clientTypeValue =
-              item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
-              0;
-            return sum + clientTypeValue;
-          }, 0);
+          const filteredValue = selectedClientTypes.reduce(
+            (sum, clientType) => {
+              const clientTypeValue =
+                item.clientTypes?.[
+                  clientType as keyof typeof item.clientTypes
+                ] || 0;
+              return sum + clientTypeValue;
+            },
+            0
+          );
           finalValue = filteredValue;
         }
 

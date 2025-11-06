@@ -37,11 +37,10 @@ export const getChartSubtitle = (
   topFilter: string
 ) => {
   const typeMap: Record<string, string> = {
-    'Revenue by Vertical': 'business verticals',
+    'Revenue by Products': 'products',
     'Revenue by LOB': 'lines of business',
     'Revenue by Policy Type': 'policy types',
     'Revenue by Insurers': 'insurance partners',
-    'Revenue by Products': 'product categories',
     'Cross-Sell Penetration': 'cross-sell combinations',
   };
 

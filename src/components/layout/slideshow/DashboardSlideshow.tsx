@@ -37,10 +37,10 @@ const SLIDESHOW_SEQUENCE = [
     department: 'Business' as DepartmentType,
     reportType: 'Revenue by LOB' as ReportType,
   },
-  {
-    department: 'Business' as DepartmentType,
-    reportType: 'Cross-Sell Penetration' as ReportType,
-  },
+  // {
+  //   department: 'Business' as DepartmentType,
+  //   reportType: 'Cross-Sell Penetration' as ReportType, // COMMENTED OUT - Cross-sell functionality disabled
+  // },
 
   // Department: Retention (2 pages)
   {
@@ -52,7 +52,7 @@ const SLIDESHOW_SEQUENCE = [
     reportType: 'Retention - Broker' as ReportType,
   },
 
-  // Department: Customer Analysis (5 pages)
+  // Department: Customer Analysis (4 pages - reduced from 5)
   {
     department: 'Customer Analysis' as DepartmentType,
     reportType: 'Duration of Relationship' as ReportType,
@@ -69,10 +69,10 @@ const SLIDESHOW_SEQUENCE = [
     department: 'Customer Analysis' as DepartmentType,
     reportType: 'Customer Satisfaction / NPS' as ReportType,
   },
-  {
-    department: 'Customer Analysis' as DepartmentType,
-    reportType: 'Cross-Sell / Upsell Potential' as ReportType,
-  },
+  // {
+  //   department: 'Customer Analysis' as DepartmentType,
+  //   reportType: 'Cross-Sell / Upsell Potential' as ReportType, // COMMENTED OUT - Cross-sell functionality disabled
+  // },
 ];
 
 interface DashboardSlideshowProps {
@@ -89,10 +89,10 @@ export function DashboardSlideshow({
     state => state.filter
   );
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [countdown, setCountdown] = useState(defaultInterval);
-  const [intervalDuration, setIntervalDuration] = useState(defaultInterval);
+  const [, setCountdown] = useState(defaultInterval);
+  const [intervalDuration] = useState(defaultInterval);
 
   // const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -214,7 +214,6 @@ export function DashboardSlideshow({
       </div>
 
       {/* Progress Indicator */}
-
     </>
   );
 }

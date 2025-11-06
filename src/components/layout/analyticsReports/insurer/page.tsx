@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useAppDispatch } from '../../../../hooks/hooks';
 import { RootState } from '../../../../redux/store';
+import { selectDataForReportType } from '../../../../redux/slices/importedDataSlice';
+import { selectBaseMetrics } from '../../../../redux/slices/analyticsDataSlice';
+import { selectFilteredBusinessData } from '../../../../redux/slices/filterSlice';
 import {
-  selectInsurers,
-  selectBaseMetrics,
-} from '../../../../redux/slices/analyticsDataSlice';
-import {
-  selectIsDataImported,
-  selectImportedBaseMetrics,
-  selectAllImportedData,
-} from '../../../../redux/slices/importedDataSlice';
+  loadDataForReportType,
+  loadTotalsFromJson,
+  hasDataForReportType,
+} from '../../../../utils/dashboardDataLoader';
 import { Card } from '@/components/ui/card';
 import {
   chartDimensions,
@@ -19,6 +17,7 @@ import {
   commonStyles,
 } from './style';
 import { getFormattedValue } from '@/utils/valueFormatter';
+import { BusinessDataItem } from '../../../../redux/slices/businessData';
 
 import {
   Select,
@@ -64,117 +63,66 @@ interface ChartsSectionProps {
 
 export function ChartsSection({
   valueUnit: propValueUnit,
-  selectedReportType = 'Revenue by Insurers',
+  selectedReportType = 'Revenue by Products',
   chartType,
   baseMetricsData,
   autoZoomActive = false,
   currentFocusedElement = 0,
   onTotalElementsChange,
 }: ChartsSectionProps) {
-  // Redux hooks
-  const dispatch = useAppDispatch();
   const filterState = useSelector((state: RootState) => state.filter);
+  const filteredBusinessData = useSelector(selectFilteredBusinessData);
 
   // Import handler function
   const handleImport = async () => {
-    // Create a file input element for importing Excel files
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.xlsx,.xls,.csv';
-    fileInput.style.display = 'none';
-
-    fileInput.onchange = async (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      const file = target.files?.[0];
-
-      if (file) {
-        try {
-          console.log('File selected for import:', file.name);
-
-          // Import and parse the Excel file
-          const { parseExcelFile } = await import(
-            '../../../../utils/excelParser'
-          );
-          const parsedData = await parseExcelFile(file);
-
-          // Import Redux action
-          const { setImportedData } = await import(
-            '../../../../redux/slices/importedDataSlice'
-          );
-
-          // Dispatch the parsed data to Redux store
-          dispatch(
-            setImportedData({
-              fileName: file.name,
-              data: parsedData,
-            })
-          );
-
-          console.log('Data imported successfully:', parsedData);
-
-          // Show success message
-          alert(
-            `File "${file.name}" imported successfully!\n\n` +
-              `Data Summary:\n` +
-              `• Total Revenue: ₹${(parsedData.totalRevenue / 10000000).toFixed(2)} Cr\n` +
-              `• Products: ${parsedData.productData.length} items\n` +
-              `• Insurers: ${parsedData.insurerData.length} items\n` +
-              `• Locations: ${parsedData.locationPerformance.length} items\n` +
-              `• Monthly Data: ${parsedData.monthlyTrends.length} months\n\n` +
-              ` Dashboard data has been updated with imported values.`
-          );
-        } catch (error) {
-          console.error('Error importing file:', error);
-          alert(
-            `Error importing file: ${error}\n\n` +
-              `Please ensure the Excel file has the correct format with these sheets:\n` +
-              `• Main Metrics\n• Product Data\n• Insurer Data\n• Location Performance\n• Monthly Trends`
-          );
-        }
-      }
-    };
-
-    // Trigger the file selection dialog
-    document.body.appendChild(fileInput);
-    fileInput.click();
-    document.body.removeChild(fileInput);
-
-    console.log('Import dialog opened');
+    console.log('Import button clicked for Product report');
+    try {
+      const { triggerExcelImport } = await import(
+        '../../../../utils/dynamicImportHandler'
+      );
+      await triggerExcelImport();
+      alert(
+        `Excel import functionality triggered for "${selectedReportType}" report type.\n\n` +
+          `Please select an Excel file to import product data.\n\n` +
+          `Dashboard data will be updated with imported values.`
+      );
+    } catch (error) {
+      console.error('Error during Product import:', error);
+      alert(
+        `Error importing file: ${error}\n\n` +
+          `Please try again or check the file format.`
+      );
+    }
   };
-
-  // Use valueUnit from Redux state, fallback to prop if needed
   const valueUnit = filterState.valueUnit || propValueUnit || 'K';
-
-  // Chart type switching capability
   const [chartTypeState, setChartTypeState] = useState<ChartType>('donut');
-
-  // Top filter for all report types
   const [topFilter, setTopFilter] = useState<string>('Top 10');
-
-  // Automatic chart switching: Convert donut to bar when Top > 15 is selected
   useEffect(() => {
     const topCount = parseInt(topFilter.replace('Top ', ''));
     if (topCount > 15 && chartTypeState === 'donut') {
       setChartTypeState('bar');
     }
   }, [topFilter, chartTypeState]);
-
-  // Client types filter for Revenue by Insurer - using Redux state
   const selectedClientTypes = filterState.selectedClientTypes;
-  
-  // Products filter for Revenue by Insurer - using Redux state
   const selectedProducts = filterState.selectedProducts;
 
-  // Force re-render when filter state changes
-  useEffect(() => {
-    // This effect ensures the component re-renders when filter state changes
-  }, [selectedProducts, selectedClientTypes]);
+  // Additional filters - using Redux state
+  const selectedInsurers = filterState.selectedInsurers;
+  const selectedLobs = filterState.selectedLob;
+  const selectedPolicyTypes = filterState.selectedPolicy;
+  const selectedVerticals = filterState.selectedVertical;
 
-  // Item details panel state
+  useEffect(() => {}, [
+    selectedProducts,
+    selectedClientTypes,
+    selectedInsurers,
+    selectedLobs,
+    selectedPolicyTypes,
+    selectedVerticals,
+  ]);
+
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isItemDetailsOpen, setIsItemDetailsOpen] = useState(false);
-
-  // Handle close panel
   const handleClosePanel = () => {
     setIsItemDetailsOpen(false);
     setSelectedItem(null);
@@ -182,7 +130,6 @@ export function ChartsSection({
 
   // Local value formatting functions using the utility
   const getFormattedValueLocal = (value: number) => {
-    // For Cross-Sell Penetration, show customer counts instead of revenue
     if (selectedReportType === 'Cross-Sell Penetration') {
       return value.toLocaleString('en-IN');
     }
@@ -193,6 +140,20 @@ export function ChartsSection({
   const baseMetricsFromSelector = useSelector(selectBaseMetrics);
 
   const getMetricsData = () => {
+    // Try to get totals from JSON data first
+    if (hasDataForReportType(selectedReportType)) {
+      const jsonTotals = loadTotalsFromJson();
+      if (jsonTotals) {
+        console.log('Loading Insurer totals from JSON:', jsonTotals);
+        return {
+          totalRevenue: jsonTotals.totalRevenue || 0,
+          expenses: jsonTotals.totalExpenses || 0,
+          grossProfit:
+            (jsonTotals.totalRevenue || 0) - (jsonTotals.totalExpenses || 0),
+        };
+      }
+    }
+
     if (baseMetricsData) {
       return baseMetricsData;
     }
@@ -223,42 +184,86 @@ export function ChartsSection({
 
   const metricsData = getMetricsData();
 
-  // Get data based on whether imported data is available
-  const isDataImported = useSelector(selectIsDataImported);
-  const importedData = useSelector(selectAllImportedData);
-  const importedBaseMetrics = useSelector(selectImportedBaseMetrics);
-  
-  const defaultInsurerData = useSelector(selectInsurers);
+  // Transform businessData to Insurer format
+  const transformBusinessDataToInsurers = () => {
+    // Group by Insurer and aggregate data
+    const insurerGroups = filteredBusinessData.reduce(
+      (acc: any, item: BusinessDataItem) => {
+        const insurerName = item['Insurer name'];
+        if (!acc[insurerName]) {
+          acc[insurerName] = {
+            name: insurerName,
+            totalPolicies: 0,
+            totalPremium: 0,
+            totalRevenue: 0,
+            items: [],
+            color: item.Color,
+          };
+        }
 
-  // Transform imported insurerData to match expected format
-  const transformImportedInsurerData = (insurerData: any[]) => {
-    if (!insurerData || insurerData.length === 0) {
-      return [];
-    }
-    
-    return insurerData.map((item, index) => ({
-      id: item.name.toLowerCase().replace(/\s+/g, '-'),
-      name: item.name,
-      value: item.revenue || 0,
-      premiumRevenue: item.revenue || 0,
-      percentage: item.percentage || item.revenuePercentage || 0,
-      policies: item.policies || 0,
-      premium: item.premium || 0,
-      retention: item.retention || 85, // Default retention if not provided
-      color: item.color || `hsl(${(index * 137.5) % 360}, 70%, 50%)`,
-      revenuePercentage: item.revenuePercentage || item.percentage || 0,
+        acc[insurerName].totalPolicies += item['No.of Policies'];
+        acc[insurerName].totalPremium += item.Premium;
+        acc[insurerName].totalRevenue += item.Revenue;
+        acc[insurerName].items.push(item);
+
+        return acc;
+      },
+      {}
+    );
+
+    // Convert to array format expected by the component
+    return Object.values(insurerGroups).map((group: any, index: number) => ({
+      id: group.name
+        ? group.name.toLowerCase().replace(/\s+/g, '-')
+        : `insurer-${index}`,
+      name: group.name,
+      value: group.totalRevenue,
+      premiumRevenue: group.totalRevenue,
+      percentage:
+        (group.totalRevenue /
+          filteredBusinessData.reduce((sum, item) => sum + item.Revenue, 0)) *
+        100,
+      policies: group.totalPolicies,
+      premium: group.totalPremium,
+      revenue: group.totalRevenue,
+      color: group.color || `hsl(${(index * 137.5) % 360}, 70%, 50%)`,
+      revenuePercentage:
+        (group.totalRevenue /
+          filteredBusinessData.reduce((sum, item) => sum + item.Revenue, 0)) *
+        100,
     }));
   };
 
-  // Use imported data if available, otherwise use default data
-  const insurerData = isDataImported && importedData?.insurerData 
-    ? transformImportedInsurerData(importedData.insurerData)
-    : defaultInsurerData;
+  // Get data - Try JSON data first, then fallback to Redux
+  const productData = useSelector(selectDataForReportType(selectedReportType));
 
   const getReportData = () => {
-    return insurerData || [];
-  }; 
-  
+    // Check if we have JSON data for this report type
+    if (hasDataForReportType(selectedReportType)) {
+      const jsonData = loadDataForReportType(selectedReportType);
+      console.log('Loading Insurer data from JSON:', jsonData);
+
+      // Transform JSON data to match expected format
+      return jsonData.map((item: any) => ({
+        name: item.name,
+        value: item.revenue,
+        premiumRevenue: item.revenue,
+        policies: item.policies,
+        premium: item.premium,
+        revenue: item.revenue,
+        revenuePercentage: 0, // Calculate if needed
+      }));
+    }
+
+    // Fallback to Redux data if available
+    if (productData && productData.length > 0) {
+      return productData;
+    }
+
+    // Use business data as default (Insurers)
+    return transformBusinessDataToInsurers();
+  };
+
   // Filter data based on selected client types and products (only for Revenue by Insurers)
   const getFilteredData = () => {
     let data = getReportData();
@@ -266,37 +271,62 @@ export function ChartsSection({
     if (selectedReportType === 'Revenue by Insurers') {
       // First filter by selected products (if any are selected)
       if (selectedProducts.length > 0) {
-        data = data.filter((item: any) => 
-          selectedProducts.includes(item.name)
-        );
+        data = data.filter((item: any) => selectedProducts.includes(item.name));
+      }
+
+      // Filter by selected insurers (if any are selected)
+      if (selectedInsurers.length > 0) {
+        data = data.filter((item: any) => {
+          return item.name ? selectedInsurers.includes(item.name) : true;
+        });
+      }
+
+      // Filter by selected LOBs (if any are selected)
+      if (selectedLobs.length > 0) {
+        data = data.filter((item: any) => {
+          return item.lobName ? selectedLobs.includes(item.lobName) : true;
+        });
+      }
+
+      // Filter by selected policy types (if any are selected)
+      if (selectedPolicyTypes.length > 0) {
+        data = data.filter((item: any) => {
+          return item.policyType
+            ? selectedPolicyTypes.includes(item.policyType)
+            : true;
+        });
+      }
+
+      // Filter by selected verticals (if any are selected)
+      if (selectedVerticals.length > 0) {
+        data = data.filter((item: any) => {
+          return item.vertical
+            ? selectedVerticals.includes(item.vertical)
+            : true;
+        });
       }
 
       // Then apply client type filtering
       return data.map((item: any) => {
-        let finalValue = item.premiumRevenue;
+        if (!item?.clientTypes) return item;
 
-        if (item?.clientTypes) {
-          const filteredValue = selectedClientTypes.reduce(
-            (sum: number, clientType: string) => {
-              const clientTypeValue =
-                item.clientTypes?.[
-                  clientType as keyof typeof item.clientTypes
-                ] || 0;
-              return sum + clientTypeValue;
-            },
-            0
-          );
-          finalValue = filteredValue;
-        }
+        const filteredValue = selectedClientTypes.reduce(
+          (sum: number, clientType: string) => {
+            const clientTypeValue =
+              item.clientTypes?.[clientType as keyof typeof item.clientTypes] ||
+              0;
+            return sum + clientTypeValue;
+          },
+          0
+        );
 
         return {
           ...item,
-          value: finalValue,
-          percentage: (finalValue / metricsData.totalRevenue) * 100,
-          policies: item.policies, // Preserve policies data
-          premium: item.premiumRevenue, // Map premiumRevenue to premium field
-          revenue: item.premiumRevenue, // Map premiumRevenue to revenue field
-          revenuePercentage: item.revenuePercentage, // Preserve revenue percentage
+          value: filteredValue,
+          percentage: (filteredValue / metricsData.totalRevenue) * 100,
+          policies: item.policies, // Preserve policies data from imported Excel
+          premium: item.premium, // Preserve premium data from imported Excel
+          revenuePercentage: item.revenuePercentage, // Preserve revenue percentage from imported Excel
         };
       });
     }
@@ -309,7 +339,7 @@ export function ChartsSection({
   // Apply top filter
   const getTopFilteredData = () => {
     const topCount = parseInt(topFilter.replace('Top ', ''));
-    return reportData
+    return [...reportData]
       .sort((a: any, b: any) => b.value - a.value)
       .slice(0, topCount)
       .map((item: any, index: number) => ({
@@ -434,7 +464,7 @@ export function ChartsSection({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Insurer Analysis
+                    Product Analysis
                   </h3>
                   <p className="text-sm text-gray-500">
                     {getChartSubtitle(selectedReportType, topFilter)}

@@ -143,13 +143,16 @@ export function SaveToPlaylist({
     setPlaylists(updatedPlaylists);
 
     // Save to localStorage
-    console.log('SaveToPlaylist: Saving updated playlists to localStorage:', updatedPlaylists);
+    console.log(
+      'SaveToPlaylist: Saving updated playlists to localStorage:',
+      updatedPlaylists
+    );
     localStorage.setItem(
       'dashboardPlaylists',
       JSON.stringify(updatedPlaylists)
     );
     console.log('SaveToPlaylist: Data saved to localStorage');
-    
+
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('playlistsUpdated'));
 
@@ -204,7 +207,7 @@ export function SaveToPlaylist({
       'dashboardPlaylists',
       JSON.stringify(updatedPlaylists)
     );
-    
+
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('playlistsUpdated'));
 

@@ -1,30 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-  // Import all data from the data folder
-  productAnalyticsData,
-  insurerAnalyticsData,
-  verticalAnalyticsData,
-  lobAnalyticsData,
+  // Import only retention and revenue data
   revenueExpensesAnalyticsData,
-  crossSellAnalyticsData,
-  policyTypeAnalyticsData,
   brokerRetentionAnalyticsData,
   insurerRetentionAnalyticsData,
-  numberOfProductsAnalyticsData,
 } from '../../data';
 
 // Import interfaces
 import {
-  ProductAnalyticsData,
-  InsurerAnalyticsData,
-  VerticalAnalyticsData,
-  LobAnalyticsData,
   RevenueExpensesAnalyticsData,
-  CrossSellAnalyticsData,
-  PolicyTypeAnalyticsData,
   BrokerRetentionAnalyticsData,
   InsurerRetentionAnalyticsData,
-  NumberOfProductsAnalyticsData,
 } from '../../data';
 
 // Professional color palette
@@ -151,32 +137,32 @@ const retentionMetrics = {
 // Define the state interface
 interface AnalyticsDataState {
   // Product data
-  products: ProductAnalyticsData[];
+  // products: ProductAnalyticsData[];
 
-  // Insurer data
-  insurers: InsurerAnalyticsData[];
+  // // Insurer data
+  // insurers: InsurerAnalyticsData[];
 
-  // Vertical data
-  verticals: VerticalAnalyticsData[];
+  // // Vertical data
+  // verticals: VerticalAnalyticsData[];
 
-  // LOB data
-  lobs: LobAnalyticsData[];
+  // // LOB data
+  // lobs: LobAnalyticsData[];
 
   // Revenue expenses data
   revenueExpenses: RevenueExpensesAnalyticsData[];
 
-  // Cross sell data
-  crossSell: CrossSellAnalyticsData[];
+  // // Cross sell data
+  // crossSell: CrossSellAnalyticsData[];
 
-  // Policy type data
-  policyTypes: PolicyTypeAnalyticsData[];
+  // // Policy type data
+  // policyTypes: PolicyTypeAnalyticsData[];
 
   // Retention data
   brokerRetention: BrokerRetentionAnalyticsData[];
   insurerRetention: InsurerRetentionAnalyticsData[];
 
-  // Number of products data
-  numberOfProducts: NumberOfProductsAnalyticsData[];
+  // // Number of products data
+  // numberOfProducts: NumberOfProductsAnalyticsData[];
 
   // Additional analytics data
   baseMetrics: typeof baseMetricsData;
@@ -191,16 +177,16 @@ interface AnalyticsDataState {
 
 // Initial state
 const initialState: AnalyticsDataState = {
-  products: productAnalyticsData,
-  insurers: insurerAnalyticsData,
-  verticals: verticalAnalyticsData,
-  lobs: lobAnalyticsData,
+  // products: [],
+  // insurers: [],
+  // verticals: [],
+  // lobs: [],
   revenueExpenses: revenueExpensesAnalyticsData,
-  crossSell: crossSellAnalyticsData,
-  policyTypes: policyTypeAnalyticsData,
+  // crossSell: [],
+  // policyTypes: [],
   brokerRetention: brokerRetentionAnalyticsData,
   insurerRetention: insurerRetentionAnalyticsData,
-  numberOfProducts: numberOfProductsAnalyticsData,
+  // numberOfProducts: [],
   baseMetrics: baseMetricsData,
   lossReasons: lossReasonData,
   retentionMetrics: retentionMetrics,
@@ -224,28 +210,28 @@ const analyticsDataSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Update product data
-    updateProducts: (state, action: PayloadAction<ProductAnalyticsData[]>) => {
-      state.products = action.payload;
-    },
+    // // Update product data
+    // updateProducts: (state, action: PayloadAction<ProductAnalyticsData[]>) => {
+    //   state.products = action.payload;
+    // },
 
-    // Update insurer data
-    updateInsurers: (state, action: PayloadAction<InsurerAnalyticsData[]>) => {
-      state.insurers = action.payload;
-    },
+    // // Update insurer data
+    // updateInsurers: (state, action: PayloadAction<InsurerAnalyticsData[]>) => {
+    //   state.insurers = action.payload;
+    // },
 
-    // Update vertical data
-    updateVerticals: (
-      state,
-      action: PayloadAction<VerticalAnalyticsData[]>
-    ) => {
-      state.verticals = action.payload;
-    },
+    // // Update vertical data
+    // updateVerticals: (
+    //   state,
+    //   action: PayloadAction<VerticalAnalyticsData[]>
+    // ) => {
+    //   state.verticals = action.payload;
+    // },
 
-    // Update LOB data
-    updateLobs: (state, action: PayloadAction<LobAnalyticsData[]>) => {
-      state.lobs = action.payload;
-    },
+    // // Update LOB data
+    // updateLobs: (state, action: PayloadAction<LobAnalyticsData[]>) => {
+    //   state.lobs = action.payload;
+    // },
 
     // Update revenue expenses data
     updateRevenueExpenses: (
@@ -255,21 +241,21 @@ const analyticsDataSlice = createSlice({
       state.revenueExpenses = action.payload;
     },
 
-    // Update cross sell data
-    updateCrossSell: (
-      state,
-      action: PayloadAction<CrossSellAnalyticsData[]>
-    ) => {
-      state.crossSell = action.payload;
-    },
+    // // Update cross sell data
+    // updateCrossSell: (
+    //   state,
+    //   action: PayloadAction<CrossSellAnalyticsData[]>
+    // ) => {
+    //   state.crossSell = action.payload;
+    // },
 
-    // Update policy type data
-    updatePolicyTypes: (
-      state,
-      action: PayloadAction<PolicyTypeAnalyticsData[]>
-    ) => {
-      state.policyTypes = action.payload;
-    },
+    // // Update policy type data
+    // updatePolicyTypes: (
+    //   state,
+    //   action: PayloadAction<PolicyTypeAnalyticsData[]>
+    // ) => {
+    //   state.policyTypes = action.payload;
+    // },
 
     // Update broker retention data
     updateBrokerRetention: (
@@ -287,13 +273,13 @@ const analyticsDataSlice = createSlice({
       state.insurerRetention = action.payload;
     },
 
-    // Update number of products data
-    updateNumberOfProducts: (
-      state,
-      action: PayloadAction<NumberOfProductsAnalyticsData[]>
-    ) => {
-      state.numberOfProducts = action.payload;
-    },
+    // // Update number of products data
+    // updateNumberOfProducts: (
+    //   state,
+    //   action: PayloadAction<NumberOfProductsAnalyticsData[]>
+    // ) => {
+    //   state.numberOfProducts = action.payload;
+    // },
 
     // Update base metrics
     updateBaseMetrics: (
@@ -304,9 +290,9 @@ const analyticsDataSlice = createSlice({
     },
 
     // Reset all data to initial state
-    resetData: state => {
-      return initialState;
-    },
+    // resetData: state => {
+    //   return initialState;
+    // },
   },
 });
 
@@ -314,46 +300,46 @@ const analyticsDataSlice = createSlice({
 export const {
   setLoading,
   setError,
-  updateProducts,
-  updateInsurers,
-  updateVerticals,
-  updateLobs,
+  // updateProducts,
+  // updateInsurers,
+  // updateVerticals,
+  // updateLobs,
   updateRevenueExpenses,
-  updateCrossSell,
-  updatePolicyTypes,
+  // updateCrossSell,
+  // updatePolicyTypes,
   updateBrokerRetention,
   updateInsurerRetention,
-  updateNumberOfProducts,
+  // updateNumberOfProducts,
   updateBaseMetrics,
-  resetData,
+  // resetData,
 } = analyticsDataSlice.actions;
 
 // Selectors
-export const selectProducts = (state: { analyticsData: AnalyticsDataState }) =>
-  state.analyticsData.products;
-export const selectInsurers = (state: { analyticsData: AnalyticsDataState }) =>
-  state.analyticsData.insurers;
-export const selectVerticals = (state: { analyticsData: AnalyticsDataState }) =>
-  state.analyticsData.verticals;
-export const selectLobs = (state: { analyticsData: AnalyticsDataState }) =>
-  state.analyticsData.lobs;
+// export const selectProducts = (state: { analyticsData: AnalyticsDataState }) =>
+//   state.analyticsData.products;
+// export const selectInsurers = (state: { analyticsData: AnalyticsDataState }) =>
+//   state.analyticsData.insurers;
+// export const selectVerticals = (state: { analyticsData: AnalyticsDataState }) =>
+//   state.analyticsData.verticals;
+// export const selectLobs = (state: { analyticsData: AnalyticsDataState }) =>
+//   state.analyticsData.lobs;
 export const selectRevenueExpenses = (state: {
   analyticsData: AnalyticsDataState;
 }) => state.analyticsData.revenueExpenses;
-export const selectCrossSell = (state: { analyticsData: AnalyticsDataState }) =>
-  state.analyticsData.crossSell;
-export const selectPolicyTypes = (state: {
-  analyticsData: AnalyticsDataState;
-}) => state.analyticsData.policyTypes;
+// export const selectCrossSell = (state: { analyticsData: AnalyticsDataState }) =>
+//   state.analyticsData.crossSell;
+// export const selectPolicyTypes = (state: {
+//   analyticsData: AnalyticsDataState;
+// }) => state.analyticsData.policyTypes;
 export const selectBrokerRetention = (state: {
   analyticsData: AnalyticsDataState;
 }) => state.analyticsData.brokerRetention;
 export const selectInsurerRetention = (state: {
   analyticsData: AnalyticsDataState;
 }) => state.analyticsData.insurerRetention;
-export const selectNumberOfProducts = (state: {
-  analyticsData: AnalyticsDataState;
-}) => state.analyticsData.numberOfProducts;
+// export const selectNumberOfProducts = (state: {
+//   analyticsData: AnalyticsDataState;
+// }) => state.analyticsData.numberOfProducts;
 export const selectBaseMetrics = (state: {
   analyticsData: AnalyticsDataState;
 }) => state.analyticsData.baseMetrics;

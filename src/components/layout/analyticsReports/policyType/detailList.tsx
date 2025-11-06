@@ -149,7 +149,7 @@ export function ProductsList({
           <div
             className={`${productsListStyles.table.headerCell} sticky flex items-center justify-center`}
           >
-            Product
+            Policy Type
           </div>
 
           {/* Sortable Headers */}

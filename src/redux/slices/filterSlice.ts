@@ -16,14 +16,14 @@ import {
   getLocationOptions,
 } from '../../constants/enums';
 import {
-  productAnalyticsData,
-  insurerAnalyticsData,
-  crossSellAnalyticsData,
-  policyTypeAnalyticsData,
   brokerRetentionAnalyticsData,
   insurerRetentionAnalyticsData,
-  numberOfProductsAnalyticsData,
 } from '../../data';
+import {
+  FilterCriteria,
+  applyBusinessDataFilters,
+} from '../../utils/businessDataFilter';
+import { businessData } from './businessData';
 
 export interface FilterState {
   // Filter selections
@@ -31,20 +31,24 @@ export interface FilterState {
   selectedDepartment: DepartmentType;
   selectedReportType: ReportType;
   selectedLocation: LocationType;
-  selectedDuration: DurationType;
+  selectedDuration: DurationType[];
   valueUnit: ValueUnitType;
 
   // Detailed filter selections
   selectedProducts: string[];
   selectedInsurers: string[];
-  selectedLobs: string[];
-  selectedPolicyTypes: string[];
-  selectedVerticals: string[];
   selectedClientTypes: string[];
   selectedRegions: string[];
   selectedStates: string[];
   selectedCities: string[];
   selectedTeams: string[];
+  selectedPolicy: string[];
+  selectedLob: string[];
+  selectedVertical: string[];
+
+  // Business Data Filtering (Excel-style)
+  businessDataFilters: FilterCriteria;
+  isBusinessDataFilterActive: boolean;
 
   // Custom period handling
   customStartDate: Date | null;
@@ -196,20 +200,33 @@ const initialState: FilterState = {
   selectedDepartment: DEFAULT_DEPARTMENT,
   selectedReportType: DEFAULT_REPORT_TYPE,
   selectedLocation: DEFAULT_LOCATION,
-  selectedDuration: DEFAULT_DURATION,
+  selectedDuration: [DEFAULT_DURATION],
   valueUnit: DEFAULT_VALUE_UNIT,
 
   // Detailed filter selections - initialized with all items selected
   selectedProducts: [],
   selectedInsurers: [],
-  selectedLobs: [],
-  selectedPolicyTypes: [],
-  selectedVerticals: [],
+  selectedPolicy: [],
+  selectedLob: [],
+  selectedVertical: [],
   selectedClientTypes: ['Corporate', 'Retail', 'Affinity'],
   selectedRegions: ['Mumbai', 'Delhi', 'Bangalore'],
   selectedStates: ['Maharashtra', 'Delhi', 'Karnataka'],
   selectedCities: ['Mumbai', 'Delhi', 'Bangalore'],
   selectedTeams: [],
+
+  // Business Data Filtering (Excel-style)
+  businessDataFilters: {
+    durations: [],
+    regions: [],
+    clientTypes: [],
+    products: [],
+    insurers: [],
+    policyTypes: [],
+    lobs: [],
+    businessVerticals: [],
+  },
+  isBusinessDataFilterActive: false,
 
   // Custom period handling
   customStartDate: null,
@@ -230,11 +247,7 @@ const initialState: FilterState = {
   comparisonCustomDates: {},
 
   // Advanced filter settings
-  pinnedItems: [
-    'department',
-    'reportType',
-    'duration',
-  ],
+  pinnedItems: ['department', 'reportType', 'duration'],
   topExpenseCategories: 10,
 
   // Full screen settings
@@ -258,21 +271,9 @@ const initialState: FilterState = {
     expenseGrowth: 8.3,
     profitMargin: 30.0,
 
-    productData: productAnalyticsData.map(product => ({
-      name: product.name,
-      revenue: product.premiumRevenue,
-      growth: Math.random() * 20 - 5, // Random growth between -5% and 15%
-      percentage: product.revenuePercentage,
-      color: product.color,
-    })),
+    productData: [],
 
-    insurerData: insurerAnalyticsData.map(insurer => ({
-      name: insurer.name,
-      revenue: insurer.premiumRevenue,
-      policies: insurer.policies, // Use policies from data
-      retention: Math.random() * 30 + 70, // Generate random retention rate (70-100%) since retentionRate is not available
-      color: insurer.color,
-    })),
+    insurerData: [],
 
     locationPerformance: [
       { location: 'Mumbai', revenue: 85000000, growth: 18.5, target: 80000000 },
@@ -368,29 +369,10 @@ const initialState: FilterState = {
     ],
 
     // Cross-sell data
-    crossSellData: crossSellAnalyticsData.map(item => ({
-      id: item.id,
-      productName: item.productName,
-      currentCustomers: item.currentCustomers,
-      crossSellOpportunities: item.crossSellOpportunities,
-      conversionRate: item.conversionRate,
-      potentialRevenue: item.potentialRevenue,
-      priority: item.priority,
-      color: item.color,
-    })),
+    crossSellData: [],
 
     // Policy type data
-    policyTypeData: policyTypeAnalyticsData.map(item => ({
-      id: item.id,
-      policyType: item.policyType,
-      totalPolicies: item.totalPolicies,
-      activePolicies: item.activePolicies,
-      premiumRevenue: item.premiumRevenue,
-      claimsRatio: item.claimsRatio,
-      profitMargin: item.profitMargin,
-      growthRate: item.growthRate,
-      color: item.color,
-    })),
+    policyTypeData: [],
 
     // Broker retention data
     brokerRetentionData: brokerRetentionAnalyticsData.map((item, index) => ({
@@ -423,15 +405,7 @@ const initialState: FilterState = {
     })),
 
     // Number of products data
-    numberOfProductsData: numberOfProductsAnalyticsData.map(item => ({
-      id: item.id,
-      customerSegment: item.customerSegment,
-      averageProducts: item.averageProducts,
-      totalCustomers: item.totalCustomers,
-      totalRevenue: item.totalRevenue,
-      crossSellPotential: item.crossSellPotential,
-      color: item.color,
-    })),
+    numberOfProductsData: [],
   },
 };
 
@@ -471,9 +445,9 @@ const filterSlice = createSlice({
       state.selectedLocation = action.payload;
     },
 
-    setSelectedDuration: (state, action: PayloadAction<DurationType>) => {
+    setSelectedDuration: (state, action: PayloadAction<DurationType[]>) => {
       state.selectedDuration = action.payload;
-      if (action.payload === 'Custom Period') {
+      if (action.payload.includes('Custom Period')) {
         state.isCustomPeriodModalOpen = true;
       }
     },
@@ -498,16 +472,16 @@ const filterSlice = createSlice({
       state.selectedInsurers = action.payload;
     },
 
-    setSelectedLobs: (state, action: PayloadAction<string[]>) => {
-      state.selectedLobs = action.payload;
+    setSelectedPolicy: (state, action: PayloadAction<string[]>) => {
+      state.selectedPolicy = action.payload;
     },
 
-    setSelectedPolicyTypes: (state, action: PayloadAction<string[]>) => {
-      state.selectedPolicyTypes = action.payload;
+    setSelectedLob: (state, action: PayloadAction<string[]>) => {
+      state.selectedLob = action.payload;
     },
 
-    setSelectedVerticals: (state, action: PayloadAction<string[]>) => {
-      state.selectedVerticals = action.payload;
+    setSelectedVertical: (state, action: PayloadAction<string[]>) => {
+      state.selectedVertical = action.payload;
     },
 
     setSelectedClientTypes: (state, action: PayloadAction<string[]>) => {
@@ -538,7 +512,7 @@ const filterSlice = createSlice({
       state.customStartDate = action.payload.startDate;
       state.customEndDate = action.payload.endDate;
       if (action.payload.startDate && action.payload.endDate) {
-        state.selectedDuration = 'Custom Period';
+        state.selectedDuration = ['Custom Period'];
       }
     },
 
@@ -632,10 +606,62 @@ const filterSlice = createSlice({
       state.selectedDepartment = DEFAULT_DEPARTMENT;
       state.selectedReportType = DEFAULT_REPORT_TYPE;
       state.selectedLocation = DEFAULT_LOCATION;
-      state.selectedDuration = DEFAULT_DURATION;
+      state.selectedDuration = [DEFAULT_DURATION];
       state.valueUnit = DEFAULT_VALUE_UNIT;
       state.customStartDate = null;
       state.customEndDate = null;
+      // Reset business data filters
+      state.businessDataFilters = {
+        durations: [],
+        regions: [],
+        clientTypes: [],
+        products: [],
+        insurers: [],
+        policyTypes: [],
+        lobs: [],
+        businessVerticals: [],
+      };
+      state.isBusinessDataFilterActive = false;
+    },
+
+    // Business Data Filtering Actions
+    setBusinessDataFilters: (state, action: PayloadAction<FilterCriteria>) => {
+      state.businessDataFilters = action.payload;
+      state.isBusinessDataFilterActive = Object.values(action.payload).some(
+        filterArray => filterArray && filterArray.length > 0
+      );
+    },
+
+    updateBusinessDataFilter: (
+      state,
+      action: PayloadAction<{
+        filterType: keyof FilterCriteria;
+        values: string[];
+      }>
+    ) => {
+      const { filterType, values } = action.payload;
+      state.businessDataFilters[filterType] = values;
+      state.isBusinessDataFilterActive = Object.values(
+        state.businessDataFilters
+      ).some(filterArray => filterArray && filterArray.length > 0);
+    },
+
+    clearBusinessDataFilters: state => {
+      state.businessDataFilters = {
+        durations: [],
+        regions: [],
+        clientTypes: [],
+        products: [],
+        insurers: [],
+        policyTypes: [],
+        lobs: [],
+        businessVerticals: [],
+      };
+      state.isBusinessDataFilterActive = false;
+    },
+
+    toggleBusinessDataFilter: state => {
+      state.isBusinessDataFilterActive = !state.isBusinessDataFilterActive;
     },
 
     resetModalStates: state => {
@@ -663,14 +689,20 @@ export const {
   // Detailed filter selection actions
   setSelectedProducts,
   setSelectedInsurers,
-  setSelectedLobs,
-  setSelectedPolicyTypes,
-  setSelectedVerticals,
+  setSelectedPolicy,
+  setSelectedLob,
+  setSelectedVertical,
   setSelectedClientTypes,
   setSelectedRegions,
   setSelectedStates,
   setSelectedCities,
   setSelectedTeams,
+
+  // Business Data Filtering Actions
+  setBusinessDataFilters,
+  updateBusinessDataFilter,
+  clearBusinessDataFilters,
+  toggleBusinessDataFilter,
 
   // Custom period actions
   setCustomDates,
@@ -732,6 +764,30 @@ export const selectAnalyticsData = (state: any) => {
   }
 
   return filterData;
+};
+
+// Business Data Filtering Selectors
+export const selectBusinessDataFilters = (state: any) =>
+  state.filter.businessDataFilters;
+export const selectIsBusinessDataFilterActive = (state: any) =>
+  state.filter.isBusinessDataFilterActive;
+
+export const selectFilteredBusinessData = (state: any) => {
+  const filters = selectBusinessDataFilters(state);
+  const isFilterActive = selectIsBusinessDataFilterActive(state);
+
+  // Use imported raw Excel data if available, otherwise fall back to static business data
+  const dataToUse =
+    state.importedData?.rawExcelData &&
+    state.importedData.rawExcelData.length > 0
+      ? state.importedData.rawExcelData
+      : businessData;
+
+  if (!isFilterActive) {
+    return dataToUse;
+  }
+
+  return applyBusinessDataFilters(dataToUse, filters);
 };
 
 export const selectProductData = (state: any) => {

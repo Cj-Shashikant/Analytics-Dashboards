@@ -9,7 +9,7 @@ export const REPORT_TYPES_BY_DEPARTMENT = {
     'Revenue by Policy Type',
     'Revenue by Vertical',
     'Revenue by LOB',
-    'Cross-Sell Penetration',
+    // 'Cross-Sell Penetration', // COMMENTED OUT - Cross-sell functionality disabled
   ],
   Operations: [
     'Revenue vs Expenses',
@@ -18,7 +18,7 @@ export const REPORT_TYPES_BY_DEPARTMENT = {
     'Revenue by Policy Type',
     'Revenue by Vertical',
     'Revenue by LOB',
-    'Cross-Sell Penetration',
+    // 'Cross-Sell Penetration', // COMMENTED OUT - Cross-sell functionality disabled
   ],
   Finance: [
     'Revenue vs Expenses',
@@ -27,7 +27,7 @@ export const REPORT_TYPES_BY_DEPARTMENT = {
     'Revenue by Policy Type',
     'Revenue by Vertical',
     'Revenue by LOB',
-    'Cross-Sell Penetration',
+    // 'Cross-Sell Penetration', // COMMENTED OUT - Cross-sell functionality disabled
   ],
   Marketing: [
     'Revenue vs Expenses',
@@ -36,7 +36,7 @@ export const REPORT_TYPES_BY_DEPARTMENT = {
     'Revenue by Policy Type',
     'Revenue by Vertical',
     'Revenue by LOB',
-    'Cross-Sell Penetration',
+    // 'Cross-Sell Penetration', // COMMENTED OUT - Cross-sell functionality disabled
   ],
   Sales: [
     'Revenue vs Expenses',
@@ -45,7 +45,7 @@ export const REPORT_TYPES_BY_DEPARTMENT = {
     'Revenue by Policy Type',
     'Revenue by Vertical',
     'Revenue by LOB',
-    'Cross-Sell Penetration',
+    // 'Cross-Sell Penetration', // COMMENTED OUT - Cross-sell functionality disabled
   ],
   Retention: ['Retention - By Insurer', 'Retention - Broker'],
   'Customer Analysis': [
@@ -53,7 +53,7 @@ export const REPORT_TYPES_BY_DEPARTMENT = {
     'Number of Products Purchased',
     'Premium Contribution by Customer',
     'Customer Satisfaction / NPS',
-    'Cross-Sell / Upsell Potential',
+    // 'Cross-Sell / Upsell Potential', // COMMENTED OUT - Cross-sell functionality disabled
   ],
 } as const;
 

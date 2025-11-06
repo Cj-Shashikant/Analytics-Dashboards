@@ -179,7 +179,7 @@ export function ProductsList({
             className={`${productsListStyles.table.headerCellRight} cursor-pointer hover:bg-gray-100 px-2 py-2 rounded transition-colors justify-center`}
             onClick={() => handleSort('premium')}
           >
-            <span className="mr-1">Gross Premium</span>
+            <span className="mr-1">Premium</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"

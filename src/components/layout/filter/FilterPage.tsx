@@ -21,6 +21,9 @@ import {
   IndianRupee,
   Play,
   Pause,
+  Upload,
+  Users,
+  MapPin,
 } from 'lucide-react';
 import {
   Select,
@@ -35,6 +38,9 @@ import {
   setSelectedReportType,
   setSelectedDuration,
   cycleValueUnit,
+  setSelectedRegions,
+  setSelectedClientTypes,
+  updateBusinessDataFilter,
 } from '../../../redux/slices/filterSlice';
 import {
   DEPARTMENTS,
@@ -45,6 +51,8 @@ import {
   getReportTypesForDepartment,
   ReportType,
 } from '../../../constants/enums/reportTypes';
+import { CLIENT_TYPES } from '../../../constants/enums/revenue';
+import { getLocationOptions } from '../../../constants/enums/locations';
 import { filterStyles } from './style';
 import { getFilterWidths } from './dynamicWidth';
 import { AdvancedFilters } from './moreFilter';
@@ -64,6 +72,8 @@ export default function FilterPage() {
     selectedDuration,
     valueUnit,
     pinnedItems,
+    selectedRegions,
+    selectedClientTypes,
   } = useAppSelector(state => state.filter);
 
   // Modal state management
@@ -79,7 +89,7 @@ export default function FilterPage() {
 
   // Auto-navigation state
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSequenceIndex, setCurrentSequenceIndex] = useState(0);
+  const [, setCurrentSequenceIndex] = useState(0);
   const [countdown, setCountdown] = useState(30);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -92,7 +102,7 @@ export default function FilterPage() {
     { department: 'Business', reportType: 'Revenue by Policy Type' },
     { department: 'Business', reportType: 'Revenue by Vertical' },
     { department: 'Business', reportType: 'Revenue by LOB' },
-    { department: 'Business', reportType: 'Cross-Sell Penetration' },
+    // { department: 'Business', reportType: 'Cross-Sell Penetration' }, // COMMENTED OUT - Cross-sell functionality disabled
     { department: 'Retention', reportType: 'Retention - By Insurer' },
     { department: 'Retention', reportType: 'Retention - Broker' },
     { department: 'Customer Analysis', reportType: 'Duration of Relationship' },
@@ -107,10 +117,6 @@ export default function FilterPage() {
     {
       department: 'Customer Analysis',
       reportType: 'Customer Satisfaction / NPS',
-    },
-    {
-      department: 'Customer Analysis',
-      reportType: 'Cross-Sell / Upsell Potential',
     },
   ];
 
@@ -168,7 +174,7 @@ export default function FilterPage() {
 
       // Start countdown timer (updates every second)
       countdownRef.current = setInterval(() => {
-        setCountdown((prev) => {
+        setCountdown(prev => {
           if (prev <= 1) {
             return 30; // Reset to 30 when it reaches 0
           }
@@ -208,7 +214,8 @@ export default function FilterPage() {
     selectedDepartment,
     selectedReportType,
     selectedDuration,
-    '' // selectedLocation - not used anymore
+    selectedClientTypes,
+    selectedRegions
   );
 
   const handleDepartmentChange = (value: string) => {
@@ -220,13 +227,38 @@ export default function FilterPage() {
   };
 
   const handleDurationChange = (value: string) => {
-    dispatch(setSelectedDuration(value as DurationType));
+    dispatch(setSelectedDuration([value as DurationType]));
   };
 
   const handleValueUnitCycle = () => {
     console.log('Value unit button clicked - current valueUnit:', valueUnit);
     dispatch(cycleValueUnit());
     console.log('cycleValueUnit dispatched');
+  };
+
+  // Pinned Regions & Client Types handlers
+  const locationOptions = getLocationOptions(selectedDepartment).filter(
+    loc => loc !== 'All Location'
+  );
+
+  const handleToggleRegion = (region: string) => {
+    const next = selectedRegions.includes(region)
+      ? selectedRegions.filter(r => r !== region)
+      : [...selectedRegions, region];
+    dispatch(setSelectedRegions(next));
+    dispatch(updateBusinessDataFilter({ filterType: 'regions', values: next }));
+    return;
+  };
+
+  const handleToggleClientType = (type: string) => {
+    const next = selectedClientTypes.includes(type)
+      ? selectedClientTypes.filter(t => t !== type)
+      : [...selectedClientTypes, type];
+    dispatch(setSelectedClientTypes(next));
+    dispatch(
+      updateBusinessDataFilter({ filterType: 'clientTypes', values: next })
+    );
+    return;
   };
 
   const handleMoreFilters = () => {
@@ -247,6 +279,47 @@ export default function FilterPage() {
 
   const handleSaveToPlaylist = () => {
     setIsPlaylistFilterOpen(true);
+  };
+
+  // Excel import handler - matching the working implementation from report pages
+  const handleExport = async () => {
+    console.log('Import button clicked for report type:', selectedReportType);
+
+    try {
+      // Import the dynamic import handler
+      const { triggerExcelImport } = await import(
+        '../../../utils/dynamicImportHandler'
+      );
+
+      // Trigger the import with the current report type
+      triggerExcelImport(
+        selectedReportType as any,
+        dispatch
+        // result => {
+        //   // Success callback
+        //   console.log('Data imported successfully:', result);
+        //   alert(
+        //     `✅ ${result.message}\n\n` +
+        //       `File: ${result.fileName}\n` +
+        //       `Report Type: ${selectedReportType}\n\n` +
+        //       `The data has been automatically mapped to the "${selectedReportType}" format.`
+        //   );
+        // },
+        // result => {
+        //   // Error callback
+        //   console.error('Error importing file:', result.message);
+        //   alert(
+        //     `❌ Import Failed\n\n` +
+        //       `${result.message}\n\n` +
+        //       `Please ensure your Excel file contains the required 13 columns:\n` +
+        //       `Duration, Region, Client Types, Product Name, Insurer Name, LOB Name, Policy Type, No. of Policies, Premium, Gross Premium, Revenue, Revenue Percentage, Color`
+        //   );
+        // }
+      );
+    } catch (error) {
+      console.error('Error loading import handler:', error);
+      alert('Failed to load import functionality. Please try again.');
+    }
   };
 
   return (
@@ -301,7 +374,11 @@ export default function FilterPage() {
                     </Box>
                     <FormControl size="small" fullWidth>
                       <Select
-                        value={selectedDuration}
+                        value={
+                          Array.isArray(selectedDuration)
+                            ? selectedDuration[0] || ''
+                            : selectedDuration
+                        }
                         onValueChange={handleDurationChange}
                       >
                         <SelectTrigger
@@ -415,6 +492,90 @@ export default function FilterPage() {
                 </Grid>
               )}
 
+              {/* Client Types - Dropdown Style */}
+              {pinnedItems.includes('clientTypes') && (
+                <Grid item xs={12} sm={6} lg="auto">
+                  <Box sx={filterStyles.filterItem}>
+                    <Box sx={filterStyles.labelContainer}>
+                      <Users
+                        style={{ width: 16, height: 16, color: '#2563eb' }}
+                      />
+                      <Typography sx={filterStyles.labelText}>
+                        Client Types
+                      </Typography>
+                    </Box>
+                    <FormControl size="small" fullWidth>
+                      <Select
+                        value={selectedClientTypes[0] || ''}
+                        onValueChange={handleToggleClientType}
+                      >
+                        <SelectTrigger
+                          style={{
+                            width:
+                              typeof window !== 'undefined' &&
+                              window.innerWidth >= 1200
+                                ? filterWidths.clientTypeWidth
+                                : '100%',
+                            minWidth: 100,
+                          }}
+                        >
+                          <SelectValue placeholder="Select client type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CLIENT_TYPES.map(type => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Grid>
+              )}
+
+              {/* Regions - Dropdown Style */}
+              {pinnedItems.includes('regions') && (
+                <Grid item xs={12} sm={6} lg="auto">
+                  <Box sx={filterStyles.filterItem}>
+                    <Box sx={filterStyles.labelContainer}>
+                      <MapPin
+                        style={{ width: 16, height: 16, color: '#2563eb' }}
+                      />
+                      <Typography sx={filterStyles.labelText}>
+                        Regions
+                      </Typography>
+                    </Box>
+                    <FormControl size="small" fullWidth>
+                      <Select
+                        value={selectedRegions[0] || ''}
+                        onValueChange={handleToggleRegion}
+                      >
+                        <SelectTrigger
+                          style={{
+                            width:
+                              typeof window !== 'undefined' &&
+                              window.innerWidth >= 1200
+                                ? filterWidths.regionWidth
+                                : '100%',
+                            minWidth: 100,
+                          }}
+                        >
+                          <SelectValue placeholder="Select region" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {locationOptions.map(region => (
+                            <SelectItem key={region} value={region}>
+                              {region}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Grid>
+              )}
+
               {/* More Button - Aligned with filters */}
               <Grid item xs={12} sm={6} lg="auto">
                 <Box sx={filterStyles.filterItem}>
@@ -510,7 +671,7 @@ export default function FilterPage() {
                   <Save size={16} />
                 </IconButton>
 
-                {/* <IconButton
+                <IconButton
                   size="small"
                   onClick={handleExport}
                   sx={filterStyles.downloadIcon}
@@ -518,7 +679,7 @@ export default function FilterPage() {
                 >
                   <Upload size={16} />
                 </IconButton>
-
+                {/*
                 <IconButton
                   size="small"
                   onClick={handleDownloadSample}

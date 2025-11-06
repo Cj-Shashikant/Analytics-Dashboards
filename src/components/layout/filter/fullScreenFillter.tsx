@@ -101,7 +101,8 @@ const ChartDisplay = ({ item }: { item: PlaylistItem }) => {
               </Typography>
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                 <Typography variant="body2" className="text-blue-800">
-                  <strong>Filters:</strong> {item.reportType} • Duration: {item.duration}s
+                  <strong>Filters:</strong> {item.reportType} • Duration:{' '}
+                  {item.duration}s
                 </Typography>
               </div>
             </div>
@@ -122,7 +123,7 @@ export default function FullScreenFilter({
   const [timeRemaining, setTimeRemaining] = useState(0);
 
   const currentItem = playlist?.items[currentItemIndex];
-  const hasMultipleItems = playlist && playlist.items.length > 1;
+  // const hasMultipleItems = playlist && playlist.items.length > 1;
 
   // Auto-advance functionality
   useEffect(() => {
@@ -182,7 +183,13 @@ export default function FullScreenFilter({
 
   if (!playlist) {
     return (
-      <Dialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth fullScreen>
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        maxWidth="lg"
+        fullWidth
+        fullScreen
+      >
         <DialogContent>
           <Box sx={{ py: 2, textAlign: 'center' }}>
             <Typography variant="h6">No playlist selected</Typography>
@@ -196,23 +203,31 @@ export default function FullScreenFilter({
   }
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth={false} fullWidth fullScreen>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth={false}
+      fullWidth
+      fullScreen
+    >
       <div className="h-full flex flex-col bg-gray-100">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">{playlist.name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {playlist.name}
+            </h1>
             {playlist.description && (
               <span className="text-gray-600">• {playlist.description}</span>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
             {/* Playlist Progress */}
             <span className="text-sm text-gray-600">
               {currentItemIndex + 1} of {playlist.items.length}
             </span>
-            
+
             {/* Close Button */}
             <IconButton onClick={onClose} className="text-gray-600">
               <X className="w-6 h-6" />
@@ -240,12 +255,14 @@ export default function FullScreenFilter({
                 <ChevronLeft className="w-4 h-4" />
                 Previous
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleNext}
-                disabled={!playlist || currentItemIndex >= playlist.items.length - 1}
+                disabled={
+                  !playlist || currentItemIndex >= playlist.items.length - 1
+                }
                 className="flex items-center gap-2"
               >
                 Next
@@ -260,9 +277,9 @@ export default function FullScreenFilter({
                   Auto-advance in {formatTime(timeRemaining)}
                 </span>
               )}
-              
+
               <Button
-                variant={isPlaying ? "secondary" : "default"}
+                variant={isPlaying ? 'secondary' : 'default'}
                 size="sm"
                 onClick={togglePlayPause}
                 className="flex items-center gap-2"

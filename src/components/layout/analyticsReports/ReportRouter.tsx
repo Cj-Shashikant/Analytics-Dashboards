@@ -9,7 +9,7 @@ import InsurerPage from './insurer/page';
 import LOBPage from './lob/page';
 import VerticalPage from './vertical/page';
 import PolicyTypePage from './policyType/page';
-import CrossCellPage from './cross-cell/page';
+// import CrossCellPage from './cross-cell/page'; // COMMENTED OUT - Cross-cell functionality disabled
 import RevenueVsExpenses from './revenueVsexpenses/page';
 import RetentionInsurerPage from './retentionByInsurer/page';
 import RetentionBrokerPage from './retentionByBroker/page';
@@ -17,7 +17,7 @@ import { DurationOfRelationship } from './relation/page';
 import NumberOfProduct from './numberOfProduct/page';
 import { PremiumContribution } from './premiumCustomer/page';
 import { CustomerSatisfaction } from './customerNPS/page';
-import { CrossSellUpsell } from './upsellPotential/page';
+// import { CrossSellUpsell } from './upsellPotential/page'; // COMMENTED OUT - Cross-sell functionality disabled
 
 export default function ReportRouter() {
   const { selectedReportType } = useAppSelector(state => state.filter);
@@ -35,8 +35,8 @@ export default function ReportRouter() {
         return <VerticalPage />;
       case 'Revenue by Policy Type':
         return <PolicyTypePage />;
-      case 'Cross-Sell Penetration':
-        return <CrossCellPage />;
+      // case 'Cross-Sell Penetration': // COMMENTED OUT - Cross-cell functionality disabled
+      //   return <CrossCellPage />;
       case 'Revenue vs Expenses':
         return <RevenueVsExpenses />;
       case 'Retention - By Insurer':
@@ -51,8 +51,8 @@ export default function ReportRouter() {
         return <PremiumContribution />;
       case 'Customer Satisfaction / NPS':
         return <CustomerSatisfaction />;
-      case 'Cross-Sell / Upsell Potential':
-        return <CrossSellUpsell />;
+      // case 'Cross-Sell / Upsell Potential': // COMMENTED OUT - Cross-sell functionality disabled
+      //   return <CrossSellUpsell />;
 
       default:
         return (

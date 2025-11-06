@@ -162,7 +162,7 @@ export function ChartsSection({
 
   // Client types filter for Number of Products Analysis - using Redux state
   const selectedClientTypes = filterState.selectedClientTypes;
-  
+
   // Products filter for Number of Products Analysis - using Redux state
   const selectedProducts = filterState.selectedProducts;
 
@@ -202,7 +202,7 @@ export function ChartsSection({
     if (!numberOfProductData || numberOfProductData.length === 0) {
       return [];
     }
-    
+
     return numberOfProductData.map((item, index) => ({
       id: item.name.toLowerCase().replace(/\s+/g, '-'),
       name: item.name,
@@ -219,7 +219,9 @@ export function ChartsSection({
     }
 
     // Use imported data if available, otherwise use default data
-    const baseMetrics = isDataImported ? importedBaseMetrics : defaultBaseMetrics;
+    const baseMetrics = isDataImported
+      ? importedBaseMetrics
+      : defaultBaseMetrics;
 
     // Adjust values slightly based on report type
     const adjustmentFactor =
@@ -245,9 +247,10 @@ export function ChartsSection({
   const metricsData = getMetricsData();
 
   // Get data - Use imported data if available, otherwise use default data
-  const productData = isDataImported && importedData?.numberOfProductData 
-    ? transformImportedData(importedData.numberOfProductData)
-    : defaultProductData;
+  const productData =
+    isDataImported && importedData?.numberOfProductData
+      ? transformImportedData(importedData.numberOfProductData)
+      : defaultProductData;
 
   const getReportData = () => {
     return productData || [];
@@ -260,9 +263,7 @@ export function ChartsSection({
     if (selectedReportType === 'Revenue by Products') {
       // First filter by selected products (if any are selected)
       if (selectedProducts.length > 0) {
-        data = data.filter((item: any) => 
-          selectedProducts.includes(item.name)
-        );
+        data = data.filter((item: any) => selectedProducts.includes(item.name));
       }
 
       // Then apply client type filtering

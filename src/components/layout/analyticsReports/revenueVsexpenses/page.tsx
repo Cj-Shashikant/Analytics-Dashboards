@@ -105,7 +105,7 @@ export function ChartsSection({
 
   // Client types filter for Revenue by Products - using Redux state
   const selectedClientTypes = filterState.selectedClientTypes;
-  
+
   // Products filter for Revenue by Products - using Redux state
   const selectedProducts = filterState.selectedProducts;
 
