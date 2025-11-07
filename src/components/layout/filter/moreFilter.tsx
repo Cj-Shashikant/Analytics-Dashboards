@@ -52,19 +52,20 @@ import {
 
 // Constants imports
 import { DEPARTMENTS, DepartmentType } from '@/constants/enums/departments';
-import { DURATIONS, DurationType } from '@/constants/enums/durations';
+import { DurationType } from '@/constants/enums/durations';
 import {
   getReportTypesForDepartment,
   ReportType,
 } from '@/constants/enums/reportTypes';
-import { CLIENT_TYPES } from '@/constants/enums/revenue';
 
 // Data imports
 import { insurerRetentionAnalyticsData } from '@/data/retentionByInsurerData';
 import { brokerRetentionAnalyticsData } from '@/data/retentionByBrokerData';
 import { businessData } from '@/redux/slices/businessData';
-import { extractFilterOptions } from '@/utils/businessDataFilter';
-import { selectFilteredBusinessData } from '@/redux/slices/filterSlice';
+import {
+  extractFilterOptions,
+  applyBusinessDataFilters,
+} from '@/utils/businessDataFilter';
 import { Label } from '@/components/ui';
 
 interface AdvancedFiltersProps {
@@ -118,28 +119,57 @@ export function AdvancedFilters({
 
   // Get imported data state from Redux
   const importedData = useAppSelector(state => state.importedData);
-  const filteredBusinessData = useAppSelector(selectFilteredBusinessData);
+
+  const arraysEqual = (a: string[], b: string[]) => {
+    if (a.length !== b.length) return false;
+    const setA = new Set(a);
+    for (const item of b) {
+      if (!setA.has(item)) return false;
+    }
+    return true;
+  };
 
   // Extract filter options from business data
-  const businessFilterOptions = useMemo(() => {
-    // Base dataset: imported raw Excel or static business data
-    const baseData =
-      importedData.rawExcelData && importedData.rawExcelData.length > 0
-        ? importedData.rawExcelData
-        : businessData;
+  // Base dataset for all cascading computations
+  const baseBusinessData = useMemo(() => {
+    return importedData.rawExcelData && importedData.rawExcelData.length > 0
+      ? importedData.rawExcelData
+      : businessData;
+  }, [importedData.rawExcelData]);
 
-    // When filters are active, derive options from the currently filtered subset
-    const currentData =
-      isBusinessDataFilterActive && filteredBusinessData?.length > 0
-        ? filteredBusinessData
-        : baseData;
+  // All options from base dataset (used to render full set with disabled states)
+  const allBusinessFilterOptions = useMemo(() => {
+    return extractFilterOptions(baseBusinessData);
+  }, [baseBusinessData]);
 
-    return extractFilterOptions(currentData);
+  // Cascading available options per stage
+  const optionsByDuration = useMemo(() => {
+    const filtered = applyBusinessDataFilters(baseBusinessData, {
+      durations: (selectedDuration as unknown as string[]) || [],
+    });
+    return extractFilterOptions(filtered);
+  }, [baseBusinessData, selectedDuration]);
+
+  const optionsByDurationRegion = useMemo(() => {
+    const filtered = applyBusinessDataFilters(baseBusinessData, {
+      durations: (selectedDuration as unknown as string[]) || [],
+      regions: selectedRegions || [],
+    });
+    return extractFilterOptions(filtered);
+  }, [baseBusinessData, selectedDuration, selectedRegions]);
+
+  const optionsByDurRegClient = useMemo(() => {
+    const filtered = applyBusinessDataFilters(baseBusinessData, {
+      durations: (selectedDuration as unknown as string[]) || [],
+      regions: selectedRegions || [],
+      clientTypes: selectedClientTypes || [],
+    });
+    return extractFilterOptions(filtered);
   }, [
-    importedData.rawExcelData,
-    isBusinessDataFilterActive,
-    filteredBusinessData,
-    businessDataFilters,
+    baseBusinessData,
+    selectedDuration,
+    selectedRegions,
+    selectedClientTypes,
   ]);
 
   // Removed unused state variables: dateRange, selectedMembers, performanceRange, policyTypes, businessVerticals, revenueRange
@@ -159,19 +189,8 @@ export function AdvancedFilters({
 
   // Removed commented-out locations array
 
-  const durations = DURATIONS;
-
-  // Regional filters
-  const regions = [
-    'Mumbai',
-    'Delhi',
-    'Bangalore',
-    'Chennai',
-    'Hyderabad',
-    'Pune',
-    'Kolkata',
-    'Ahmedabad',
-  ];
+  // Removed hardcoded fallback arrays for durations/regions; now always sourced
+  // from businessData.ts via extractFilterOptions
 
   // Team filters
   const teams = [
@@ -183,327 +202,244 @@ export function AdvancedFilters({
     'Support Team',
   ];
 
-  // Dynamic data functions - prioritize JSON data, then imported data, fallback to default data, and filter by department
+  // Excel-style cascading: derive product options from currently filtered dataset
+  // This uses businessFilterOptions, which itself is computed from
+  // selectFilteredBusinessData so all other active filters constrain options here.
   const getDynamicProducts = () => {
-    // Products are only available for Business department
     if (selectedDepartment !== 'Business') {
       return [];
     }
-
-    // First check if there's imported data with proper safety checks
-    if (
-      importedData &&
-      importedData.isDataImported &&
-      importedData.productData &&
-      Array.isArray(importedData.productData) &&
-      importedData.productData.length > 0
-    ) {
-      return importedData.productData
-        .map(product => product?.name || '')
-        .filter(name => name.trim() !== '');
-    }
-
-    // Fallback to business data slice - extract only Product name values
-    if (
-      businessData &&
-      Array.isArray(businessData) &&
-      businessData.length > 0
-    ) {
-      const productNames: string[] = [];
-
-      try {
-        // Extract only Product name values with null/undefined checks
-        businessData.forEach(item => {
-          if (item && typeof item === 'object') {
-            if (
-              item['Product name'] &&
-              typeof item['Product name'] === 'string'
-            ) {
-              productNames.push(item['Product name']);
-            }
-          }
-        });
-
-        // Get unique values and filter out empty ones
-        const uniqueProducts = Array.from(new Set(productNames));
-        return uniqueProducts.filter(
-          product =>
-            product && typeof product === 'string' && product.trim() !== ''
-        );
-      } catch (error) {
-        console.error(
-          'Error processing business data in getDynamicProducts:',
-          error
-        );
-        return [];
-      }
-    }
-
-    // Final fallback to empty array
-    return [];
+    return allBusinessFilterOptions.products || [];
   };
 
   const getDynamicInsurers = () => {
-    // For Retention department, prioritize retention-specific data over imported data
+    // Retention reports use retention datasets
     if (selectedDepartment === 'Retention') {
       if (selectedReportType === 'Retention - By Insurer') {
-        // Return actual insurer retention data names
         return insurerRetentionAnalyticsData.map(insurer => insurer.name);
-      } else if (selectedReportType === 'Retention - Broker') {
-        // Return actual broker retention data names
+      }
+      if (selectedReportType === 'Retention - Broker') {
         return brokerRetentionAnalyticsData.map(broker => broker.name);
       }
-      // Default fallback for retention department
       return insurerRetentionAnalyticsData.map(insurer => insurer.name);
     }
 
-    // For Business department, use business data
+    // Business: cascade from filtered dataset
     if (selectedDepartment === 'Business') {
-      // First check if there's imported data with proper safety checks
-      if (
-        importedData &&
-        importedData.isDataImported &&
-        importedData.insurerData &&
-        Array.isArray(importedData.insurerData) &&
-        importedData.insurerData.length > 0
-      ) {
-        return importedData.insurerData
-          .map(insurer => insurer?.name || '')
-          .filter(name => name.trim() !== '');
-      }
-
-      // Fallback to business data slice - extract only Insurer name values
-      if (
-        businessData &&
-        Array.isArray(businessData) &&
-        businessData.length > 0
-      ) {
-        const insurerNames: string[] = [];
-
-        try {
-          // Extract only Insurer name values with null/undefined checks
-          businessData.forEach(item => {
-            if (item && typeof item === 'object') {
-              if (
-                item['Insurer name'] &&
-                typeof item['Insurer name'] === 'string'
-              ) {
-                insurerNames.push(item['Insurer name']);
-              }
-            }
-          });
-
-          // Get unique values and filter out empty ones
-          const uniqueInsurers = Array.from(new Set(insurerNames));
-          return uniqueInsurers.filter(
-            insurer =>
-              insurer && typeof insurer === 'string' && insurer.trim() !== ''
-          );
-        } catch (error) {
-          console.error(
-            'Error processing business data in getDynamicInsurers:',
-            error
-          );
-          return [];
-        }
-      }
+      return allBusinessFilterOptions.insurers || [];
     }
 
-    // Skip JSON data check since hasImportedData is not available
-
-    // Fallback to Redux imported data for other departments
-    if (importedData.isDataImported && importedData.insurerData.length > 0) {
-      return importedData.insurerData.map(insurer => insurer.name);
-    }
-
-    // Final fallback to empty array (no default data)
     return [];
   };
 
   const getDynamicPolicyTypes = () => {
-    // Policy Types are only available for Business department
     if (selectedDepartment !== 'Business') {
       return [];
     }
-
-    // Use business data slice - extract only Policy Type values
-    if (
-      businessData &&
-      Array.isArray(businessData) &&
-      businessData.length > 0
-    ) {
-      const policyTypes: string[] = [];
-
-      try {
-        // Extract only Policy Type values with null/undefined checks
-        businessData.forEach(item => {
-          if (item && typeof item === 'object') {
-            if (
-              item['Policy Type'] &&
-              typeof item['Policy Type'] === 'string'
-            ) {
-              policyTypes.push(item['Policy Type']);
-            }
-          }
-        });
-
-        // Get unique values and filter out empty ones
-        const uniquePolicyTypes = Array.from(new Set(policyTypes));
-        return uniquePolicyTypes.filter(
-          policyType =>
-            policyType &&
-            typeof policyType === 'string' &&
-            policyType.trim() !== ''
-        );
-      } catch (error) {
-        console.error(
-          'Error processing business data in getDynamicPolicyTypes:',
-          error
-        );
-        return [];
-      }
-    }
-
-    // Final fallback to empty array
-    return [];
+    return allBusinessFilterOptions.policyTypes || [];
   };
 
   const getDynamicLobs = () => {
-    console.log(
-      '🔍 getDynamicLobs called - selectedDepartment:',
-      selectedDepartment
-    );
-
-    // LOBs are only available for Business department
     if (selectedDepartment !== 'Business') {
-      console.log('🔍 Not Business department, returning empty array');
       return [];
     }
-
-    // Use business data slice - extract only LOB name values
-    if (
-      businessData &&
-      Array.isArray(businessData) &&
-      businessData.length > 0
-    ) {
-      console.log('🔍 businessData length:', businessData.length);
-      const lobNames: string[] = [];
-
-      try {
-        // Extract only LOB name values with null/undefined checks
-        businessData.forEach(item => {
-          if (item && typeof item === 'object') {
-            if (item['LOB name'] && typeof item['LOB name'] === 'string') {
-              lobNames.push(item['LOB name']);
-            }
-          }
-        });
-
-        console.log('🔍 Extracted LOB names:', lobNames);
-
-        // Get unique values and filter out empty ones
-        const uniqueLobs = Array.from(new Set(lobNames));
-        console.log('🔍 Unique LOBs:', uniqueLobs);
-
-        const filteredLobs = uniqueLobs.filter(
-          lob => lob && typeof lob === 'string' && lob.trim() !== ''
-        );
-
-        console.log('🔍 Final filtered LOBs:', filteredLobs);
-        return filteredLobs;
-      } catch (error) {
-        console.error(
-          'Error processing business data in getDynamicLobs:',
-          error
-        );
-        return [];
-      }
-    }
-
-    console.log('🔍 No businessData available, returning empty array');
-    // Final fallback to empty array
-    return [];
+    return allBusinessFilterOptions.lobs || [];
   };
 
   const getDynamicVerticals = () => {
-    // Business Verticals are only available for Business department
     if (selectedDepartment !== 'Business') {
       return [];
     }
-
-    // Use business data slice - extract only Business Vertical values
-    if (
-      businessData &&
-      Array.isArray(businessData) &&
-      businessData.length > 0
-    ) {
-      const businessVerticals: string[] = [];
-
-      try {
-        // Extract only Business Vertical values with null/undefined checks
-        businessData.forEach(item => {
-          if (item && typeof item === 'object') {
-            if (
-              item['Bussiness Vertical'] &&
-              typeof item['Bussiness Vertical'] === 'string'
-            ) {
-              businessVerticals.push(item['Bussiness Vertical']);
-            }
-          }
-        });
-
-        // Get unique values and filter out empty ones
-        const uniqueVerticals = Array.from(new Set(businessVerticals));
-        return uniqueVerticals.filter(
-          vertical =>
-            vertical && typeof vertical === 'string' && vertical.trim() !== ''
-        );
-      } catch (error) {
-        console.error(
-          'Error processing business data in getDynamicVerticals:',
-          error
-        );
-        return [];
-      }
-    }
-
-    // Final fallback to empty array
-    return [];
+    return allBusinessFilterOptions.businessVerticals || [];
   };
 
   const getDynamicDurations = () => {
-    return durations;
+    return allBusinessFilterOptions.durations || [];
   };
 
   const getDynamicRegions = () => {
-    return regions;
+    return allBusinessFilterOptions.regions || [];
   };
 
   const getDynamicClientTypes = () => {
-    return ['Corporate', 'Retail', 'Affinity'];
+    return allBusinessFilterOptions.clientTypes || [];
   };
 
-  // Get dynamic filter values using useMemo to prevent infinite re-renders
-  const products = useMemo(() => getDynamicProducts(), [importedData]);
-  const insurers = useMemo(() => getDynamicInsurers(), [importedData]);
-  const dynamicLobs = useMemo(() => {
-    console.log('🔍 dynamicLobs useMemo triggered');
-    console.log('🔍 businessData in useMemo:', businessData?.length);
-    const result = getDynamicLobs();
-    console.log('🔍 dynamicLobs useMemo result:', result);
-    return result;
-  }, [businessData]);
+  // Get dynamic filter values using useMemo; these options are derived from
+  // businessFilterOptions (cascading Excel-style) so any change in filters
+  // updates other filter options. Retention department keeps its own logic.
+  const products = useMemo(
+    () => getDynamicProducts(),
+    [allBusinessFilterOptions, selectedDepartment]
+  );
+  const insurers = useMemo(
+    () => getDynamicInsurers(),
+    [allBusinessFilterOptions, selectedDepartment, selectedReportType]
+  );
+  const dynamicLobs = useMemo(
+    () => getDynamicLobs(),
+    [allBusinessFilterOptions, selectedDepartment]
+  );
   const dynamicPolicyTypes = useMemo(
     () => getDynamicPolicyTypes(),
-    [businessData]
+    [allBusinessFilterOptions, selectedDepartment]
   );
-  const dynamicVerticals = useMemo(() => getDynamicVerticals(), [businessData]);
-  const dynamicDurations = useMemo(() => getDynamicDurations(), [importedData]);
-  const dynamicRegions = useMemo(() => getDynamicRegions(), [importedData]);
+  const dynamicVerticals = useMemo(
+    () => getDynamicVerticals(),
+    [allBusinessFilterOptions, selectedDepartment]
+  );
+  const dynamicDurations = useMemo(
+    () => getDynamicDurations(),
+    [allBusinessFilterOptions, selectedDepartment]
+  );
+  const dynamicRegions = useMemo(
+    () => getDynamicRegions(),
+    [allBusinessFilterOptions, selectedDepartment]
+  );
   const dynamicClientTypes = useMemo(
     () => getDynamicClientTypes(),
-    [importedData]
+    [allBusinessFilterOptions, selectedDepartment]
   );
+
+  // Auto-deselect invalid downstream selections when upstream constraints change
+  useEffect(() => {
+    // Regions invalidated by Duration change
+    if (selectedRegions.length > 0) {
+      const availableRegions = optionsByDuration.regions || [];
+      const nextRegions = selectedRegions.filter(r =>
+        availableRegions.includes(r)
+      );
+      if (nextRegions.length !== selectedRegions.length) {
+        dispatch(setSelectedRegions(nextRegions));
+        if (selectedDepartment === 'Business') {
+          dispatch(
+            updateBusinessDataFilter({
+              filterType: 'regions',
+              values: nextRegions,
+            })
+          );
+        }
+      }
+    }
+
+    // Client Types invalidated by Duration/Region change
+    if (selectedClientTypes.length > 0) {
+      const availableClientTypes = optionsByDurationRegion.clientTypes || [];
+      const nextClientTypes = selectedClientTypes.filter(c =>
+        availableClientTypes.includes(c)
+      );
+      if (nextClientTypes.length !== selectedClientTypes.length) {
+        dispatch(setSelectedClientTypes(nextClientTypes));
+        if (selectedDepartment === 'Business') {
+          dispatch(
+            updateBusinessDataFilter({
+              filterType: 'clientTypes',
+              values: nextClientTypes,
+            })
+          );
+        }
+      }
+    }
+  }, [selectedDuration, selectedRegions, selectedDepartment]);
+
+  // Auto-deselect downstream Business filters when Duration/Region/Client Types change
+  useEffect(() => {
+    if (selectedDepartment !== 'Business') return;
+
+    // Products
+    if (selectedProducts.length > 0) {
+      const availableProducts = optionsByDurRegClient.products || [];
+      const nextProducts = selectedProducts.filter(p =>
+        availableProducts.includes(p)
+      );
+      if (nextProducts.length !== selectedProducts.length) {
+        dispatch(setSelectedProducts(nextProducts));
+        dispatch(
+          updateBusinessDataFilter({
+            filterType: 'products',
+            values: nextProducts,
+          })
+        );
+      }
+    }
+
+    // Insurers
+    if (selectedInsurers.length > 0) {
+      const availableInsurers = optionsByDurRegClient.insurers || [];
+      const nextInsurers = selectedInsurers.filter(i =>
+        availableInsurers.includes(i)
+      );
+      if (nextInsurers.length !== selectedInsurers.length) {
+        dispatch(setSelectedInsurers(nextInsurers));
+        dispatch(
+          updateBusinessDataFilter({
+            filterType: 'insurers',
+            values: nextInsurers,
+          })
+        );
+      }
+    }
+
+    // Policy Types
+    if (selectedPolicy.length > 0) {
+      const availablePolicy = optionsByDurRegClient.policyTypes || [];
+      const nextPolicy = selectedPolicy.filter(p =>
+        availablePolicy.includes(p)
+      );
+      if (nextPolicy.length !== selectedPolicy.length) {
+        dispatch(setSelectedPolicy(nextPolicy));
+        dispatch(
+          updateBusinessDataFilter({
+            filterType: 'policyTypes',
+            values: nextPolicy,
+          })
+        );
+      }
+    }
+
+    // LOBs
+    if (selectedLob.length > 0) {
+      const availableLobs = optionsByDurRegClient.lobs || [];
+      const nextLobs = selectedLob.filter(l => availableLobs.includes(l));
+      if (nextLobs.length !== selectedLob.length) {
+        dispatch(setSelectedLob(nextLobs));
+        dispatch(
+          updateBusinessDataFilter({
+            filterType: 'lobs',
+            values: nextLobs,
+          })
+        );
+      }
+    }
+
+    // Vertical
+    if (selectedVertical.length > 0) {
+      const availableVerticals = optionsByDurRegClient.businessVerticals || [];
+      const nextVerticals = selectedVertical.filter(v =>
+        availableVerticals.includes(v)
+      );
+      if (nextVerticals.length !== selectedVertical.length) {
+        dispatch(setSelectedVertical(nextVerticals));
+        dispatch(
+          updateBusinessDataFilter({
+            filterType: 'businessVerticals',
+            values: nextVerticals,
+          })
+        );
+      }
+    }
+  }, [
+    selectedDuration,
+    selectedRegions,
+    selectedClientTypes,
+    selectedDepartment,
+    optionsByDurRegClient,
+    selectedProducts,
+    selectedInsurers,
+    selectedPolicy,
+    selectedLob,
+    selectedVertical,
+  ]);
 
   // Removed commented-out getDynamicFilterOptionsForReportType function
 
@@ -653,6 +589,11 @@ export function AdvancedFilters({
     dispatch(setSelectedProducts([]));
     dispatch(setSelectedInsurers([]));
     dispatch(setSelectedClientTypes([]));
+
+    // Reset cascading filters when leaving Business department
+    if (value !== 'Business') {
+      dispatch(clearBusinessDataFilters());
+    }
   };
 
   const handleReportTypeChange = (value: string) => {
@@ -661,6 +602,11 @@ export function AdvancedFilters({
     // Clear specific filters when report type changes to ensure clean state
     dispatch(setSelectedProducts([]));
     dispatch(setSelectedInsurers([]));
+
+    // Reset cascading filters if leaving Business report contexts
+    if (selectedDepartment !== 'Business') {
+      dispatch(clearBusinessDataFilters());
+    }
   };
 
   // Enhanced duration handler to support multi-select
@@ -720,7 +666,7 @@ export function AdvancedFilters({
       selectedTeams,
       selectedProducts,
       selectedInsurers,
-      clientTypes: CLIENT_TYPES,
+      clientTypes: selectedClientTypes,
     };
 
     // Implementation for saving configuration to localStorage or API
@@ -733,70 +679,6 @@ export function AdvancedFilters({
     alert('Dashboard configuration saved successfully!');
   };
 
-  // Business Data Filtering Handlers
-  const handleBusinessDataFilterChange = (
-    filterType: keyof typeof businessDataFilters,
-    value: string
-  ) => {
-    const currentValues = businessDataFilters[filterType] || [];
-    let newValues: string[];
-
-    if (currentValues.includes(value)) {
-      // Remove if already selected
-      newValues = currentValues.filter(v => v !== value);
-    } else {
-      // Add to selection
-      newValues = [...currentValues, value];
-    }
-
-    dispatch(updateBusinessDataFilter({ filterType, values: newValues }));
-  };
-
-  const handleBusinessDataFilterSelectAll = (
-    filterType: keyof typeof businessDataFilters
-  ) => {
-    let allOptions: string[] = [];
-
-    switch (filterType) {
-      case 'durations':
-        allOptions = businessFilterOptions.durations;
-        break;
-      case 'regions':
-        allOptions = businessFilterOptions.regions;
-        break;
-      case 'clientTypes':
-        allOptions = businessFilterOptions.clientTypes;
-        break;
-      case 'products':
-        allOptions = businessFilterOptions.products;
-        break;
-      case 'insurers':
-        allOptions = businessFilterOptions.insurers;
-        break;
-      case 'policyTypes':
-        allOptions = businessFilterOptions.policyTypes;
-        break;
-      case 'lobs':
-        allOptions = businessFilterOptions.lobs;
-        break;
-      case 'businessVerticals':
-        allOptions = businessFilterOptions.businessVerticals;
-        break;
-    }
-
-    dispatch(updateBusinessDataFilter({ filterType, values: allOptions }));
-  };
-
-  const handleBusinessDataFilterClearAll = (
-    filterType: keyof typeof businessDataFilters
-  ) => {
-    dispatch(updateBusinessDataFilter({ filterType, values: [] }));
-  };
-
-  const clearAllBusinessDataFilters = () => {
-    dispatch(clearBusinessDataFilters());
-  };
-
   // Load configuration on mount
   useEffect(() => {
     const savedConfig = localStorage.getItem('dashboardConfiguration');
@@ -807,19 +689,73 @@ export function AdvancedFilters({
         if (configuration.pinnedItems && onPinnedItemsChange) {
           onPinnedItemsChange(configuration.pinnedItems);
         }
-        // Load other settings
-        // if (configuration.dateRange) setDateRange(configuration.dateRange); // dateRange state was removed
         if (configuration.selectedRegions)
           dispatch(setSelectedRegions(configuration.selectedRegions));
         if (configuration.selectedStates)
           dispatch(setSelectedStates(configuration.selectedStates));
-        // if (configuration.chartType) setChartType(configuration.chartType);
-        // ... load other settings as needed
       } catch (error) {
         console.error('Error loading saved configuration:', error);
       }
     }
   }, [onPinnedItemsChange]);
+
+  // Default-all selection: ensure core cascading filters start with "all" selected
+  // 1) Durations: select all available durations on initial load when empty
+  useEffect(() => {
+    const allDurations = dynamicDurations || [];
+    const currentDurations = (selectedDuration as unknown as string[]) || [];
+    if (currentDurations.length === 0 && allDurations.length > 0) {
+      dispatch(setSelectedDuration(allDurations as DurationType[]));
+      if (selectedDepartment === 'Business') {
+        dispatch(
+          updateBusinessDataFilter({
+            filterType: 'durations',
+            values: allDurations as unknown as string[],
+          })
+        );
+      }
+    }
+  }, [dynamicDurations, selectedDepartment]);
+
+  // 2) Regions: once durations are known, select all available regions when empty
+  useEffect(() => {
+    const availableRegions = optionsByDuration.regions || [];
+    if ((selectedRegions?.length ?? 0) === 0 && availableRegions.length > 0) {
+      dispatch(setSelectedRegions([...availableRegions]));
+      if (selectedDepartment === 'Business') {
+        dispatch(
+          updateBusinessDataFilter({
+            filterType: 'regions',
+            values: [...availableRegions],
+          })
+        );
+      }
+    }
+  }, [optionsByDuration, selectedDuration, selectedDepartment]);
+
+  // 3) Client Types: once durations/regions are set, select all available client types when empty
+  useEffect(() => {
+    const availableClientTypes = optionsByDurationRegion.clientTypes || [];
+    if (
+      (selectedClientTypes?.length ?? 0) === 0 &&
+      availableClientTypes.length > 0
+    ) {
+      dispatch(setSelectedClientTypes([...availableClientTypes]));
+      if (selectedDepartment === 'Business') {
+        dispatch(
+          updateBusinessDataFilter({
+            filterType: 'clientTypes',
+            values: [...availableClientTypes],
+          })
+        );
+      }
+    }
+  }, [
+    optionsByDurationRegion,
+    selectedRegions,
+    selectedDuration,
+    selectedDepartment,
+  ]);
 
   // Auto-select all available items when department or report type changes
   useEffect(() => {
@@ -833,44 +769,58 @@ export function AdvancedFilters({
 
     // Handle Business department filters
     if (selectedDepartment === 'Business') {
-      // Auto-select all products when Business department is selected and products are available
-      if (products.length > 0) {
+      // Keep UI selections in sync, but do not apply non-Region filters to data here
+      if (products.length > 0 && !arraysEqual(selectedProducts, products)) {
         dispatch(setSelectedProducts([...products]));
       }
-      // Auto-select all LOBs for Business department
-      if (dynamicLobs.length > 0) {
-        console.log('🚀 Setting selectedLob to all dynamicLobs:', dynamicLobs);
+      if (dynamicLobs.length > 0 && !arraysEqual(selectedLob, dynamicLobs)) {
         dispatch(setSelectedLob([...dynamicLobs]));
       }
-      // Auto-select all policy types for Business department
-      if (dynamicPolicyTypes.length > 0) {
+      if (
+        dynamicPolicyTypes.length > 0 &&
+        !arraysEqual(selectedPolicy, dynamicPolicyTypes)
+      ) {
         dispatch(setSelectedPolicy([...dynamicPolicyTypes]));
       }
-      // Auto-select all verticals for Business department
-      if (dynamicVerticals.length > 0) {
+      if (
+        dynamicVerticals.length > 0 &&
+        !arraysEqual(selectedVertical, dynamicVerticals)
+      ) {
         dispatch(setSelectedVertical([...dynamicVerticals]));
       }
-      // Auto-select all client types for Business department
-      if (dynamicClientTypes.length > 0) {
+      if (
+        dynamicClientTypes.length > 0 &&
+        !arraysEqual(selectedClientTypes, dynamicClientTypes)
+      ) {
         dispatch(setSelectedClientTypes([...dynamicClientTypes]));
       }
     } else {
       // Clear Business-specific filters when not in Business department
-      dispatch(setSelectedProducts([]));
-      dispatch(setSelectedLob([]));
-      dispatch(setSelectedPolicy([]));
-      dispatch(setSelectedVertical([]));
+      if (selectedProducts.length > 0) dispatch(setSelectedProducts([]));
+      if (selectedLob.length > 0) dispatch(setSelectedLob([]));
+      if (selectedPolicy.length > 0) dispatch(setSelectedPolicy([]));
+      if (selectedVertical.length > 0) dispatch(setSelectedVertical([]));
+      const hasBusinessFilters =
+        (businessDataFilters.products?.length ?? 0) > 0 ||
+        (businessDataFilters.lobs?.length ?? 0) > 0 ||
+        (businessDataFilters.policyTypes?.length ?? 0) > 0 ||
+        (businessDataFilters.businessVerticals?.length ?? 0) > 0 ||
+        (businessDataFilters.clientTypes?.length ?? 0) > 0 ||
+        (businessDataFilters.insurers?.length ?? 0) > 0 ||
+        (businessDataFilters.regions?.length ?? 0) > 0;
+      if (hasBusinessFilters) dispatch(clearBusinessDataFilters());
     }
 
     // Handle Retention department filters
     if (selectedDepartment === 'Retention') {
-      // Auto-select all client types for Retention department
-      if (dynamicClientTypes.length > 0) {
+      if (
+        dynamicClientTypes.length > 0 &&
+        !arraysEqual(selectedClientTypes, dynamicClientTypes)
+      ) {
         dispatch(setSelectedClientTypes([...dynamicClientTypes]));
       }
     } else if (selectedDepartment !== 'Business') {
-      // Clear client types for departments other than Business and Retention
-      dispatch(setSelectedClientTypes([]));
+      if (selectedClientTypes.length > 0) dispatch(setSelectedClientTypes([]));
     }
 
     // Auto-select all insurers for departments that support them (Business and Retention)
@@ -879,32 +829,11 @@ export function AdvancedFilters({
         selectedDepartment === 'Retention') &&
       insurers.length > 0
     ) {
-      dispatch(setSelectedInsurers([...insurers]));
+      if (!arraysEqual(selectedInsurers, insurers)) {
+        dispatch(setSelectedInsurers([...insurers]));
+      }
     } else {
-      dispatch(setSelectedInsurers([]));
-    }
-
-    // Auto-select all regions (available for all departments)
-    if (dynamicRegions.length > 0) {
-      dispatch(setSelectedRegions([...dynamicRegions]));
-    }
-
-    // Auto-select all states (using regions data as they appear to be the same)
-    const statesData = [
-      'Maharashtra',
-      'Delhi',
-      'Karnataka',
-      'Tamil Nadu',
-      'Telangana',
-      'Maharashtra',
-      'West Bengal',
-      'Gujarat',
-    ];
-    dispatch(setSelectedStates([...statesData]));
-
-    // Auto-select all teams (available for all departments)
-    if (teams.length > 0) {
-      dispatch(setSelectedTeams([...teams]));
+      if (selectedInsurers.length > 0) dispatch(setSelectedInsurers([]));
     }
   }, [
     selectedDepartment,
@@ -1229,19 +1158,23 @@ export function AdvancedFilters({
                           </div>
 
                           {/* Available Options */}
-                          {filterOptions.length > 0 && (
-                            <div className="px-3 pb-3">
-                              <div className="border-t border-gray-200 pt-3">
-                                <Label className="text-xs font-medium text-gray-600 mb-2 block">
-                                  Available Options ({filterOptions.length})
-                                  {isMultiSelect(item.id) &&
-                                    Array.isArray(currentSelection) &&
-                                    currentSelection && (
-                                      <span className="text-blue-600 ml-1">
-                                        • {currentSelection.length} selected
-                                      </span>
-                                    )}
-                                </Label>
+                          <div className="px-3 pb-3">
+                            <div className="border-t border-gray-200 pt-3">
+                              <Label className="text-xs font-medium text-gray-600 mb-2 block">
+                                Available Options ({filterOptions.length})
+                                {isMultiSelect(item.id) &&
+                                  Array.isArray(currentSelection) &&
+                                  currentSelection && (
+                                    <span className="text-blue-600 ml-1">
+                                      • {currentSelection.length} selected
+                                    </span>
+                                  )}
+                              </Label>
+                              {filterOptions.length === 0 ? (
+                                <div className="text-xs text-gray-500 italic py-2">
+                                  No options available for current selection
+                                </div>
+                              ) : (
                                 <div className="flex flex-wrap gap-1">
                                   {filterOptions.map(option => {
                                     const isSelected = isMultiSelect(item.id)
@@ -1249,22 +1182,161 @@ export function AdvancedFilters({
                                         currentSelection.includes(option)
                                       : option === currentSelection;
 
+                                    const isDisabled = (() => {
+                                      switch (item.id) {
+                                        case 'regions':
+                                          return (
+                                            (selectedDuration?.length ?? 0) ===
+                                              0 ||
+                                            !(
+                                              optionsByDuration.regions || []
+                                            ).includes(option)
+                                          );
+                                        case 'clientTypes':
+                                          return (
+                                            (selectedDuration?.length ?? 0) ===
+                                              0 ||
+                                            (selectedRegions?.length ?? 0) ===
+                                              0 ||
+                                            !(
+                                              optionsByDurationRegion.clientTypes ||
+                                              []
+                                            ).includes(option)
+                                          );
+                                        case 'products':
+                                          return (
+                                            (selectedDuration?.length ?? 0) ===
+                                              0 ||
+                                            (selectedRegions?.length ?? 0) ===
+                                              0 ||
+                                            (selectedClientTypes?.length ??
+                                              0) === 0 ||
+                                            !(
+                                              optionsByDurRegClient.products ||
+                                              []
+                                            ).includes(option)
+                                          );
+                                        case 'insurers':
+                                          return (
+                                            (selectedDuration?.length ?? 0) ===
+                                              0 ||
+                                            (selectedRegions?.length ?? 0) ===
+                                              0 ||
+                                            (selectedClientTypes?.length ??
+                                              0) === 0 ||
+                                            !(
+                                              optionsByDurRegClient.insurers ||
+                                              []
+                                            ).includes(option)
+                                          );
+                                        case 'policy':
+                                          return (
+                                            (selectedDuration?.length ?? 0) ===
+                                              0 ||
+                                            (selectedRegions?.length ?? 0) ===
+                                              0 ||
+                                            (selectedClientTypes?.length ??
+                                              0) === 0 ||
+                                            !(
+                                              optionsByDurRegClient.policyTypes ||
+                                              []
+                                            ).includes(option)
+                                          );
+                                        case 'lob':
+                                          return (
+                                            (selectedDuration?.length ?? 0) ===
+                                              0 ||
+                                            (selectedRegions?.length ?? 0) ===
+                                              0 ||
+                                            (selectedClientTypes?.length ??
+                                              0) === 0 ||
+                                            !(
+                                              optionsByDurRegClient.lobs || []
+                                            ).includes(option)
+                                          );
+                                        case 'vertical':
+                                          return (
+                                            (selectedDuration?.length ?? 0) ===
+                                              0 ||
+                                            (selectedRegions?.length ?? 0) ===
+                                              0 ||
+                                            (selectedClientTypes?.length ??
+                                              0) === 0 ||
+                                            !(
+                                              optionsByDurRegClient.businessVerticals ||
+                                              []
+                                            ).includes(option)
+                                          );
+                                        default:
+                                          return false;
+                                      }
+                                    })();
+
                                     return (
                                       <Badge
                                         key={option}
                                         variant={
-                                          isSelected ? 'default' : 'outline'
+                                          isSelected && !isDisabled
+                                            ? 'default'
+                                            : 'outline'
                                         }
-                                        className={`text-xs cursor-pointer transition-all duration-200 ${
-                                          isSelected
-                                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                            : 'hover:bg-gray-100 hover:border-gray-300'
+                                        title={
+                                          isDisabled
+                                            ? 'Not available in current selection'
+                                            : undefined
+                                        }
+                                        className={`text-xs transition-all duration-200 ${
+                                          isDisabled
+                                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'
+                                            : 'cursor-pointer ' +
+                                              (isSelected
+                                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                : 'hover:bg-gray-100 hover:border-gray-300')
                                         }`}
                                         onClick={e => {
                                           e.stopPropagation();
+                                          if (isDisabled) return;
                                           if (isMultiSelect(item.id)) {
-                                            // Handle multi-select for teams, regions, products, insurers
+                                            // Handle multi-select for duration, teams, regions, products, insurers, etc.
                                             switch (item.id) {
+                                              case 'duration': {
+                                                const newSelection =
+                                                  Array.isArray(
+                                                    selectedDuration
+                                                  ) &&
+                                                  selectedDuration.includes(
+                                                    option as DurationType
+                                                  )
+                                                    ? (
+                                                        selectedDuration as DurationType[]
+                                                      ).filter(
+                                                        d =>
+                                                          d !==
+                                                          (option as DurationType)
+                                                      )
+                                                    : [
+                                                        ...(selectedDuration as DurationType[]),
+                                                        option as DurationType,
+                                                      ];
+                                                dispatch(
+                                                  setSelectedDuration(
+                                                    newSelection
+                                                  )
+                                                );
+                                                if (
+                                                  selectedDepartment ===
+                                                  'Business'
+                                                ) {
+                                                  dispatch(
+                                                    updateBusinessDataFilter({
+                                                      filterType: 'durations',
+                                                      values:
+                                                        newSelection as unknown as string[],
+                                                    })
+                                                  );
+                                                }
+                                                break;
+                                              }
                                               case 'teams':
                                                 dispatch(
                                                   setSelectedTeams(
@@ -1282,8 +1354,8 @@ export function AdvancedFilters({
                                                 );
                                                 break;
                                               case 'regions':
-                                                dispatch(
-                                                  setSelectedRegions(
+                                                {
+                                                  const newSelection =
                                                     selectedRegions.includes(
                                                       option
                                                     )
@@ -1293,13 +1365,29 @@ export function AdvancedFilters({
                                                       : [
                                                           ...selectedRegions,
                                                           option,
-                                                        ]
-                                                  )
-                                                );
+                                                        ];
+                                                  dispatch(
+                                                    setSelectedRegions(
+                                                      newSelection
+                                                    )
+                                                  );
+                                                  if (
+                                                    selectedDepartment ===
+                                                    'Business'
+                                                  ) {
+                                                    dispatch(
+                                                      updateBusinessDataFilter({
+                                                        filterType: 'regions',
+                                                        values: newSelection,
+                                                      })
+                                                    );
+                                                  }
+                                                  break;
+                                                }
                                                 break;
                                               case 'products':
-                                                dispatch(
-                                                  setSelectedProducts(
+                                                {
+                                                  const newSelection =
                                                     selectedProducts.includes(
                                                       option
                                                     )
@@ -1309,13 +1397,29 @@ export function AdvancedFilters({
                                                       : [
                                                           ...selectedProducts,
                                                           option,
-                                                        ]
-                                                  )
-                                                );
+                                                        ];
+                                                  dispatch(
+                                                    setSelectedProducts(
+                                                      newSelection
+                                                    )
+                                                  );
+                                                  if (
+                                                    selectedDepartment ===
+                                                    'Business'
+                                                  ) {
+                                                    dispatch(
+                                                      updateBusinessDataFilter({
+                                                        filterType: 'products',
+                                                        values: newSelection,
+                                                      })
+                                                    );
+                                                  }
+                                                  break;
+                                                }
                                                 break;
                                               case 'insurers':
-                                                dispatch(
-                                                  setSelectedInsurers(
+                                                {
+                                                  const newSelection =
                                                     selectedInsurers.includes(
                                                       option
                                                     )
@@ -1325,13 +1429,29 @@ export function AdvancedFilters({
                                                       : [
                                                           ...selectedInsurers,
                                                           option,
-                                                        ]
-                                                  )
-                                                );
+                                                        ];
+                                                  dispatch(
+                                                    setSelectedInsurers(
+                                                      newSelection
+                                                    )
+                                                  );
+                                                  if (
+                                                    selectedDepartment ===
+                                                    'Business'
+                                                  ) {
+                                                    dispatch(
+                                                      updateBusinessDataFilter({
+                                                        filterType: 'insurers',
+                                                        values: newSelection,
+                                                      })
+                                                    );
+                                                  }
+                                                  break;
+                                                }
                                                 break;
                                               case 'brokers':
-                                                dispatch(
-                                                  setSelectedInsurers(
+                                                {
+                                                  const newSelection =
                                                     selectedInsurers.includes(
                                                       option
                                                     )
@@ -1341,13 +1461,24 @@ export function AdvancedFilters({
                                                       : [
                                                           ...selectedInsurers,
                                                           option,
-                                                        ]
-                                                  )
-                                                );
+                                                        ];
+                                                  dispatch(
+                                                    setSelectedInsurers(
+                                                      newSelection
+                                                    )
+                                                  );
+                                                  if (
+                                                    selectedDepartment ===
+                                                    'Business'
+                                                  ) {
+                                                    // Do not apply non-Region filters to business data here
+                                                  }
+                                                  break;
+                                                }
                                                 break;
                                               case 'clientTypes':
-                                                dispatch(
-                                                  setSelectedClientTypes(
+                                                {
+                                                  const newSelection =
                                                     selectedClientTypes.includes(
                                                       option
                                                     )
@@ -1357,13 +1488,30 @@ export function AdvancedFilters({
                                                       : [
                                                           ...selectedClientTypes,
                                                           option,
-                                                        ]
-                                                  )
-                                                );
+                                                        ];
+                                                  dispatch(
+                                                    setSelectedClientTypes(
+                                                      newSelection
+                                                    )
+                                                  );
+                                                  if (
+                                                    selectedDepartment ===
+                                                    'Business'
+                                                  ) {
+                                                    dispatch(
+                                                      updateBusinessDataFilter({
+                                                        filterType:
+                                                          'clientTypes',
+                                                        values: newSelection,
+                                                      })
+                                                    );
+                                                  }
+                                                  break;
+                                                }
                                                 break;
                                               case 'policy':
-                                                dispatch(
-                                                  setSelectedPolicy(
+                                                {
+                                                  const newSelection =
                                                     selectedPolicy.includes(
                                                       option
                                                     )
@@ -1373,24 +1521,58 @@ export function AdvancedFilters({
                                                       : [
                                                           ...selectedPolicy,
                                                           option,
-                                                        ]
-                                                  )
-                                                );
+                                                        ];
+                                                  dispatch(
+                                                    setSelectedPolicy(
+                                                      newSelection
+                                                    )
+                                                  );
+                                                  if (
+                                                    selectedDepartment ===
+                                                    'Business'
+                                                  ) {
+                                                    dispatch(
+                                                      updateBusinessDataFilter({
+                                                        filterType:
+                                                          'policyTypes',
+                                                        values: newSelection,
+                                                      })
+                                                    );
+                                                  }
+                                                  break;
+                                                }
                                                 break;
                                               case 'lob':
-                                                dispatch(
-                                                  setSelectedLob(
+                                                {
+                                                  const newSelection =
                                                     selectedLob.includes(option)
                                                       ? selectedLob.filter(
                                                           l => l !== option
                                                         )
-                                                      : [...selectedLob, option]
-                                                  )
-                                                );
+                                                      : [
+                                                          ...selectedLob,
+                                                          option,
+                                                        ];
+                                                  dispatch(
+                                                    setSelectedLob(newSelection)
+                                                  );
+                                                  if (
+                                                    selectedDepartment ===
+                                                    'Business'
+                                                  ) {
+                                                    dispatch(
+                                                      updateBusinessDataFilter({
+                                                        filterType: 'lobs',
+                                                        values: newSelection,
+                                                      })
+                                                    );
+                                                  }
+                                                  break;
+                                                }
                                                 break;
                                               case 'vertical':
-                                                dispatch(
-                                                  setSelectedVertical(
+                                                {
+                                                  const newSelection =
                                                     selectedVertical.includes(
                                                       option
                                                     )
@@ -1400,9 +1582,26 @@ export function AdvancedFilters({
                                                       : [
                                                           ...selectedVertical,
                                                           option,
-                                                        ]
-                                                  )
-                                                );
+                                                        ];
+                                                  dispatch(
+                                                    setSelectedVertical(
+                                                      newSelection
+                                                    )
+                                                  );
+                                                  if (
+                                                    selectedDepartment ===
+                                                    'Business'
+                                                  ) {
+                                                    dispatch(
+                                                      updateBusinessDataFilter({
+                                                        filterType:
+                                                          'businessVerticals',
+                                                        values: newSelection,
+                                                      })
+                                                    );
+                                                  }
+                                                  break;
+                                                }
                                                 break;
                                             }
                                           } else {
@@ -1431,121 +1630,385 @@ export function AdvancedFilters({
                                     );
                                   })}
                                 </div>
-                                {isMultiSelect(item.id) && (
-                                  <div className="mt-2 flex gap-2">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        switch (item.id) {
-                                          case 'teams':
+                              )}
+                              {isMultiSelect(item.id) && (
+                                <div className="mt-2 flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={(() => {
+                                      switch (item.id) {
+                                        case 'regions':
+                                          return (
+                                            (optionsByDuration.regions || [])
+                                              .length === 0
+                                          );
+                                        case 'clientTypes':
+                                          return (
+                                            (
+                                              optionsByDurationRegion.clientTypes ||
+                                              []
+                                            ).length === 0
+                                          );
+                                        case 'products':
+                                          return (
+                                            (
+                                              optionsByDurRegClient.products ||
+                                              []
+                                            ).length === 0
+                                          );
+                                        case 'insurers':
+                                          return (
+                                            (
+                                              optionsByDurRegClient.insurers ||
+                                              []
+                                            ).length === 0
+                                          );
+                                        case 'policy':
+                                          return (
+                                            (
+                                              optionsByDurRegClient.policyTypes ||
+                                              []
+                                            ).length === 0
+                                          );
+                                        case 'lob':
+                                          return (
+                                            (optionsByDurRegClient.lobs || [])
+                                              .length === 0
+                                          );
+                                        case 'vertical':
+                                          return (
+                                            (
+                                              optionsByDurRegClient.businessVerticals ||
+                                              []
+                                            ).length === 0
+                                          );
+                                        default:
+                                          return filterOptions.length === 0;
+                                      }
+                                    })()}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      switch (item.id) {
+                                        case 'duration':
+                                          {
+                                            const allDurations =
+                                              getDynamicDurations();
                                             dispatch(
-                                              setSelectedTeams([...teams])
+                                              setSelectedDuration(
+                                                allDurations as DurationType[]
+                                              )
                                             );
-                                            break;
-                                          case 'regions':
+                                            if (
+                                              selectedDepartment === 'Business'
+                                            ) {
+                                              dispatch(
+                                                updateBusinessDataFilter({
+                                                  filterType: 'durations',
+                                                  values:
+                                                    allDurations as unknown as string[],
+                                                })
+                                              );
+                                            }
+                                          }
+                                          break;
+                                        case 'teams':
+                                          dispatch(
+                                            setSelectedTeams([...teams])
+                                          );
+                                          break;
+                                        case 'regions':
+                                          {
+                                            const available =
+                                              optionsByDuration.regions || [];
+                                            if (available.length === 0) break;
                                             dispatch(
-                                              setSelectedRegions([...regions])
+                                              setSelectedRegions([...available])
                                             );
-                                            break;
-                                          case 'products':
+                                            if (
+                                              selectedDepartment === 'Business'
+                                            ) {
+                                              dispatch(
+                                                updateBusinessDataFilter({
+                                                  filterType: 'regions',
+                                                  values: [...available],
+                                                })
+                                              );
+                                            }
+                                          }
+                                          break;
+                                        case 'products':
+                                          {
+                                            const available =
+                                              optionsByDurRegClient.products ||
+                                              [];
+                                            if (available.length === 0) break;
                                             dispatch(
-                                              setSelectedProducts([...products])
+                                              setSelectedProducts([
+                                                ...available,
+                                              ])
                                             );
-                                            break;
-                                          case 'insurers':
+                                            if (
+                                              selectedDepartment === 'Business'
+                                            ) {
+                                              dispatch(
+                                                updateBusinessDataFilter({
+                                                  filterType: 'products',
+                                                  values: [...available],
+                                                })
+                                              );
+                                            }
+                                          }
+                                          break;
+                                        case 'insurers':
+                                          {
+                                            const available =
+                                              optionsByDurRegClient.insurers ||
+                                              [];
+                                            if (available.length === 0) break;
                                             dispatch(
-                                              setSelectedInsurers([...insurers])
+                                              setSelectedInsurers([
+                                                ...available,
+                                              ])
                                             );
-                                            break;
-                                          case 'brokers':
-                                            dispatch(
-                                              setSelectedInsurers([...insurers])
-                                            );
-                                            break;
-                                          case 'clientTypes':
+                                            if (
+                                              selectedDepartment === 'Business'
+                                            ) {
+                                              dispatch(
+                                                updateBusinessDataFilter({
+                                                  filterType: 'insurers',
+                                                  values: [...available],
+                                                })
+                                              );
+                                            }
+                                          }
+                                          break;
+                                        case 'brokers':
+                                          dispatch(
+                                            setSelectedInsurers([...insurers])
+                                          );
+                                          break;
+                                        case 'clientTypes':
+                                          {
+                                            const allClientTypes =
+                                              optionsByDurationRegion.clientTypes ||
+                                              [];
+                                            if (allClientTypes.length === 0)
+                                              break;
                                             dispatch(
                                               setSelectedClientTypes([
-                                                'Corporate',
-                                                'Retail',
-                                                'Affinity',
+                                                ...allClientTypes,
                                               ])
                                             );
-                                            break;
-                                          case 'policy':
+                                            if (
+                                              selectedDepartment === 'Business'
+                                            ) {
+                                              dispatch(
+                                                updateBusinessDataFilter({
+                                                  filterType: 'clientTypes',
+                                                  values: [...allClientTypes],
+                                                })
+                                              );
+                                            }
+                                          }
+                                          break;
+                                        case 'policy':
+                                          {
+                                            const available =
+                                              optionsByDurRegClient.policyTypes ||
+                                              [];
+                                            if (available.length === 0) break;
                                             dispatch(
-                                              setSelectedPolicy([
-                                                ...getDynamicPolicyTypes(),
-                                              ])
+                                              setSelectedPolicy([...available])
                                             );
-                                            break;
-                                          case 'lob':
+                                            if (
+                                              selectedDepartment === 'Business'
+                                            ) {
+                                              dispatch(
+                                                updateBusinessDataFilter({
+                                                  filterType: 'policyTypes',
+                                                  values: [...available],
+                                                })
+                                              );
+                                            }
+                                          }
+                                          break;
+                                        case 'lob':
+                                          {
+                                            const available =
+                                              optionsByDurRegClient.lobs || [];
+                                            if (available.length === 0) break;
                                             dispatch(
-                                              setSelectedLob([
-                                                ...getDynamicLobs(),
-                                              ])
+                                              setSelectedLob([...available])
                                             );
-                                            break;
-                                          case 'vertical':
+                                            if (
+                                              selectedDepartment === 'Business'
+                                            ) {
+                                              dispatch(
+                                                updateBusinessDataFilter({
+                                                  filterType: 'lobs',
+                                                  values: [...available],
+                                                })
+                                              );
+                                            }
+                                          }
+                                          break;
+                                        case 'vertical':
+                                          {
+                                            const available =
+                                              optionsByDurRegClient.businessVerticals ||
+                                              [];
+                                            if (available.length === 0) break;
                                             dispatch(
                                               setSelectedVertical([
-                                                ...getDynamicVerticals(),
+                                                ...available,
                                               ])
                                             );
-                                            break;
-                                        }
-                                      }}
-                                    >
-                                      Select All
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2 text-xs text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        switch (item.id) {
-                                          case 'teams':
-                                            dispatch(setSelectedTeams([]));
-                                            break;
-                                          case 'regions':
-                                            dispatch(setSelectedRegions([]));
-                                            break;
-                                          case 'products':
-                                            dispatch(setSelectedProducts([]));
-                                            break;
-                                          case 'insurers':
-                                            dispatch(setSelectedInsurers([]));
-                                            break;
-                                          case 'brokers':
-                                            dispatch(setSelectedInsurers([]));
-                                            break;
-                                          case 'clientTypes':
+                                            if (
+                                              selectedDepartment === 'Business'
+                                            ) {
+                                              dispatch(
+                                                updateBusinessDataFilter({
+                                                  filterType:
+                                                    'businessVerticals',
+                                                  values: [...available],
+                                                })
+                                              );
+                                            }
+                                          }
+                                          break;
+                                      }
+                                    }}
+                                  >
+                                    Select All
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      switch (item.id) {
+                                        case 'duration':
+                                          dispatch(setSelectedDuration([]));
+                                          if (
+                                            selectedDepartment === 'Business'
+                                          ) {
                                             dispatch(
-                                              setSelectedClientTypes([])
+                                              updateBusinessDataFilter({
+                                                filterType: 'durations',
+                                                values: [],
+                                              })
                                             );
-                                            break;
-                                          case 'policy':
-                                            dispatch(setSelectedPolicy([]));
-                                            break;
-                                          case 'lob':
-                                            dispatch(setSelectedLob([]));
-                                            break;
-                                          case 'vertical':
-                                            dispatch(setSelectedVertical([]));
-                                            break;
-                                        }
-                                      }}
-                                    >
-                                      Clear All
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
+                                          }
+                                          break;
+                                        case 'teams':
+                                          dispatch(setSelectedTeams([]));
+                                          break;
+                                        case 'regions':
+                                          dispatch(setSelectedRegions([]));
+                                          if (
+                                            selectedDepartment === 'Business'
+                                          ) {
+                                            dispatch(
+                                              updateBusinessDataFilter({
+                                                filterType: 'regions',
+                                                values: [],
+                                              })
+                                            );
+                                          }
+                                          break;
+                                        case 'products':
+                                          dispatch(setSelectedProducts([]));
+                                          if (
+                                            selectedDepartment === 'Business'
+                                          ) {
+                                            dispatch(
+                                              updateBusinessDataFilter({
+                                                filterType: 'products',
+                                                values: [],
+                                              })
+                                            );
+                                          }
+                                          break;
+                                        case 'insurers':
+                                          dispatch(setSelectedInsurers([]));
+                                          if (
+                                            selectedDepartment === 'Business'
+                                          ) {
+                                            dispatch(
+                                              updateBusinessDataFilter({
+                                                filterType: 'insurers',
+                                                values: [],
+                                              })
+                                            );
+                                          }
+                                          break;
+                                        case 'brokers':
+                                          dispatch(setSelectedInsurers([]));
+                                          break;
+                                        case 'clientTypes':
+                                          dispatch(setSelectedClientTypes([]));
+                                          if (
+                                            selectedDepartment === 'Business'
+                                          ) {
+                                            dispatch(
+                                              updateBusinessDataFilter({
+                                                filterType: 'clientTypes',
+                                                values: [],
+                                              })
+                                            );
+                                          }
+                                          break;
+                                        case 'policy':
+                                          dispatch(setSelectedPolicy([]));
+                                          if (
+                                            selectedDepartment === 'Business'
+                                          ) {
+                                            dispatch(
+                                              updateBusinessDataFilter({
+                                                filterType: 'policyTypes',
+                                                values: [],
+                                              })
+                                            );
+                                          }
+                                          break;
+                                        case 'lob':
+                                          dispatch(setSelectedLob([]));
+                                          if (
+                                            selectedDepartment === 'Business'
+                                          ) {
+                                            dispatch(
+                                              updateBusinessDataFilter({
+                                                filterType: 'lobs',
+                                                values: [],
+                                              })
+                                            );
+                                          }
+                                          break;
+                                        case 'vertical':
+                                          dispatch(setSelectedVertical([]));
+                                          if (
+                                            selectedDepartment === 'Business'
+                                          ) {
+                                            dispatch(
+                                              updateBusinessDataFilter({
+                                                filterType: 'businessVerticals',
+                                                values: [],
+                                              })
+                                            );
+                                          }
+                                          break;
+                                      }
+                                    }}
+                                  >
+                                    Clear All
+                                  </Button>
+                                </div>
+                              )}
                             </div>
-                          )}
+                          </div>
                         </div>
                       );
                     })}
@@ -1553,151 +2016,6 @@ export function AdvancedFilters({
                 </div>
               ))}
             </div>
-
-            {/* Business Data Filters Section */}
-            {isBusinessDataFilterActive && (
-              <Card className="p-4 border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-blue-600" />
-                    Excel-Style Business Data Filters
-                  </h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearAllBusinessDataFilters}
-                    className="text-xs"
-                  >
-                    Clear All
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  {Object.entries(businessFilterOptions).map(
-                    ([filterType, options]) => {
-                      if (!options || options.length === 0) return null;
-
-                      const currentSelection =
-                        businessDataFilters[
-                          filterType as keyof typeof businessDataFilters
-                        ] || [];
-                      const isExpanded = true; // You can add state to control expansion
-
-                      return (
-                        <div
-                          key={filterType}
-                          className="border border-gray-100 rounded-lg"
-                        >
-                          <div className="p-3 bg-gray-50 border-b border-gray-100">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-xs font-medium text-gray-700 capitalize flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                {filterType.replace(/([A-Z])/g, ' $1').trim()}
-                                <span className="text-gray-500">
-                                  ({currentSelection.length}/{options.length})
-                                </span>
-                              </h4>
-                              <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                  onClick={() =>
-                                    handleBusinessDataFilterSelectAll(
-                                      filterType as keyof typeof businessDataFilters
-                                    )
-                                  }
-                                >
-                                  Select All
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 px-2 text-xs text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                  onClick={() =>
-                                    handleBusinessDataFilterClearAll(
-                                      filterType as keyof typeof businessDataFilters
-                                    )
-                                  }
-                                >
-                                  Clear All
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {isExpanded && (
-                            <div className="p-3">
-                              <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-                                {options.map(option => (
-                                  <label
-                                    key={option}
-                                    className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={currentSelection.includes(
-                                        option
-                                      )}
-                                      onChange={() =>
-                                        handleBusinessDataFilterChange(
-                                          filterType as keyof typeof businessDataFilters,
-                                          option
-                                        )
-                                      }
-                                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm text-gray-700 flex-1">
-                                      {option}
-                                    </span>
-                                  </label>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-
-                {Object.keys(businessDataFilters).some(
-                  key =>
-                    businessDataFilters[key as keyof typeof businessDataFilters]
-                      ?.length > 0
-                ) && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h5 className="text-xs font-medium text-blue-800 mb-2">
-                      Active Filters:
-                    </h5>
-                    <div className="flex flex-wrap gap-1">
-                      {Object.entries(businessDataFilters).map(
-                        ([filterType, values]) =>
-                          values?.map(value => (
-                            <span
-                              key={`${filterType}-${value}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                            >
-                              {filterType}: {value}
-                              <button
-                                onClick={() =>
-                                  handleBusinessDataFilterChange(
-                                    filterType as keyof typeof businessDataFilters,
-                                    value
-                                  )
-                                }
-                                className="ml-1 text-blue-600 hover:text-blue-800"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </Card>
-            )}
           </Card>
         </div>
       </SheetContent>

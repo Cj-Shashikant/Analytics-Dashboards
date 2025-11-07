@@ -90,7 +90,7 @@ export default function FilterPage() {
   // Auto-navigation state
   const [isPlaying, setIsPlaying] = useState(false);
   const [, setCurrentSequenceIndex] = useState(0);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(5);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -165,18 +165,18 @@ export default function FilterPage() {
         clearInterval(countdownRef.current);
         countdownRef.current = null;
       }
-      setCountdown(30); // Reset countdown
+      setCountdown(5); // Reset countdown
     } else {
       // Play
       setIsPlaying(true);
       setCurrentSequenceIndex(getCurrentSequenceIndex());
-      setCountdown(30); // Reset countdown to 30 seconds
+      setCountdown(5); // Reset countdown to 30 seconds
 
       // Start countdown timer (updates every second)
       countdownRef.current = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
-            return 30; // Reset to 30 when it reaches 0
+            return 5; // Reset to 30 when it reaches 0
           }
           return prev - 1;
         });
@@ -185,7 +185,7 @@ export default function FilterPage() {
       // Start 30-second interval for navigation
       intervalRef.current = setInterval(() => {
         navigateToNextReport();
-      }, 30000); // 30 seconds
+      }, 5000); // 30 seconds
     }
   };
 
@@ -228,6 +228,10 @@ export default function FilterPage() {
 
   const handleDurationChange = (value: string) => {
     dispatch(setSelectedDuration([value as DurationType]));
+    // Update business data for duration selection as well
+    dispatch(
+      updateBusinessDataFilter({ filterType: 'durations', values: [value] })
+    );
   };
 
   const handleValueUnitCycle = () => {
@@ -255,6 +259,7 @@ export default function FilterPage() {
       ? selectedClientTypes.filter(t => t !== type)
       : [...selectedClientTypes, type];
     dispatch(setSelectedClientTypes(next));
+    // Reflect client type changes in business data filters
     dispatch(
       updateBusinessDataFilter({ filterType: 'clientTypes', values: next })
     );

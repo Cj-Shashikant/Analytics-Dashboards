@@ -243,7 +243,7 @@ export const businessData: BusinessDataItem[] = [
   {
     Organization: '',
     Duration: 'FY 2023-24',
-    Region: 'Bangalore',
+    Region: 'Banglore',
     'Client Types': 'Retail',
     'Product name': 'Liability Insurance',
     'Insurer name': 'Future Generali',
@@ -260,7 +260,7 @@ export const businessData: BusinessDataItem[] = [
   {
     Organization: '',
     Duration: 'FY 2023-24',
-    Region: 'Bangalore',
+    Region: 'Banglore',
     'Client Types': 'Affinity',
     'Product name': 'Agriculture Insurance',
     'Insurer name': 'Liberty',
@@ -277,7 +277,7 @@ export const businessData: BusinessDataItem[] = [
   {
     Organization: '',
     Duration: 'FY 2023-24',
-    Region: 'Bangalore',
+    Region: 'Banglore',
     'Client Types': 'Affinity',
     'Product name': 'Aviation Insurance',
     'Insurer name': 'IFFCO Tokio',

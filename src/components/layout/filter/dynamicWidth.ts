@@ -37,7 +37,7 @@ export const getFilterWidths = (
 
   return {
     entityWidth: getDynamicWidth(selectedEntity, 160, 220),
-    departmentWidth: getDynamicWidth(selectedDepartment, 120, 180),
+    departmentWidth: getDynamicWidth(selectedDepartment, 80, 140),
     reportTypeWidth: getDynamicWidth(selectedReportType, 180, 280),
     durationWidth: getDynamicWidth(durationDisplay, 110, 200),
     // locationWidth: getDynamicWidth(selectedLocation, 100, 160),

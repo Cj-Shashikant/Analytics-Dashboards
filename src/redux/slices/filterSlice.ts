@@ -776,12 +776,89 @@ export const selectFilteredBusinessData = (state: any) => {
   const filters = selectBusinessDataFilters(state);
   const isFilterActive = selectIsBusinessDataFilterActive(state);
 
-  // Use imported raw Excel data if available, otherwise fall back to static business data
-  const dataToUse =
-    state.importedData?.rawExcelData &&
-    state.importedData.rawExcelData.length > 0
-      ? state.importedData.rawExcelData
-      : businessData;
+  // Prefer Excel raw data only when it contains columns relevant to the current report/filters
+  const rawExcelData = state.importedData?.rawExcelData || [];
+  const selectedReportType = state.filter?.selectedReportType;
+
+  // Helper: check if any row in raw data has at least one of the provided column keys
+  const hasAnyColumn = (rows: any[], keys: string[]) => {
+    if (!rows || rows.length === 0) return false;
+    return rows.some(row => keys.some(k => row[k] !== undefined));
+  };
+
+  // Determine if raw Excel data is suitable for current context
+  let shouldUseRawExcel = false;
+  if (rawExcelData.length > 0) {
+    switch (selectedReportType) {
+      case 'Revenue by Products':
+        shouldUseRawExcel = hasAnyColumn(rawExcelData, [
+          'Product Name',
+          'Product name',
+        ]);
+        break;
+      case 'Revenue by Insurers':
+        shouldUseRawExcel = hasAnyColumn(rawExcelData, [
+          'Insurer Name',
+          'Insurer name',
+        ]);
+        break;
+      case 'Revenue by Policy Type':
+        shouldUseRawExcel = hasAnyColumn(rawExcelData, ['Policy Type']);
+        break;
+      case 'Revenue by LOB':
+        shouldUseRawExcel = hasAnyColumn(rawExcelData, [
+          'LOB Name',
+          'LOB name',
+        ]);
+        break;
+      case 'Revenue by Vertical':
+        shouldUseRawExcel = hasAnyColumn(rawExcelData, [
+          'Business Vertical',
+          'Bussiness Vertical',
+        ]);
+        break;
+      default:
+        shouldUseRawExcel = false;
+    }
+
+    // Additional guard: if specific filters are active, ensure required columns exist
+    if (shouldUseRawExcel && isFilterActive) {
+      const requiredByActiveFilters: string[] = [];
+      if ((filters.products || []).length > 0) {
+        requiredByActiveFilters.push('Product Name', 'Product name');
+      }
+      if ((filters.insurers || []).length > 0) {
+        requiredByActiveFilters.push('Insurer Name', 'Insurer name');
+      }
+      if ((filters.policyTypes || []).length > 0) {
+        requiredByActiveFilters.push('Policy Type');
+      }
+      if ((filters.lobs || []).length > 0) {
+        requiredByActiveFilters.push('LOB Name', 'LOB name');
+      }
+      if ((filters.businessVerticals || []).length > 0) {
+        requiredByActiveFilters.push('Business Vertical', 'Bussiness Vertical');
+      }
+      if ((filters.clientTypes || []).length > 0) {
+        requiredByActiveFilters.push('Client Types');
+      }
+      if ((filters.regions || []).length > 0) {
+        requiredByActiveFilters.push('Region');
+      }
+      if ((filters.durations || []).length > 0) {
+        requiredByActiveFilters.push('Duration');
+      }
+
+      if (requiredByActiveFilters.length > 0) {
+        const hasRequired = hasAnyColumn(rawExcelData, requiredByActiveFilters);
+        if (!hasRequired) {
+          shouldUseRawExcel = false; // Fallback to static data when columns are missing
+        }
+      }
+    }
+  }
+
+  const dataToUse = shouldUseRawExcel ? rawExcelData : businessData;
 
   if (!isFilterActive) {
     return dataToUse;
