@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Bell, Home, ArrowLeft, Settings, Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
