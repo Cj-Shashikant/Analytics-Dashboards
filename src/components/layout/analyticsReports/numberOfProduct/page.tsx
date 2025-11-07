@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../../../hooks/hooks';
 import { RootState } from '../../../../redux/store';
-import {
-  selectNumberOfProducts,
-  selectBaseMetrics,
-} from '../../../../redux/slices/analyticsDataSlice';
+import { selectBaseMetrics } from '../../../../redux/slices/analyticsDataSlice';
 import {
   selectIsDataImported,
   selectImportedBaseMetrics,
@@ -194,7 +191,57 @@ export function ChartsSection({
   const isDataImported = useSelector(selectIsDataImported);
   const importedData = useSelector(selectAllImportedData);
   const importedBaseMetrics = useSelector(selectImportedBaseMetrics);
-  const defaultProductData = useSelector(selectNumberOfProducts);
+  // Fallback default data when imported data is not available
+  const defaultProductData = [
+    {
+      id: 'single-product',
+      name: 'Single Product',
+      value: 4800,
+      percentage: 60.0,
+      avgPremium: 45000,
+      color: '#3B82F6',
+    },
+    {
+      id: 'two-products',
+      name: 'Two Products',
+      value: 2000,
+      percentage: 25.0,
+      avgPremium: 85000,
+      color: '#10B981',
+    },
+    {
+      id: 'three-products',
+      name: 'Three Products',
+      value: 800,
+      percentage: 10.0,
+      avgPremium: 125000,
+      color: '#F59E0B',
+    },
+    {
+      id: 'four-products',
+      name: 'Four Products',
+      value: 320,
+      percentage: 4.0,
+      avgPremium: 165000,
+      color: '#8B5CF6',
+    },
+    {
+      id: 'five-products',
+      name: 'Five Products',
+      value: 64,
+      percentage: 0.8,
+      avgPremium: 205000,
+      color: '#EF4444',
+    },
+    {
+      id: 'six-plus-products',
+      name: 'Six+ Products',
+      value: 16,
+      percentage: 0.2,
+      avgPremium: 245000,
+      color: '#06B6D4',
+    },
+  ];
   const defaultBaseMetrics = useSelector(selectBaseMetrics);
 
   // Transform imported numberOfProductData to match expected format
