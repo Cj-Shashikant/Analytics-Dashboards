@@ -1,6 +1,7 @@
 export { Avatar, AvatarImage, AvatarFallback } from './avatar';
 export { Badge, badgeVariants } from './badge';
-export { Button, buttonVariants } from './button';
+// Exporting Button via index was causing resolution issues in some environments.
+// Import Button directly from '@/components/ui/button' where needed.
 export {
   Card,
   CardHeader,
