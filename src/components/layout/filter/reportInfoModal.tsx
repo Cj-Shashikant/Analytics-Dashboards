@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar';
 import { Users, Target, TrendingUp, DollarSign } from 'lucide-react';
 
 interface TeamMember {

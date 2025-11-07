@@ -29,7 +29,7 @@ const nextConfig = {
     return [];
   },
   // Add webpack alias for '@' to point to 'src' for consistent resolution
-  webpack: (config) => {
+  webpack: config => {
     config.resolve = config.resolve || {};
     config.resolve.alias = config.resolve.alias || {};
     config.resolve.alias['@'] = path.resolve(__dirname, 'src');

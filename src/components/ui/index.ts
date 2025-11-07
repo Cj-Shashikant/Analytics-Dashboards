@@ -1,4 +1,4 @@
-export { Avatar, AvatarImage, AvatarFallback } from './avatar';
+export { Avatar, AvatarImage, AvatarFallback } from './Avatar';
 export { Badge, badgeVariants } from './badge';
 // Exporting Button via index was causing resolution issues in some environments.
 // Import Button directly from '@/components/ui/button' where needed.
@@ -45,7 +45,7 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
 } from './dropdown-menu';
-export { Input } from './input';
+export { Input } from './Input';
 export { Label } from './label';
 export { Popover, PopoverTrigger, PopoverContent } from './popover';
 export { Progress } from './progress';
