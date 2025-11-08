@@ -286,40 +286,24 @@ export default function FilterPage() {
     setIsPlaylistFilterOpen(true);
   };
 
-  // Excel import handler - matching the working implementation from report pages
+  // Excel import handler
   const handleExport = async () => {
     console.log('Import button clicked for report type:', selectedReportType);
-
     try {
-      // Import the dynamic import handler
       const { triggerExcelImport } = await import(
         '../../../utils/dynamicImportHandler'
       );
-
-      // Trigger the import with the current report type
-      triggerExcelImport(
-        selectedReportType as any,
-        dispatch
-        // result => {
-        //   // Success callback
-        //   console.log('Data imported successfully:', result);
-        //   alert(
-        //     `✅ ${result.message}\n\n` +
-        //       `File: ${result.fileName}\n` +
-        //       `Report Type: ${selectedReportType}\n\n` +
-        //       `The data has been automatically mapped to the "${selectedReportType}" format.`
-        //   );
-        // },
-        // result => {
-        //   // Error callback
-        //   console.error('Error importing file:', result.message);
-        //   alert(
-        //     `❌ Import Failed\n\n` +
-        //       `${result.message}\n\n` +
-        //       `Please ensure your Excel file contains the required 13 columns:\n` +
-        //       `Duration, Region, Client Types, Product Name, Insurer Name, LOB Name, Policy Type, No. of Policies, Premium, Gross Premium, Revenue, Revenue Percentage, Color`
-        //   );
-        // }
+      // Use proper success/error callbacks
+      await triggerExcelImport(
+        fileName => {
+          console.log(`Excel imported: ${fileName}`);
+        },
+        err => {
+          console.error('Excel import error:', err);
+          alert(
+            `Import Failed. Please ensure your file includes columns like Product Name, Insurer Name, LOB Name, Policy Type, Policy No, Net Premium/Gross Premium.`
+          );
+        }
       );
     } catch (error) {
       console.error('Error loading import handler:', error);

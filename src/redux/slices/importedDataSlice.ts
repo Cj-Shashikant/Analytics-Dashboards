@@ -373,84 +373,158 @@ function regroupRawDataForReportType(
   rawData: any[],
   reportType: ReportType
 ): CommonDataItem[] {
-  // Define column mappings for each report type
-  const columnMappings = {
-    'Revenue by Products': 'Product name ',
-    'Revenue by Insurers': 'Insurer name ',
-    'Revenue by LOB': 'LOB name',
-    'Revenue by Policy Type': 'Policy Type',
-    'Revenue by Vertical': 'Bussiness Vertical',
+  // Flexible column options for grouping and values
+  const normalize = (s: string) => s?.toString().trim().toLowerCase();
+  const findValue = (row: any, keys: string[]) => {
+    const entries = Object.keys(row);
+    for (const k of entries) {
+      const nk = normalize(k);
+      if (keys.some(target => normalize(target) === nk)) {
+        return row[k];
+      }
+    }
+    // Fallback: partial includes
+    for (const k of entries) {
+      const nk = normalize(k);
+      if (keys.some(target => nk.includes(normalize(target)))) {
+        return row[k];
+      }
+    }
+    return undefined;
   };
 
-  const groupByColumn = columnMappings[reportType];
-  if (!groupByColumn) return [];
+  const groupKeyOptions: Record<ReportType, string[]> = {
+    'Revenue by Products': [
+      'Product Name',
+      'Product name',
+      'product',
+      'Product',
+    ],
+    'Revenue by Insurers': [
+      'Insurer Name',
+      'Insurer name',
+      'insurer',
+      'Insurer',
+    ],
+    'Revenue by LOB': ['LOB Name', 'LOB name', 'lob', 'LOB'],
+    'Revenue by Policy Type': [
+      'Policy Type',
+      'policy type',
+      'PolicyType',
+      'Policy',
+    ],
+    'Revenue by Vertical': [
+      'Business Vertical',
+      'Bussiness Vertical',
+      'Vertical',
+    ],
+  };
 
-  // Group data by the appropriate column
-  const groupedData = new Map<
+  const policiesKeys = ['No. of Policies', 'No.of Policies'];
+  const policyNoKeys = ['Policy No', 'Policy Number'];
+  const netPremiumKeys = ['Net Premium', 'Premium'];
+  const grossPremiumKeys = ['Gross Premium', 'Revenue'];
+  const colorKeys = ['Color', 'color'];
+
+  const groupKeys = groupKeyOptions[reportType];
+  if (!groupKeys || groupKeys.length === 0) return [];
+
+  // First, group rows by the selected key
+  const grouped = new Map<
     string,
     {
       policies: number;
-      premium: number;
-      revenue: number;
-      revenuePercentage: number;
+      premiumSum?: number;
+      revenueSum?: number;
       color?: string;
-      count: number;
     }
   >();
 
   rawData.forEach(row => {
-    const nameValue = row[groupByColumn] as string;
-    const policies = Number(row['No.of Policies']) || 0;
-    const premium = Number(row['Premium']) || 0;
-    const revenue = Number(row['Revenue']) || 0;
-    const revenuePercentage = Number(row['Revenue Percentage']) || 0;
-    const color = row['Color'] || row['color'] || '';
+    const nameValue = findValue(row, groupKeys);
+    const name = nameValue ? String(nameValue).trim() : '';
+    if (!name) return; // Skip empty or header-like rows
 
-    // Skip rows with invalid data
-    if (!nameValue || nameValue.toString().trim() === '') {
-      return;
+    // Count policies: prefer explicit count, else count by policy number presence
+    const policiesCountVal = findValue(row, policiesKeys);
+    let policiesCount = Number(policiesCountVal) || 0;
+    const policyNoVal = findValue(row, policyNoKeys);
+    if (!policiesCount && policyNoVal && String(policyNoVal).trim() !== '') {
+      policiesCount = 1;
     }
 
-    // Group by name
-    if (groupedData.has(nameValue)) {
-      const existing = groupedData.get(nameValue)!;
-      existing.policies += policies;
-      existing.premium += premium;
-      existing.revenue += revenue;
-      existing.count += 1;
-      // Average the revenue percentage
-      existing.revenuePercentage =
-        (existing.revenuePercentage + revenuePercentage) / 2;
+    // Sum premiums
+    const netPremVal = findValue(row, netPremiumKeys);
+    const grossPremVal = findValue(row, grossPremiumKeys);
+    const netPrem =
+      netPremVal !== undefined && netPremVal !== ''
+        ? Number(netPremVal)
+        : undefined;
+    const grossPrem =
+      grossPremVal !== undefined && grossPremVal !== ''
+        ? Number(grossPremVal)
+        : undefined;
+    const colorVal = findValue(row, colorKeys);
+
+    const existing = grouped.get(name);
+    if (existing) {
+      existing.policies += policiesCount;
+      if (netPrem !== undefined && !isNaN(netPrem)) {
+        existing.premiumSum = (existing.premiumSum || 0) + netPrem;
+      }
+      if (grossPrem !== undefined && !isNaN(grossPrem)) {
+        existing.revenueSum = (existing.revenueSum || 0) + grossPrem;
+      }
+      if (!existing.color && colorVal) {
+        existing.color = String(colorVal);
+      }
     } else {
-      groupedData.set(nameValue, {
-        policies,
-        premium,
-        revenue,
-        revenuePercentage,
-        color: color || `hsl(${(groupedData.size * 137.5) % 360}, 70%, 50%)`,
-        count: 1,
+      grouped.set(name, {
+        policies: policiesCount,
+        premiumSum:
+          netPrem !== undefined && !isNaN(netPrem)
+            ? Number(netPrem)
+            : undefined,
+        revenueSum:
+          grossPrem !== undefined && !isNaN(grossPrem)
+            ? Number(grossPrem)
+            : undefined,
+        color: colorVal ? String(colorVal) : undefined,
       });
     }
   });
 
-  // Convert grouped data to array format
-  const processedData: CommonDataItem[] = Array.from(groupedData.entries()).map(
-    ([name, data]) => ({
-      name,
-      policies: data.policies,
-      premium: data.premium,
-      revenue: data.revenue,
-      revenuePercentage: data.revenuePercentage,
-      color: data.color,
-      // Add aliases for compatibility
-      value: data.revenue,
-      percentage: data.revenuePercentage,
-    })
+  // Compute total revenue across groups for percentage calculation
+  let totalRevenue = 0;
+  grouped.forEach(g => {
+    if (g.revenueSum !== undefined && !isNaN(g.revenueSum)) {
+      totalRevenue += g.revenueSum;
+    }
+  });
+
+  // Convert grouped map to CommonDataItem[]
+  const processedData: CommonDataItem[] = Array.from(grouped.entries()).map(
+    ([name, g], idx) => {
+      const revenue = g.revenueSum !== undefined ? g.revenueSum : 0;
+      const premium = g.premiumSum !== undefined ? g.premiumSum : 0;
+      const hasRevenue = g.revenueSum !== undefined;
+      const percentage =
+        hasRevenue && totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0;
+      return {
+        name,
+        policies: g.policies,
+        premium,
+        revenue,
+        revenuePercentage: Number(percentage.toFixed(2)),
+        color: g.color || `hsl(${(idx * 137.5) % 360}, 70%, 50%)`,
+        value: revenue,
+        percentage: Number(percentage.toFixed(2)),
+      };
+    }
   );
 
-  // Sort by revenue descending
+  // Sort by revenue desc
   processedData.sort((a, b) => b.revenue - a.revenue);
-
   return processedData;
 }
 

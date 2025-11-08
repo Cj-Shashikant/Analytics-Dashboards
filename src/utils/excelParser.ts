@@ -101,60 +101,66 @@ export const parseExcelFile = async (file: File): Promise<ExcelDataItem[]> => {
 
 export const validateExcelData = (data: ExcelDataItem[]) => {
   const errors: string[] = [];
-  const requiredColumns = [
-    'Duration',
-    'Region',
-    'Client Types',
-    'Product Name',
-    'Insurer Name',
-    'LOB Name',
-    'Policy Type',
-    'No. of Policies',
-    'Premium',
-    'Gross Premium',
-    'Revenue',
-    'Revenue Percentage',
-    'Color',
-  ];
 
   if (data.length === 0) {
     errors.push('No data found in Excel file');
     return { isValid: false, errors };
   }
 
-  // Check if required columns exist in at least one row
-  const firstRow = data[0];
-  const availableColumns = Object.keys(firstRow);
+  // Relaxed validation: ensure presence of at least one grouping column
+  // and at least one premium column (Net or Gross)
+  const normalize = (s: string) => s.trim().toLowerCase();
+  const keys = Object.keys(data[0]).map(normalize);
 
-  const missingColumns = requiredColumns.filter(
-    col => !availableColumns.includes(col)
+  const hasProduct = keys.some(
+    k => k.includes('product') && k.includes('name')
   );
-  if (missingColumns.length > 0) {
-    errors.push(`Missing required columns: ${missingColumns.join(', ')}`);
+  const hasInsurer = keys.some(
+    k => k.includes('insurer') && k.includes('name')
+  );
+  const hasLob = keys.some(k => k.includes('lob'));
+  const hasPolicyType = keys.some(
+    k => k.includes('policy') && k.includes('type')
+  );
+
+  const hasNetPremium =
+    keys.some(k => k.includes('net') && k.includes('premium')) ||
+    keys.includes('premium');
+  const hasGrossPremium =
+    keys.some(k => k.includes('gross') && k.includes('premium')) ||
+    keys.includes('revenue');
+
+  if (!(hasProduct || hasInsurer || hasLob || hasPolicyType)) {
+    errors.push('Missing grouping columns: Product/Insurer/LOB/Policy Type');
+  }
+  if (!(hasNetPremium || hasGrossPremium)) {
+    errors.push('Missing premium columns: Net Premium or Gross Premium');
   }
 
-  // Validate data types for numeric fields
-  const numericFields = [
+  // Validate numeric fields when present
+  const numericCandidates = [
     'No. of Policies',
+    'No.of Policies',
+    'Policy No',
+    'Net Premium',
     'Premium',
     'Gross Premium',
     'Revenue',
-    'Revenue Percentage',
   ];
   data.forEach((row, index) => {
-    numericFields.forEach(field => {
+    Object.keys(row).forEach(key => {
+      const norm = normalize(key);
       if (
-        row[field] !== undefined &&
-        row[field] !== null &&
-        isNaN(Number(row[field]))
+        numericCandidates.some(c => normalize(c) === norm) &&
+        row[key] !== undefined &&
+        row[key] !== null &&
+        row[key] !== '' &&
+        isNaN(Number(row[key]))
       ) {
-        errors.push(`Row ${index + 2}: ${field} should be a number`);
+        errors.push(`Row ${index + 2}: ${key} should be a number`);
       }
     });
   });
 
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  return { isValid: errors.length === 0, errors };
 };
