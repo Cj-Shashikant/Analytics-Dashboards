@@ -420,8 +420,7 @@ function regroupRawDataForReportType(
     ],
   };
 
-  const policiesKeys = ['No. of Policies', 'No.of Policies'];
-  const policyNoKeys = ['Policy No', 'Policy Number'];
+  // Policies are counted by row occurrences for each group
   const netPremiumKeys = ['Net Premium', 'Premium'];
   const grossPremiumKeys = ['Gross Premium', 'Revenue'];
   const colorKeys = ['Color', 'color'];
